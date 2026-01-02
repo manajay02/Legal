@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Legal Case Analyzer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>⚖️ Legal Case Analyzer</h1>
+
+    <!-- PDF Upload -->
+    <div class="card">
+        <h3>Upload Legal PDF</h3>
+        <input type="file" id="pdfFile" accept=".pdf">
+        <button onclick="uploadPDF()">Upload & Extract</button>
+    </div>
+
+    <!-- Extracted Text -->
+    <div class="card">
+        <h3>Extracted Text</h3>
+        <textarea id="extractedText" placeholder="Extracted text will appear here..."></textarea>
+    </div>
+
+    <!-- Classification -->
+    <div class="card">
+        <h3>Case Classification</h3>
+        <button onclick="classifyCase()">Predict Category</button>
+        <p><strong>Predicted Category:</strong> <span id="prediction">---</span></p>
+    </div>
+
+    <!-- Similar Cases -->
+    <div class="card">
+        <h3>Similar Cases</h3>
+        <ul id="similarCases">
+            <li>No results yet</li>
+        </ul>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

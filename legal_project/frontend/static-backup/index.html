@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal Case Analyzer</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<!-- Header and Navigation -->
+<header class="header">
+    <div class="navbar">
+        <div class="logo">
+            <h1>⚖️ Legal Case Analyzer</h1>
+            <div class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+        <nav class="nav-menu" id="navMenu">
+            <ul>
+                <li><a href="#home" class="nav-link"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="#similar-cases" class="nav-link"><i class="fas fa-balance-scale"></i> Similar Cases Analyzer</a></li>
+                <li><a href="#compliance-audit" class="nav-link"><i class="fas fa-clipboard-check"></i> Civil Compliance Auditor</a></li>
+                <li><a href="#structured-view" class="nav-link"><i class="fas fa-project-diagram"></i> Structured View</a></li>
+                <li><a href="#argument-score" class="nav-link"><i class="fas fa-chart-line"></i> Argument Strength Score</a></li>
+                <li><a href="#about" class="nav-link"><i class="fas fa-info-circle"></i> About Us</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<div class="container">
+    <!-- Home Section -->
+    <section id="home" class="section">
+        <div class="intro-section">
+            <h2>Intelligent Legal Document Analysis System</h2>
+            <p>AI-powered platform for legal case analysis, compliance auditing, and argument evaluation</p>
+        </div>
+        
+        <div class="dashboard-cards">
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-balance-scale"></i>
+                </div>
+                <h3>Similar Cases Analyzer</h3>
+                <p>Find legally similar cases using advanced AI matching algorithms</p>
+                <a href="#similar-cases" class="card-btn">Go to Analyzer</a>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <h3>Civil Compliance Auditor</h3>
+                <p>Automated compliance checking against civil regulations</p>
+                <a href="#compliance-audit" class="card-btn">Start Audit</a>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-project-diagram"></i>
+                </div>
+                <h3>Structured View</h3>
+                <p>Organized visualization of legal document structures</p>
+                <a href="#structured-view" class="card-btn">View Structure</a>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Argument Strength Score</h3>
+                <p>Quantitative assessment of legal argument effectiveness</p>
+                <a href="#argument-score" class="card-btn">Calculate Score</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Similar Cases Analyzer Section -->
+    <section id="similar-cases" class="section">
+        <div class="card">
+            <h3><i class="fas fa-balance-scale"></i> Similar Cases Analyzer</h3>
+            <div class="upload-area">
+                <input type="file" id="caseFile" accept=".pdf,.doc,.docx,.txt">
+                <button onclick="analyzeSimilarCases()"><i class="fas fa-search"></i> Find Similar Cases</button>
+            </div>
+            <div class="results">
+                <h4>Similar Cases Found:</h4>
+                <ul id="similarCasesList">
+                    <li>Case #2023-045: Similarity Score: 92%</li>
+                    <li>Case #2022-187: Similarity Score: 87%</li>
+                    <li>Case #2023-012: Similarity Score: 79%</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Civil Compliance Auditor Section -->
+    <section id="compliance-audit" class="section">
+        <div class="card">
+            <h3><i class="fas fa-clipboard-check"></i> Civil Compliance Auditor</h3>
+            <div class="upload-area">
+                <textarea placeholder="Paste legal document text or upload to check compliance..."></textarea>
+                <button onclick="runComplianceAudit()"><i class="fas fa-play"></i> Run Compliance Audit</button>
+            </div>
+            <div class="results">
+                <h4>Compliance Results:</h4>
+                <div class="compliance-score">Compliance Score: <span>78%</span></div>
+                <div class="issues-list">
+                    <p><strong>Issues Found:</strong></p>
+                    <ul>
+                        <li>✓ Clause 4.2 meets regulatory standards</li>
+                        <li>⚠️ Section 7.1 requires additional disclosures</li>
+                        <li>✗ Clause 9.3 violates updated 2023 regulations</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Structured View Section -->
+    <section id="structured-view" class="section">
+        <div class="card">
+            <h3><i class="fas fa-project-diagram"></i> Structured View</h3>
+            <div class="structured-container">
+                <div class="document-structure">
+                    <h4>Document Structure</h4>
+                    <div class="tree-view">
+                        <ul>
+                            <li>Case Summary
+                                <ul>
+                                    <li>Parties Involved</li>
+                                    <li>Claims & Defenses</li>
+                                </ul>
+                            </li>
+                            <li>Legal Arguments
+                                <ul>
+                                    <li>Precedents Cited</li>
+                                    <li>Statutory References</li>
+                                </ul>
+                            </li>
+                            <li>Evidence
+                                <ul>
+                                    <li>Documentary</li>
+                                    <li>Testimonial</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="visualization">
+                    <h4>Visual Representation</h4>
+                    <div class="visual-box">
+                        <div class="node main">Case Root</div>
+                        <div class="node branch">Arguments</div>
+                        <div class="node branch">Evidence</div>
+                        <div class="node leaf">Precedent 1</div>
+                        <div class="node leaf">Precedent 2</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Argument Strength Score Section -->
+    <section id="argument-score" class="section">
+        <div class="card">
+            <h3><i class="fas fa-chart-line"></i> Argument Strength Score</h3>
+            <div class="upload-area">
+                <textarea placeholder="Enter legal argument text for analysis..."></textarea>
+                <button onclick="calculateArgumentScore()"><i class="fas fa-calculator"></i> Calculate Strength Score</button>
+            </div>
+            <div class="results">
+                <h4>Argument Analysis:</h4>
+                <div class="score-display">
+                    <div class="score-circle">
+                        <div class="score-value">8.2</div>
+                        <div class="score-label">/10</div>
+                    </div>
+                    <div class="score-details">
+                        <p><strong>Strength Breakdown:</strong></p>
+                        <div class="score-bar-container">
+                            <label>Legal Precedent: <span>85%</span></label>
+                            <div class="score-bar"><div class="score-fill" style="width: 85%"></div></div>
+                        </div>
+                        <div class="score-bar-container">
+                            <label>Statutory Support: <span>72%</span></label>
+                            <div class="score-bar"><div class="score-fill" style="width: 72%"></div></div>
+                        </div>
+                        <div class="score-bar-container">
+                            <label>Logical Consistency: <span>91%</span></label>
+                            <div class="score-bar"><div class="score-fill" style="width: 91%"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Us Section -->
+    <section id="about" class="section">
+        <div class="card">
+            <h3><i class="fas fa-info-circle"></i> About Us</h3>
+            <div class="about-content">
+                <div class="about-text">
+                    <h4>Legal Case Analyzer Platform</h4>
+                    <p>Our AI-powered platform helps legal professionals analyze cases, check compliance, and evaluate argument strength using advanced machine learning algorithms.</p>
+                    <p>Built with the MERN stack (MongoDB, Express.js, React, Node.js), our system provides reliable, scalable, and secure legal document analysis.</p>
+                </div>
+                <div class="tech-stack">
+                    <h4>Technology Stack</h4>
+                    <div class="tech-icons">
+                        <div class="tech-icon">MongoDB</div>
+                        <div class="tech-icon">Express.js</div>
+                        <div class="tech-icon">React</div>
+                        <div class="tech-icon">Node.js</div>
+                        <div class="tech-icon">Python AI</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<footer>
+    <p>© 2023 Legal Case Analyzer | MERN Stack Application</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

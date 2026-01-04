@@ -1,0 +1,252 @@
+{
+  "info": {
+    "_postman_id": "legal-backend-collection",
+    "name": "Legal Backend API",
+    "description": "Complete API collection for Legal Document Analysis Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health & Status",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "health"]
+            },
+            "description": "Check if backend server is running"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Similar Cases Finder",
+      "item": [
+        {
+          "name": "Find Similar Cases",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"caseText\": \"Employment contract dispute regarding wrongful termination and breach of contract. The employee claims the employer violated the employment agreement by terminating without proper notice.\",\n  \"caseType\": \"Labour\",\n  \"limit\": 5\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/similar-cases/find",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "similar-cases", "find"]
+            },
+            "description": "Find similar cases using text search"
+          }
+        },
+        {
+          "name": "Get All Cases",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/similar-cases?page=1&limit=10&caseType=Labour",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "similar-cases"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "caseType",
+                  "value": "Labour"
+                }
+              ]
+            },
+            "description": "Retrieve paginated list of cases"
+          }
+        },
+        {
+          "name": "Upload New Case",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"caseText\": \"Full case text content here. This is where the complete case details would go including facts, arguments, and decision.\",\n  \"title\": \"Smith v. Jones - Employment Dispute\",\n  \"caseType\": \"Labour\",\n  \"court\": \"District Court\",\n  \"year\": 2023\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/similar-cases/upload",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "similar-cases", "upload"]
+            },
+            "description": "Upload and save a new case to database"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Case Management",
+      "item": [
+        {
+          "name": "Classify Case",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"caseText\": \"This is a contract dispute case involving breach of service agreement between two parties.\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/cases/classify",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "cases", "classify"]
+            },
+            "description": "Classify a case by type (Civil, Criminal, Labour, etc.)"
+          }
+        },
+        {
+          "name": "Upload Case",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"caseFile\": \"case_document.pdf\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/cases/upload",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "cases", "upload"]
+            },
+            "description": "Upload a case PDF file"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Compliance Auditor",
+      "item": [
+        {
+          "name": "Audit Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentText\": \"Employment contract: The employee shall work 48 hours per week with no fixed days off. Salary is LKR 50,000 per month. Employer can terminate with 24 hours notice.\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/compliance/audit",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "compliance", "audit"]
+            },
+            "description": "Audit document for legal compliance with Sri Lankan laws"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Document Analyzer",
+      "item": [
+        {
+          "name": "Analyze Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentText\": \"Section 1: Introduction. Section 2: Terms and Conditions. Section 3: Payment Terms. Section 4: Dispute Resolution.\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/documents/analyze",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "documents", "analyze"]
+            },
+            "description": "Analyze document structure and extract information"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Argument Analyzer",
+      "item": [
+        {
+          "name": "Analyze Argument Strength",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"argumentText\": \"The defendant breached the contract by failing to deliver goods on the agreed date. This is evidenced by the purchase order dated January 1, 2023, and the invoice showing non-delivery.\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/arguments/analyze",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "arguments", "analyze"]
+            },
+            "description": "Analyze the strength of a legal argument"
+          }
+        }
+      ]
+    }
+  ]
+}

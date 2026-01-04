@@ -1,0 +1,141 @@
+.classify-page {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.classify-page h2 {
+  color: #1e3c72;
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 32px;
+}
+
+.classify-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.input-section {
+  padding: 30px;
+  border-bottom: 1px solid #eee;
+}
+
+.input-section h3 {
+  color: #1e3c72;
+  margin-bottom: 20px;
+}
+
+.case-textarea {
+  width: 100%;
+  height: 250px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  margin-bottom: 20px;
+  resize: vertical;
+}
+
+.case-textarea:focus {
+  outline: none;
+  border-color: #2a5298;
+  box-shadow: 0 0 5px rgba(42, 82, 152, 0.2);
+}
+
+.btn-classify {
+  width: 100%;
+  padding: 12px !important;
+  font-size: 16px !important;
+}
+
+.result-section {
+  padding: 30px;
+}
+
+.result-section h3 {
+  color: #1e3c72;
+  margin-bottom: 25px;
+}
+
+.result-box {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.result-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.result-item label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.category-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 16px;
+  width: fit-content;
+}
+
+.confidence-bar {
+  width: 100%;
+  height: 30px;
+  background: #f0f0f0;
+  border-radius: 15px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+}
+
+.confidence-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
+  transition: width 0.3s ease;
+}
+
+.confidence-text {
+  display: block;
+  color: #666;
+  font-size: 14px;
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.error-message {
+  margin-top: 15px;
+  padding: 12px;
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 5px;
+}
+
+@media (max-width: 768px) {
+  .classify-page h2 {
+    font-size: 24px;
+  }
+
+  .input-section, .result-section {
+    padding: 20px;
+  }
+
+  .case-textarea {
+    height: 200px;
+  }
+
+  .result-box {
+    gap: 15px;
+  }
+}

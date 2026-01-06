@@ -73,6 +73,17 @@ router.post('/classify', (req, res) => {
     // Intelligent case type detection
     const { type, confidence, matches } = detectCaseType(caseText);
     
+    // Validation: Reject files that are not legal cases
+    const CONFIDENCE_THRESHOLD = 0.2; // 20% confidence minimum
+    if (confidence < CONFIDENCE_THRESHOLD || matches < 2) {
+      return res.status(400).json({ 
+        error: 'not a legal case',
+        message: 'The uploaded document does not appear to be a legal case. Please upload a valid legal document.',
+        confidence: confidence,
+        matches: matches
+      });
+    }
+    
     // Extract keywords for tags
     const keywords = caseText
       .toLowerCase()

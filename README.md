@@ -48,7 +48,7 @@ Legal/
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/Legal.git
+git clone https://github.com/ManaJay02/Legal.git
 cd Legal
 ```
 

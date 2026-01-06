@@ -30,7 +30,7 @@ mongoose.connect(mongoUri, {
 })
 .catch(err => {
   console.error('❌ MongoDB connection error:', err.message);
-  process.exit(1);
+  console.log('⚠️  Continuing without database connection...');
 });
 
 // Routes

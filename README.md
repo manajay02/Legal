@@ -880,20 +880,7 @@ For more information, see [Legal.txt](Legal.txt)
 
 ---
 
-## ✉️ Support & Contact
 
-For issues, questions, or suggestions:
-
-1. **Check existing documentation** in the project
-2. **Review test cases** for usage examples
-3. **Check logs** for error messages
-4. **File an issue** with:
-   - Clear description
-   - Error message
-   - Steps to reproduce
-   - System information
-
----
 
 ## 🎯 Roadmap
 
@@ -913,34 +900,9 @@ For issues, questions, or suggestions:
 - 🔄 User accounts
 - 🔄 Audit trails
 
-### Future Enhancements
-- 📈 Multi-language support
-- 📈 Real-time law updates
-- 📈 Advanced analytics
-- 📈 Mobile app
-- 📈 Integration APIs
 
 ---
 
-## 📈 Project Statistics
 
-| Metric | Value |
-|--------|-------|
-| **Total Python Files** | 15+ |
-| **Lines of Code** | ~3000+ |
-| **CSS Rules** | ~600+ |
-| **HTML Templates** | 4 |
-| **Supported Domains** | 8+ |
-| **Training Samples** | 5000+ |
-| **Model Parameters** | ~125M |
-| **Documentation Pages** | 10+ |
 
----
 
-**Last Updated**: January 2026  
-**Version**: 1.0.0  
-**Status**: Production Ready ✅
-
----
-
-*For the latest updates, documentation, and issues, refer to the project directory and supporting documents.*

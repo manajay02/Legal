@@ -1,5 +1,18 @@
+# Web Framework
 Flask
+
+# PDF Processing
 pdfminer.six
+PyMuPDF
+
+# OCR Support
+pytesseract
+Pillow
+
+# Machine Learning
 scikit-learn
 joblib
+numpy
+
+# Natural Language Processing
 nltk

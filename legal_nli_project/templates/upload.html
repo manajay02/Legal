@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal Compliance Analyzer - Check Your Agreements</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">Legal Compliance Analyzer</a>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>Legal Compliance Analyzer</h1>
+            <p>Upload your contracts and agreements to check compliance with applicable laws</p>
+        </div>
+
+        <!-- Upload Card -->
+        <div class="upload-card">
+            <div class="upload-section">
+                <h2>📋 Upload Your Document</h2>
+                <p>Drag and drop your contract or agreement file, or click to browse</p>
+
+                <form action="/analyze" method="POST" enctype="multipart/form-data" id="uploadForm">
+                    <div class="file-input-wrapper">
+                        <input 
+                            type="file" 
+                            name="document" 
+                            id="fileInput"
+                            accept=".pdf,.txt,.docx"
+                            required
+                        >
+                        <label for="fileInput" class="file-input-label">
+                            Choose or Drag & Drop File
+                        </label>
+                        <div class="file-name" id="fileName"></div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-large">
+                        Analyze Document
+                    </button>
+                </form>
+
+                <div style="margin-top: 2rem; text-align: left; background-color: #f3f4f6; padding: 1.5rem; border-radius: 8px;">
+                    <h3 style="font-size: 1rem; margin-bottom: 1rem; color: #374151;">ℹ️ Supported Formats</h3>
+                    <ul style="list-style: none; color: #6b7280;">
+                        <li>✓ PDF documents (.pdf)</li>
+                        <li>✓ Text files (.txt)</li>
+                        <li>✓ Word documents (.docx)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>🔒 Your documents are analyzed securely </p>
+    </div>
+
+    <script>
+        // File drag and drop
+        const fileInput = document.getElementById('fileInput');
+        const fileInputLabel = document.querySelector('.file-input-label');
+        const fileName = document.getElementById('fileName');
+
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                fileName.textContent = '✓ ' + this.files[0].name;
+            }
+        });
+
+        // Drag and drop functionality
+        const uploadForm = document.getElementById('uploadForm');
+        
+        uploadForm.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileInputLabel.style.borderColor = '#1d4ed8';
+            fileInputLabel.style.backgroundColor = 'rgba(37, 99, 235, 0.15)';
+        });
+
+        uploadForm.addEventListener('dragleave', () => {
+            fileInputLabel.style.borderColor = 'var(--primary-color)';
+            fileInputLabel.style.backgroundColor = 'rgba(37, 99, 235, 0.05)';
+        });
+
+        uploadForm.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileInputLabel.style.borderColor = 'var(--primary-color)';
+            fileInputLabel.style.backgroundColor = 'rgba(37, 99, 235, 0.05)';
+            
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                fileName.textContent = '✓ ' + e.dataTransfer.files[0].name;
+            }
+        });
+
+        // Form submission
+        document.querySelector('form').addEventListener('submit', function() {
+            const button = document.querySelector('.btn-primary');
+            button.innerHTML = '<span class="loading"><span class="spinner"></span> Analyzing...</span>';
+            button.disabled = true;
+        });
+    </script>
+</body>
+</html>

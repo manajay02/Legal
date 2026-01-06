@@ -1,0 +1,70 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environment
+venv/
+env/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# IDE / Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Model and checkpoint files
+legal_nli_model/
+results/
+*.safetensors
+*.pt
+*.pth
+*.bin
+
+# Uploads and temporary files
+uploads/
+temp/
+*.tmp
+
+# Data files (optional - uncomment if needed)
+# *.csv
+# *.json
+
+# OS files
+.DS_Store
+Thumbs.db
+.env
+.env.local
+
+

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compliance Analysis Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">Legal Compliance Analyzer</a>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Back Link -->
+        <a href="/" class="back-link">Analyze Another Document</a>
+
+        <!-- Results Header -->
+        <div class="results-container">
+            <div class="results-header">
+                <h2>📊 Compliance Analysis Results</h2>
+                {% if domain %}
+                    <span class="domain-badge">Domain: {{ domain }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Check if results exist -->
+            {% if results %}
+                <!-- Results Grid -->
+                {% for result in results %}
+                    <div class="result-card {% if result.nli_label == 'CONTRADICTION' %}contradiction{% elif result.nli_label == 'ENTAILMENT' %}entailment{% else %}neutral{% endif %}">
+                        
+                        <!-- Status Badge -->
+                        <div class="result-status">
+                            {% if result.nli_label == 'CONTRADICTION' %}
+                                <span class="status-badge contradiction">CONTRADICTION</span>
+                            {% elif result.nli_label == 'ENTAILMENT' %}
+                                <span class="status-badge entailment">ENTAILMENT</span>
+                            {% else %}
+                                <span class="status-badge neutral">NEUTRAL</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Clause Text -->
+                        <div class="clause-text">
+                            <strong>📝 Clause:</strong><br>
+                            {{ result.contract_clause }}
+                        </div>
+
+                        <!-- Result Details -->
+                        <div class="result-details">
+                            <div class="detail-item">
+                                <label>⚖️ Law Reference</label>
+                                <p>{{ result.law_reference }}</p>
+                            </div>
+
+                            <div class="detail-item">
+                                <label>✓ Status</label>
+                                <p>{{ result.status }}</p>
+                            </div>
+
+                            <div class="detail-item">
+                                <label>📊 Confidence Score</label>
+                                <p>{{ "%.1f" | format(result.confidence * 100) }}%</p>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" style="width: 0%;" data-width="{{ result.confidence * 100 }}%"></div>
+
+                                </div>
+                            </div>
+
+                            <div class="detail-item">
+                                <label>🏷️ Category</label>
+                                <p>
+                                    {% if result.nli_label == 'CONTRADICTION' %}
+                                        <span style="color: #ef4444; font-weight: 600;">Non-Compliant</span>
+                                    {% elif result.nli_label == 'ENTAILMENT' %}
+                                        <span style="color: #10b981; font-weight: 600;">Compliant</span>
+                                    {% else %}
+                                        <span style="color: #f59e0b; font-weight: 600;">Review Needed</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Explanation -->
+                        <div class="explanation">
+                            <label>💡 Analysis & Recommendation</label>
+                            <p>{{ result.explanation }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <!-- Summary Section -->
+                <div style="margin-top: 2rem; padding: 1.5rem; background-color: #f9fafb; border-radius: 8px; border-left: 4px solid #2563eb;">
+                    <h3 style="margin-bottom: 1rem; color: #1f2937;">📋 Analysis Summary</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                        <div style="text-align: center; padding: 1rem;">
+                            <div style="font-size: 2rem; font-weight: 700; color: #2563eb;">{{ results | length }}</div>
+                            <div style="color: #6b7280; font-size: 0.9rem;">Total Clauses Analyzed</div>
+                        </div>
+                        <div style="text-align: center; padding: 1rem;">
+                            <div style="font-size: 2rem; font-weight: 700; color: #10b981;">
+                                {% set compliant = results | selectattr('nli_label', 'equalto', 'ENTAILMENT') | list | length %}
+                                {{ compliant }}
+                            </div>
+                            <div style="color: #6b7280; font-size: 0.9rem;">Compliant Clauses</div>
+                        </div>
+                        <div style="text-align: center; padding: 1rem;">
+                            <div style="font-size: 2rem; font-weight: 700; color: #ef4444;">
+                                {% set contradictory = results | selectattr('nli_label', 'equalto', 'CONTRADICTION') | list | length %}
+                                {{ contradictory }}
+                            </div>
+                            <div style="color: #6b7280; font-size: 0.9rem;">Non-Compliant</div>
+                        </div>
+                        <div style="text-align: center; padding: 1rem;">
+                            <div style="font-size: 2rem; font-weight: 700; color: #f59e0b;">
+                                {% set neutral = results | selectattr('nli_label', 'equalto', 'NEUTRAL') | list | length %}
+                                {{ neutral }}
+                            </div>
+                            <div style="color: #6b7280; font-size: 0.9rem;">Requires Review</div>
+                        </div>
+                    </div>
+                </div>
+
+            {% else %}
+                <!-- No Results Message -->
+                <div class="no-results">
+                    <p>No matching laws or clauses were found for the uploaded document.</p>
+                    <p style="margin-top: 1rem; font-size: 0.95rem;">This could mean the document type or content is outside the current knowledge base.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="text-align: center; margin-top: 2rem; margin-bottom: 2rem;">
+            <a href="/" class="btn btn-primary">
+                ← Analyze Another Document
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>🔒 Secure analysis | 🚀 Powered by Legal NLI Model | ⚖️ Legal Compliance Analyzer</p>
+    </div>
+</body>
+</html>

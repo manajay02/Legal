@@ -1,0 +1,9 @@
+{
+  "short_name": "Legal Analyzer",
+  "name": "Legal Case Analyzer",
+  "icons": [],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#1e3c72",
+  "background_color": "#ffffff"
+}

@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Environment Variables
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Data & Models (Large Files)
+data/processed_text/*.txt
+data/training_data/*.jsonl
+models/base/*
+models/fine_tuned/*
+!models/base/.gitkeep
+!models/fine_tuned/.gitkeep
+
+# Logs
+logs/*.log
+logs/**/*.log
+
+# Jupyter Notebooks Checkpoints
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary Files
+*.tmp
+temp/
+
+*.pdf
+*.docx

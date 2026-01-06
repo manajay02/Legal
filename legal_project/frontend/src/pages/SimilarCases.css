@@ -1,5 +1,21 @@
 @import './Pages.css';
 
+/* Pulse Animation for Highlight */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 6px 25px rgba(255, 107, 53, 0.6);
+    transform: scale(1.02);
+  }
+  100% {
+    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+    transform: scale(1);
+  }
+}
+
 /* Workflow Progress */
 .workflow-progress {
   display: flex;

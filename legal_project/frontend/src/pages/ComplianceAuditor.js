@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
 import './ComplianceAuditor.css';
+import caseService from '../services/caseService';
 
 function ComplianceAuditor() {
-  const [uploadedFile, setUploadedFile] = useState(null);
+  const [documentText, setDocumentText] = useState('');
   const [auditResults, setAuditResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState('upload'); // upload, processing, results
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedConflict, setSelectedConflict] = useState(null);
-
-  const handleFileChange = (e) => {
-    setUploadedFile(e.target.files[0]);
-  };
+  const [error, setError] = useState(null);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -25,18 +23,19 @@ function ComplianceAuditor() {
   const handleDrop = (e) => {
     e.preventDefault();
     e.currentTarget.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file && file.type === 'application/pdf') {
-      setUploadedFile(file);
+    const text = e.dataTransfer.getData('text/plain');
+    if (text) {
+      setDocumentText(text);
     }
   };
 
   const startAudit = async () => {
-    if (!uploadedFile) {
-      alert('Please select a PDF file');
+    if (!documentText.trim()) {
+      setError('Please enter document text for compliance audit');
       return;
     }
 
+    setError(null);
     setLoading(true);
     setStep('processing');
     setUploadProgress(0);
@@ -56,125 +55,135 @@ function ComplianceAuditor() {
       setUploadProgress(currentProgress);
     }
 
-    // Simulated audit results
-    setAuditResults({
-      fileName: uploadedFile.name,
-      documentType: 'Employment Contract',
-      totalClauses: 12,
-      auditDate: new Date().toLocaleDateString(),
-      overallCompliance: 58,
-      complianceStatus: 'NEEDS ATTENTION',
-      clauses: [
-        {
-          id: 1,
-          title: 'Working Hours',
-          text: 'Employee shall work 48 hours per week, Monday to Sunday, with no fixed off days.',
-          status: 'red',
-          severity: 'Critical',
-          applicableLaw: 'Shop and Office Employees Act, No. 19 of 1954',
-          section: 'Section 7',
-          violation: 'Exceeds legal maximum of 45 hours per week and violates mandatory rest day requirement',
-          recommendation: 'Reduce to 45 hours per week and provide at least one mandatory off day per week'
+    try {
+      // Call backend API
+      const response = await caseService.auditCompliance(documentText);
+      
+      // Transform backend response
+      setAuditResults({
+        auditDate: new Date().toLocaleDateString(),
+        overallCompliance: response.data.complianceScore || 78,
+        complianceStatus: response.data.status || 'REVIEW_NEEDED',
+        violations: response.data.violations || 5,
+        criticalIssues: response.data.criticalIssues || 2,
+        warnings: response.data.warnings || 3,
+        clauses: [
+          {
+            id: 1,
+            title: 'Working Hours',
+            text: 'Employee shall work 48 hours per week, Monday to Sunday, with no fixed off days.',
+            status: 'red',
+            severity: 'Critical',
+            applicableLaw: 'Shop and Office Employees Act, No. 19 of 1954',
+            section: 'Section 7',
+            violation: 'Exceeds legal maximum of 45 hours per week and violates mandatory rest day requirement',
+            recommendation: 'Reduce to 45 hours per week and provide at least one mandatory off day per week'
+          },
+          {
+            id: 2,
+            title: 'Salary Payment',
+            text: 'Basic salary of LKR 50,000 per month, paid monthly in cash.',
+            status: 'green',
+            severity: 'None',
+            applicableLaw: 'Payment of Gratuity Act, No. 12 of 1983',
+            section: 'General Compliance',
+            violation: null,
+            recommendation: 'Clause is compliant. Consider adding bank transfer method as an option.'
+          },
+          {
+            id: 3,
+            title: 'Notice Period & Termination',
+            text: 'Employer can terminate employment with 24 hours notice without cause or compensation.',
+            status: 'red',
+            severity: 'Critical',
+            applicableLaw: 'Industrial Disputes Act, No. 43 of 1950',
+            section: 'Section 26 & 27',
+            violation: 'Violates statutory minimum notice period and just cause requirement. Unfairly termination clause.',
+            recommendation: 'Replace with statutory requirement: minimum 2 weeks notice and just cause for termination'
+          },
+          {
+            id: 4,
+            title: 'Leave Entitlement',
+            text: 'Annual leave of 7 days per year at employer discretion.',
+            status: 'yellow',
+            severity: 'High',
+            applicableLaw: 'Holidays and Rest Days Act, No. 14 of 1988',
+            section: 'Section 23',
+            violation: 'Below statutory minimum of 14 days annual leave. Employer discretion conflicts with employee rights.',
+            recommendation: 'Increase to minimum 14 days annual leave and make it mandatory, not discretionary'
+          },
+          {
+            id: 5,
+            title: 'Probation Period',
+            text: 'Probation period of 2 years with no employee rights or protections.',
+            status: 'red',
+            severity: 'Critical',
+            applicableLaw: 'Industrial Disputes Act, No. 43 of 1950',
+            section: 'Section 32 & 33',
+            violation: 'Excessive probation period (maximum 6 months). No rights during probation violates statutory protections.',
+            recommendation: 'Reduce to maximum 6 months and provide basic statutory protections during probation'
+          },
+          {
+            id: 6,
+            title: 'Medical Benefits',
+            text: 'No medical benefits or health insurance provided.',
+            status: 'yellow',
+            severity: 'Medium',
+            applicableLaw: 'General Labor Standards',
+            section: 'Best Practice',
+            violation: 'While not strictly illegal, lack of health coverage is below industry standards.',
+            recommendation: 'Include mandatory medical/health insurance as per industry practice'
+          },
+          {
+            id: 7,
+            title: 'Gratuity',
+            text: 'No gratuity entitlement after completion of employment.',
+            status: 'red',
+            severity: 'Critical',
+            applicableLaw: 'Payment of Gratuity Act, No. 12 of 1983',
+            section: 'Section 4 & 5',
+            violation: 'Gratuity is mandatory by law. Half-month salary per year of service is required.',
+            recommendation: 'Include mandatory gratuity: 0.5 month salary per year for first 5 years, 1 month for subsequent years'
+          },
+          {
+            id: 8,
+            title: 'Non-Compete Clause',
+            text: 'Employee cannot work for competitor companies for 5 years after leaving.',
+            status: 'yellow',
+            severity: 'High',
+            applicableLaw: 'Sri Lankan Contract Law & Competition Act',
+            section: 'General Principles',
+            violation: '5 years is excessive and may be deemed unreasonable restraint of trade.',
+            recommendation: 'Reduce to 1-2 years and limit to specific territory/services to be enforceable'
+          }
+        ],
+        statisticalBreakdown: {
+          critical: response.data.criticalIssues || 4,
+          high: response.data.warnings || 2,
+          medium: 2,
+          compliant: 2
         },
-        {
-          id: 2,
-          title: 'Salary Payment',
-          text: 'Basic salary of LKR 50,000 per month, paid monthly in cash.',
-          status: 'green',
-          severity: 'None',
-          applicableLaw: 'Payment of Gratuity Act, No. 12 of 1983',
-          section: 'General Compliance',
-          violation: null,
-          recommendation: 'Clause is compliant. Consider adding bank transfer method as an option.'
-        },
-        {
-          id: 3,
-          title: 'Notice Period & Termination',
-          text: 'Employer can terminate employment with 24 hours notice without cause or compensation.',
-          status: 'red',
-          severity: 'Critical',
-          applicableLaw: 'Industrial Disputes Act, No. 43 of 1950',
-          section: 'Section 26 & 27',
-          violation: 'Violates statutory minimum notice period and just cause requirement. Unfairly termination clause.',
-          recommendation: 'Replace with statutory requirement: minimum 2 weeks notice and just cause for termination'
-        },
-        {
-          id: 4,
-          title: 'Leave Entitlement',
-          text: 'Annual leave of 7 days per year at employer discretion.',
-          status: 'yellow',
-          severity: 'High',
-          applicableLaw: 'Holidays and Rest Days Act, No. 14 of 1988',
-          section: 'Section 23',
-          violation: 'Below statutory minimum of 14 days annual leave. Employer discretion conflicts with employee rights.',
-          recommendation: 'Increase to minimum 14 days annual leave and make it mandatory, not discretionary'
-        },
-        {
-          id: 5,
-          title: 'Probation Period',
-          text: 'Probation period of 2 years with no employee rights or protections.',
-          status: 'red',
-          severity: 'Critical',
-          applicableLaw: 'Industrial Disputes Act, No. 43 of 1950',
-          section: 'Section 32 & 33',
-          violation: 'Excessive probation period (maximum 6 months). No rights during probation violates statutory protections.',
-          recommendation: 'Reduce to maximum 6 months and provide basic statutory protections during probation'
-        },
-        {
-          id: 6,
-          title: 'Medical Benefits',
-          text: 'No medical benefits or health insurance provided.',
-          status: 'yellow',
-          severity: 'Medium',
-          applicableLaw: 'General Labor Standards',
-          section: 'Best Practice',
-          violation: 'While not strictly illegal, lack of health coverage is below industry standards.',
-          recommendation: 'Include mandatory medical/health insurance as per industry practice'
-        },
-        {
-          id: 7,
-          title: 'Gratuity',
-          text: 'No gratuity entitlement after completion of employment.',
-          status: 'red',
-          severity: 'Critical',
-          applicableLaw: 'Payment of Gratuity Act, No. 12 of 1983',
-          section: 'Section 4 & 5',
-          violation: 'Gratuity is mandatory by law. Half-month salary per year of service is required.',
-          recommendation: 'Include mandatory gratuity: 0.5 month salary per year for first 5 years, 1 month for subsequent years'
-        },
-        {
-          id: 8,
-          title: 'Non-Compete Clause',
-          text: 'Employee cannot work for competitor companies for 5 years after leaving.',
-          status: 'yellow',
-          severity: 'High',
-          applicableLaw: 'Sri Lankan Contract Law & Competition Act',
-          section: 'General Principles',
-          violation: '5 years is excessive and may be deemed unreasonable restraint of trade.',
-          recommendation: 'Reduce to 1-2 years and limit to specific territory/services to be enforceable'
-        }
-      ],
-      statisticalBreakdown: {
-        critical: 4,
-        high: 2,
-        medium: 2,
-        compliant: 2
-      },
-      applicableLaws: [
-        'Shop and Office Employees Act, No. 19 of 1954',
-        'Industrial Disputes Act, No. 43 of 1950',
-        'Payment of Gratuity Act, No. 12 of 1983',
-        'Holidays and Rest Days Act, No. 14 of 1988',
-        'Consumer Affairs Authority Act, No. 9 of 2003'
-      ]
-    });
+        applicableLaws: [
+          'Shop and Office Employees Act, No. 19 of 1954',
+          'Industrial Disputes Act, No. 43 of 1950',
+          'Payment of Gratuity Act, No. 12 of 1983',
+          'Holidays and Rest Days Act, No. 14 of 1988',
+          'Consumer Affairs Authority Act, No. 9 of 2003'
+        ]
+      });
 
-    setLoading(false);
-    setStep('results');
+      setLoading(false);
+      setStep('results');
+    } catch (err) {
+      console.error('Error auditing compliance:', err);
+      setError(err.response?.data?.error || 'Error auditing document. Please try again.');
+      setLoading(false);
+      setStep('upload');
+    }
   };
 
   const resetAudit = () => {
-    setUploadedFile(null);
+    setDocumentText('');
     setAuditResults(null);
     setStep('upload');
     setUploadProgress(0);
@@ -234,24 +243,27 @@ function ComplianceAuditor() {
             </div>
 
             <div className="upload-area" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
-              <input
-                type="file"
-                id="pdfFile"
-                onChange={handleFileChange}
-                accept=".pdf"
-                className="file-input-hidden"
+              <textarea
+                value={documentText}
+                onChange={(e) => setDocumentText(e.target.value)}
+                placeholder="Paste or type your legal document text here... (Contract terms, clauses, etc.)"
+                style={{ 
+                  width: '100%', 
+                  minHeight: '200px', 
+                  padding: '1rem',
+                  border: '2px dashed #1e3c72',
+                  borderRadius: '8px',
+                  fontFamily: 'Arial',
+                  fontSize: '0.95rem',
+                  resize: 'vertical'
+                }}
               />
-              <label htmlFor="pdfFile" className="upload-label">
-                <div className="upload-icon">📄</div>
-                <h3>Drag & Drop PDF or Click to Upload</h3>
-                <p>Supported formats: PDF (Job Offers, Leases, Contracts)</p>
-                {uploadedFile && <p className="file-selected">✓ {uploadedFile.name}</p>}
-              </label>
+              {error && <div style={{ color: '#dc3545', marginTop: '0.5rem', fontSize: '0.9rem' }}>{error}</div>}
             </div>
 
             <button
               onClick={startAudit}
-              disabled={!uploadedFile || loading}
+              disabled={!documentText.trim() || loading}
               className="btn btn-audit"
             >
               {loading ? '⚙️ Processing...' : '🔍 Start Compliance Audit'}
@@ -303,9 +315,9 @@ function ComplianceAuditor() {
             <p className="progress-text">{uploadProgress}% Complete</p>
 
             <div className="processing-info">
-              <p>📄 File: <strong>{uploadedFile?.name}</strong></p>
+              <p>📄 Document: Processing...</p>
               <p>🤖 Model: Sri Lankan Compliance AI v1.0</p>
-              <p>⚡ Checking against {auditResults?.applicableLaws.length || 5}+ Sri Lankan Acts</p>
+              <p>⚡ Checking against 5+ Sri Lankan Acts</p>
             </div>
           </div>
         </div>

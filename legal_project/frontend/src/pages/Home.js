@@ -1,9 +1,40 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './Home.css';
+import caseService from '../services/caseService';
 
 function Home() {
+  const [backendStatus, setBackendStatus] = useState('checking');
+  const [statusMessage, setStatusMessage] = useState('Connecting to backend...');
+
+  useEffect(() => {
+    const checkBackend = async () => {
+      try {
+        await caseService.checkHealth();
+        setBackendStatus('connected');
+        setStatusMessage('✅ Backend Connected');
+      } catch (error) {
+        setBackendStatus('disconnected');
+        setStatusMessage('❌ Backend Offline - Make sure server is running on http://localhost:5000');
+      }
+    };
+
+    checkBackend();
+  }, []);
+
   return (
     <div className="container home-page">
+      {/* Backend Status Banner */}
+      <div style={{ 
+        background: backendStatus === 'connected' ? '#d4edda' : '#f8d7da',
+        border: `1px solid ${backendStatus === 'connected' ? '#c3e6cb' : '#f5c6cb'}`,
+        color: backendStatus === 'connected' ? '#155724' : '#721c24',
+        padding: '1rem',
+        borderRadius: '8px',
+        marginBottom: '2rem',
+        textAlign: 'center'
+      }}>
+        <strong>{statusMessage}</strong>
+      </div>
       <div className="intro-section">
         <h2>Welcome to Legal Case Analyzer</h2>
         <p>Intelligent legal document analysis and case classification system</p>

@@ -3,6 +3,7 @@ import './ArgumentScore.css';
 
 function ArgumentScore() {
   const [argumentText, setArgumentText] = useState('');
+  // eslint-disable-next-line no-unused-vars
   const [caseFile, setCaseFile] = useState(null);
   const [jurisdiction, setJurisdiction] = useState('');
   const [caseType, setCaseType] = useState('');

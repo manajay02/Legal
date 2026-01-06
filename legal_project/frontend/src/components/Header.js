@@ -32,6 +32,13 @@ function Header() {
           <li><Link to="/compliance" onClick={closeMenu}>📋 Compliance Auditor</Link></li>
           <li><Link to="/structured-view" onClick={closeMenu}>📊 Structured View</Link></li>
           <li><Link to="/argument-score" onClick={closeMenu}>📈 Argument Score</Link></li>
+          <li className="dropdown">
+            <span>📚 Cases</span>
+            <ul className="dropdown-menu">
+              <li><Link to="/add-case" onClick={closeMenu}>➕ Add Case</Link></li>
+              <li><Link to="/cases-database" onClick={closeMenu}>📂 View Database</Link></li>
+            </ul>
+          </li>
           <li><Link to="/about" onClick={closeMenu}>ℹ️ About Us</Link></li>
         </ul>
       </nav>

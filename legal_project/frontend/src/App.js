@@ -6,6 +6,8 @@ import SimilarCases from './pages/SimilarCases';
 import ComplianceAuditor from './pages/ComplianceAuditor';
 import StructuredView from './pages/StructuredView';
 import ArgumentScore from './pages/ArgumentScore';
+import AddCase from './pages/AddCase';
+import CasesDatabase from './pages/CasesDatabase';
 import About from './pages/About';
 import './App.css';
 
@@ -20,6 +22,8 @@ function App() {
           <Route path="/compliance" element={<ComplianceAuditor />} />
           <Route path="/structured-view" element={<StructuredView />} />
           <Route path="/argument-score" element={<ArgumentScore />} />
+          <Route path="/add-case" element={<AddCase />} />
+          <Route path="/cases-database" element={<CasesDatabase />} />
           <Route path="/about" element={<About />} />
         </Routes>
       </main>

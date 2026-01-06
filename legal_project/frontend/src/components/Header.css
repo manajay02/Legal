@@ -64,6 +64,74 @@
   transform: translateY(-2px);
 }
 
+.nav-menu .dropdown {
+  position: relative;
+}
+
+.nav-menu .dropdown > span {
+  color: white;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 10px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.nav-menu .dropdown > span:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffd700;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: rgba(30, 60, 114, 0.95);
+  border-radius: 5px;
+  list-style: none;
+  margin: 5px 0 0 0;
+  padding: 8px 0;
+  min-width: 180px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.nav-menu .dropdown:hover .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-menu li {
+  list-style: none;
+}
+
+.dropdown-menu a {
+  display: block;
+  padding: 10px 20px;
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 13px;
+  transition: all 0.3s ease;
+  border-radius: 0;
+  white-space: nowrap;
+}
+
+.dropdown-menu a:hover {
+  background: rgba(255, 215, 0, 0.1);
+  color: #ffd700;
+  padding-left: 25px;
+}
+
 .mobile-menu-toggle {
   display: none;
   flex-direction: column;
@@ -126,9 +194,10 @@
   }
 
   .nav-menu.active {
-    max-height: 500px;
+    max-height: 800px;
     padding: 20px 0;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
   }
 
   .nav-menu a {
@@ -145,6 +214,45 @@
   .nav-menu a:hover {
     background: rgba(255, 255, 255, 0.15);
     transform: none;
+  }
+
+  .nav-menu .dropdown > span {
+    padding: 12px 20px;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .dropdown-menu {
+    position: static;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    background: rgba(20, 40, 80, 0.95);
+    box-shadow: none;
+    border-radius: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav-menu .dropdown:hover .dropdown-menu {
+    transform: none;
+  }
+
+  .dropdown-menu.active {
+    max-height: 300px;
+    padding: 8px 0;
+  }
+
+  .dropdown-menu a {
+    padding: 10px 40px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .dropdown-menu a:hover {
+    padding-left: 45px;
   }
 }
 

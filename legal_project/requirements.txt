@@ -1,5 +1,0 @@
-Flask
-pdfminer.six
-scikit-learn
-joblib
-nltk

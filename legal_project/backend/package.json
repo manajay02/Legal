@@ -24,7 +24,11 @@
     "axios": "^1.6.0",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.0",
-    "express-validator": "^7.0.0"
+    "express-validator": "^7.0.0",
+    "pdf-parse": "^1.1.1",
+    "docx": "^8.5.0",
+    "mammoth": "^1.6.0",
+    "text-encoding": "^0.7.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.20"

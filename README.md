@@ -2,10 +2,6 @@
 
 A sophisticated **AI-powered legal argument analysis component** that automatically evaluates legal arguments and provides detailed scoring based on an 8-category rubric. Built with FastAPI, OpenRouter LLM integration, and modern web technologies for Sri Lankan civil cases.
 
-[![Python]](https://www.python.org/)
-[![FastAPI]](https://fastapi.tiangolo.com/)
-[![License]](LICENSE)
-
 ---
 
 ## Table of Contents

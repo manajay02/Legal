@@ -1,0 +1,116 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment Variables
+.env
+.env.local
+
+# Data Directories (sensitive data)
+data/uploads/*
+!data/uploads/.gitkeep
+data/processed/*
+data/processed_text/*
+!data/processed/.gitkeep
+data/training/*
+!data/training/.gitkeep
+
+# Machine Learning Models & Adapters
+models/*
+merged_model/*
+adapter_model/*
+*.bin
+*.safetensors
+*.gguf
+*.pth
+*.pt
+*.onnx
+checkpoint-*/
+pytorch_model.bin
+model.safetensors
+
+# HuggingFace Cache
+.cache/
+huggingface/
+
+# Keep sample_cases for reference (add individual files to ignore if sensitive)
+# data/sample_cases/*
+
+# Database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# OS
+Thumbs.db
+.DS_Store
+
+*.pdf
+
+data/processed_text/*

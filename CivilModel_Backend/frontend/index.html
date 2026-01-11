@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivilModel - Legal Document Analyzer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-balance-scale"></i>
+                <span>CivilModel</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-page="upload">
+                    <i class="fas fa-upload"></i>
+                    <span>Upload Document</span>
+                </a>
+                <a href="#" class="nav-item" data-page="documents">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Documents</span>
+                </a>
+                <a href="#" class="nav-item" data-page="output">
+                    <i class="fas fa-file-export"></i>
+                    <span>Output</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="api-status" id="api-status">
+                    <div class="status-dot"></div>
+                    <span>Checking API...</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <section class="page active" id="dashboard-page">
+                <header class="page-header">
+                    <h1>Dashboard</h1>
+                    <p>Sri Lankan Supreme Court Civil Case Structure & Metadata Extractor</p>
+                </header>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="total-docs">0</h3>
+                            <p>Total Documents</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon processing">
+                            <i class="fas fa-spinner"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="processing-docs">0</h3>
+                            <p>Processing</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon completed">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="completed-docs">0</h3>
+                            <p>Completed</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon error">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="failed-docs">0</h3>
+                            <p>Failed</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recent-section">
+                    <h2>Recent Documents</h2>
+                    <div class="documents-list" id="recent-docs-list">
+                        <p class="empty-state">No documents yet. Upload a PDF to get started!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Upload Page -->
+            <section class="page" id="upload-page">
+                <header class="page-header">
+                    <h1>Upload Document</h1>
+                    <p>Upload a Sri Lankan Supreme Court case PDF for extraction</p>
+                </header>
+
+                <div class="upload-container">
+                    <div class="upload-zone" id="upload-zone">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h3>Drag & Drop your PDF here</h3>
+                        <p>or click to browse files</p>
+                        <input type="file" id="file-input" accept=".pdf" hidden>
+                        <span class="file-info">Maximum file size: 50MB</span>
+                    </div>
+
+                    <div class="upload-progress hidden" id="upload-progress">
+                        <div class="progress-info">
+                            <span class="filename" id="upload-filename"></span>
+                            <span class="status" id="upload-status">Uploading...</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                    </div>
+
+                    <div class="upload-result hidden" id="upload-result">
+                        <div class="result-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h3>Upload Successful!</h3>
+                        <p>Document ID: <code id="result-doc-id"></code></p>
+                        <div class="result-actions">
+                            <button class="btn btn-primary" id="process-btn">
+                                <i class="fas fa-cog"></i> Process Document
+                            </button>
+                            <button class="btn btn-secondary" id="upload-another-btn">
+                                <i class="fas fa-plus"></i> Upload Another
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Documents Page -->
+            <section class="page" id="documents-page">
+                <header class="page-header">
+                    <h1>Documents</h1>
+                    <p>View and manage all processed documents</p>
+                    <button class="btn btn-primary refresh-btn" id="refresh-docs-btn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </header>
+
+                <div class="documents-grid" id="documents-grid">
+                    <p class="empty-state">No documents found.</p>
+                </div>
+            </section>
+
+            <!-- Output Page -->
+            <section class="page" id="output-page">
+                <header class="page-header">
+                    <h1>Document Output</h1>
+                    <p>View extracted metadata and sections from processed documents</p>
+                </header>
+
+                <div class="output-container">
+                    <div class="output-selector">
+                        <label for="output-doc-select">Select Document:</label>
+                        <select id="output-doc-select">
+                            <option value="">-- Choose a document --</option>
+                        </select>
+                        <button class="btn btn-primary" id="load-output-btn">
+                            <i class="fas fa-eye"></i> View Output
+                        </button>
+                    </div>
+
+                    <div class="output-content hidden" id="output-content">
+                        <!-- Tabs -->
+                        <div class="output-tabs">
+                            <button class="tab-btn active" data-tab="metadata">
+                                <i class="fas fa-info-circle"></i> Metadata
+                            </button>
+                            <button class="tab-btn" data-tab="sections">
+                                <i class="fas fa-list"></i> Sections
+                            </button>
+                            <button class="tab-btn" data-tab="rawtext">
+                                <i class="fas fa-file-alt"></i> Raw Text
+                            </button>
+                            <button class="tab-btn" data-tab="json">
+                                <i class="fas fa-code"></i> JSON Export
+                            </button>
+                        </div>
+
+                        <!-- Metadata Tab -->
+                        <div class="tab-content active" id="metadata-tab">
+                            <div class="metadata-card">
+                                <h3><i class="fas fa-gavel"></i> Case Information</h3>
+                                <div class="metadata-grid" id="case-metadata">
+                                    <!-- Will be populated by JS -->
+                                </div>
+                            </div>
+                            <div class="metadata-card">
+                                <h3><i class="fas fa-users"></i> Parties & Judges</h3>
+                                <div class="metadata-grid" id="parties-metadata">
+                                    <!-- Will be populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sections Tab -->
+                        <div class="tab-content" id="sections-tab">
+                            <div class="sections-list" id="sections-list">
+                                <!-- Will be populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Raw Text Tab -->
+                        <div class="tab-content" id="rawtext-tab">
+                            <div class="raw-text-actions">
+                                <button class="btn btn-secondary" id="copy-raw-btn">
+                                    <i class="fas fa-copy"></i> Copy Text
+                                </button>
+                                <button class="btn btn-secondary" id="download-raw-btn">
+                                    <i class="fas fa-download"></i> Download TXT
+                                </button>
+                            </div>
+                            <pre class="raw-text-preview" id="raw-text-content"></pre>
+                        </div>
+
+                        <!-- JSON Export Tab -->
+                        <div class="tab-content" id="json-tab">
+                            <div class="json-actions">
+                                <button class="btn btn-secondary" id="copy-json-btn">
+                                    <i class="fas fa-copy"></i> Copy JSON
+                                </button>
+                                <button class="btn btn-primary" id="download-json-btn">
+                                    <i class="fas fa-download"></i> Download JSON
+                                </button>
+                            </div>
+                            <pre class="json-preview" id="json-content"></pre>
+                        </div>
+                    </div>
+
+                    <div class="output-empty" id="output-empty">
+                        <i class="fas fa-file-export"></i>
+                        <h3>No Document Selected</h3>
+                        <p>Select a completed document from the dropdown above to view its extracted data.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Document Detail Modal -->
+            <div class="modal hidden" id="document-modal">
+                <div class="modal-overlay"></div>
+                <div class="modal-content">
+                    <button class="modal-close" id="modal-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="modal-header">
+                        <h2 id="modal-title">Document Details</h2>
+                        <span class="status-badge" id="modal-status">Processing</span>
+                    </div>
+                    <div class="modal-body" id="modal-body">
+                        <!-- Document details will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

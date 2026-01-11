@@ -1,0 +1,26 @@
+# Ollama Modelfile for Civil Case Extractor (Fine-tuned Qwen2.5-3B)
+# 
+# Prerequisites:
+#   1. Run merge_adapter.py to create merged model
+#   2. Install Ollama: https://ollama.ai
+#
+# Usage:
+#   cd D:\CivilModel
+#   ollama create civilmodel-qwen3b -f Modelfile
+#   ollama run civilmodel-qwen3b
+
+# Path to merged model (after running merge_adapter.py)
+FROM ./merged_model
+
+# Model parameters optimized for structured extraction
+PARAMETER temperature 0.1
+PARAMETER top_p 0.9
+PARAMETER top_k 40
+PARAMETER num_predict 2048
+PARAMETER stop "<|im_end|>"
+
+# System prompt for Sri Lankan legal document extraction
+SYSTEM "You are an expert Sri Lankan paralegal. Extract metadata and content from the OCR text of a Supreme Court judgment and return ONLY a valid JSON object. RULES: 1. Return ONLY the JSON object. No explanatory text. 2. Do NOT invent data. Use null for missing fields. 3. parties and judges must be flat lists of strings. 4. Divide content into logical sections."
+
+# Chat template for Qwen
+TEMPLATE "{{ if .System }}<|im_start|>system\n{{ .System }}<|im_end|>\n{{ end }}{{ if .Prompt }}<|im_start|>user\n{{ .Prompt }}<|im_end|>\n{{ end }}<|im_start|>assistant\n{{ .Response }}<|im_end|>"

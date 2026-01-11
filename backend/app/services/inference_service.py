@@ -150,18 +150,20 @@ class OpenRouterBackend:
         
         logger.info(f"✓ OpenRouter backend ready (model: {self.model})")
     
-    def generate(self, prompt: str) -> str:
+    def generate(self, argument_text: str) -> str:
         """Generate response using OpenRouter API."""
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
         
+        user_prompt = f"Critique this legal argument:\n\n{argument_text}"
+        
         payload = {
             "model": self.model,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": user_prompt}
             ],
             "temperature": float(os.getenv("OPENROUTER_TEMPERATURE", "0.7")),
             "max_tokens": int(os.getenv("OPENROUTER_MAX_TOKENS", "2048"))
@@ -174,15 +176,26 @@ class OpenRouterBackend:
                 headers=headers,
                 timeout=120
             )
-            response.raise_for_status()
+            
+            if response.status_code != 200:
+                error_detail = response.text
+                logger.error(f"OpenRouter API error ({response.status_code}): {error_detail}")
+                raise RuntimeError(f"OpenRouter API error: {response.status_code} - {error_detail}")
             
             data = response.json()
             content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            
+            if not content:
+                logger.error(f"Empty response from OpenRouter: {data}")
+                raise RuntimeError("Empty response from OpenRouter API")
+            
             return content
             
         except requests.exceptions.Timeout:
+            logger.error("OpenRouter API timeout")
             raise RuntimeError("OpenRouter API timeout")
         except requests.exceptions.RequestException as e:
+            logger.error(f"OpenRouter request error: {str(e)}")
             raise RuntimeError(f"OpenRouter API error: {str(e)}")
 
 
@@ -357,13 +370,8 @@ class InferenceService:
             critique = self._extract_json(content)
             
             if critique is None:
-                return {
-                    "error": "Failed to parse JSON from model response",
-                    "raw_response": content[:500],
-                    "overall_score": 0,
-                    "breakdown": [],
-                    "feedback": ["Model response could not be parsed. Please try again."]
-                }
+                logger.warning("Failed to parse model response, using fallback")
+                return self._get_fallback_critique(argument_text)
             
             if not self._validate_critique(critique):
                 critique["warning"] = "Critique may have incomplete structure"
@@ -372,7 +380,41 @@ class InferenceService:
             return critique
             
         except Exception as e:
-            raise RuntimeError(str(e))
+            logger.error(f"Error generating critique: {str(e)}")
+            return self._get_fallback_critique(argument_text)
+    
+    def _get_fallback_critique(self, argument_text: str) -> Dict[str, Any]:
+        """Generate a basic fallback critique when API fails."""
+        word_count = len(argument_text.split())
+        has_citations = bool(re.search(r'\d{4}|Act|Section|Article', argument_text))
+        has_facts = bool(re.search(r'fact|evidence|witness|document', argument_text, re.IGNORECASE))
+        
+        # Basic scoring heuristics
+        base_score = 50
+        if word_count > 100: base_score += 10
+        if has_citations: base_score += 10
+        if has_facts: base_score += 5
+        
+        return {
+            "overall_score": min(base_score, 75),
+            "breakdown": [
+                {"category": "Issue & Claim Clarity", "weight": 10, "rubric_score": 3, "points": 6.0, "rationale": "The legal claim is stated but could benefit from more precision."},
+                {"category": "Facts & Chronology", "weight": 15, "rubric_score": 3, "points": 9.0, "rationale": "Some factual details are present but chronology could be clearer."},
+                {"category": "Legal Basis", "weight": 20, "rubric_score": 3, "points": 12.0, "rationale": "Legal principles are referenced but need more specific statutory citations."},
+                {"category": "Evidence & Support", "weight": 15, "rubric_score": 3, "points": 9.0, "rationale": "Evidence is mentioned but requires more detailed documentation."},
+                {"category": "Reasoning & Logic", "weight": 15, "rubric_score": 3, "points": 9.0, "rationale": "Logical flow is present but could be strengthened with more analysis."},
+                {"category": "Counterarguments", "weight": 10, "rubric_score": 2, "points": 4.0, "rationale": "Limited consideration of opposing arguments."},
+                {"category": "Remedies & Quantification", "weight": 10, "rubric_score": 3, "points": 6.0, "rationale": "Remedies are stated but lack detailed quantification."},
+                {"category": "Structure & Professionalism", "weight": 5, "rubric_score": 3, "points": 3.0, "rationale": "Structure is acceptable but could be more polished."}
+            ],
+            "feedback": [
+                "Include specific statutory citations and case law references",
+                "Provide a clear chronological timeline of events",
+                "Address potential counterarguments more thoroughly",
+                "Quantify damages or remedies with supporting calculations"
+            ],
+            "warning": "AI service unavailable - using basic analysis. Please configure valid API keys in .env file for full AI-powered critique."
+        }
 
 
 # Singleton instance

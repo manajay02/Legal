@@ -28,6 +28,67 @@
                 {% endif %}
             </div>
 
+            <!-- Enhanced Summary Section with Border -->
+            <div class="summary-section">
+                <div class="summary-header">
+                    <h3>📊 Analysis Summary</h3>
+                    <span class="summary-subtitle">Comprehensive overview of compliance analysis</span>
+                </div>
+                <div class="summary-stats">
+                    <div class="stat-card stat-total">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-value">{{ results | length }}</div>
+                        <div class="stat-label">Total Clauses Analyzed</div>
+                    </div>
+                    <div class="stat-card stat-compliant">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-value">
+                            {% set compliant = results | selectattr('nli_label', 'equalto', 'ENTAILMENT') | list | length %}
+                            {{ compliant }}
+                        </div>
+                        <div class="stat-label">Compliant Clauses</div>
+                        <div class="stat-percentage">
+                            {% if results | length > 0 %}
+                                {{ "%.1f" | format((compliant / (results | length)) * 100) }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="stat-card stat-non-compliant">
+                        <div class="stat-icon">❌</div>
+                        <div class="stat-value">
+                            {% set contradictory = results | selectattr('nli_label', 'equalto', 'CONTRADICTION') | list | length %}
+                            {{ contradictory }}
+                        </div>
+                        <div class="stat-label">Non-Compliant</div>
+                        <div class="stat-percentage">
+                            {% if results | length > 0 %}
+                                {{ "%.1f" | format((contradictory / (results | length)) * 100) }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="stat-card stat-review">
+                        <div class="stat-icon">⚠️</div>
+                        <div class="stat-value">
+                            {% set neutral = results | selectattr('nli_label', 'equalto', 'NEUTRAL') | list | length %}
+                            {{ neutral }}
+                        </div>
+                        <div class="stat-label">Requires Review</div>
+                        <div class="stat-percentage">
+                            {% if results | length > 0 %}
+                                {{ "%.1f" | format((neutral / (results | length)) * 100) }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
             <!-- Check if results exist -->
             {% if results %}
                 <!-- Results Grid -->
@@ -38,7 +99,7 @@
                         <div class="result-status">
                             {% if result.nli_label == 'CONTRADICTION' %}
                                 <span class="status-badge contradiction">CONTRADICTION</span>
-                            {% elif result.nli_label == 'ENTAILMENT' %}
+                            {% elif result.nli_label == 'ENTAILMENT' %} 
                                 <span class="status-badge entailment">ENTAILMENT</span>
                             {% else %}
                                 <span class="status-badge neutral">NEUTRAL</span>
@@ -65,10 +126,14 @@
 
                             <div class="detail-item">
                                 <label>📊 Confidence Score</label>
-                                <p>{{ "%.1f" | format(result.confidence * 100) }}%</p>
-                                <div class="confidence-bar">
-                                    <div class="confidence-fill" style="width: 0%;" data-width="{{ result.confidence * 100 }}%"></div>
-
+                                <div class="confidence-score-wrapper">
+                                    <span class="confidence-value">{{ "%.1f" | format(result.confidence * 100) }}%</span>
+                                    <div class="progress-bar-container">
+                                        <div class="progress-bar {% if result.confidence >= 0.8 %}high-confidence{% elif result.confidence >= 0.5 %}medium-confidence{% else %}low-confidence{% endif %}" 
+                                             style="width: {{ result.confidence * 100 }}%;">
+                                            <span class="progress-bar-text">{{ "%.1f" | format(result.confidence * 100) }}%</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -93,38 +158,6 @@
                         </div>
                     </div>
                 {% endfor %}
-
-                <!-- Summary Section -->
-                <div style="margin-top: 2rem; padding: 1.5rem; background-color: #f9fafb; border-radius: 8px; border-left: 4px solid #2563eb;">
-                    <h3 style="margin-bottom: 1rem; color: #1f2937;">📋 Analysis Summary</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
-                        <div style="text-align: center; padding: 1rem;">
-                            <div style="font-size: 2rem; font-weight: 700; color: #2563eb;">{{ results | length }}</div>
-                            <div style="color: #6b7280; font-size: 0.9rem;">Total Clauses Analyzed</div>
-                        </div>
-                        <div style="text-align: center; padding: 1rem;">
-                            <div style="font-size: 2rem; font-weight: 700; color: #10b981;">
-                                {% set compliant = results | selectattr('nli_label', 'equalto', 'ENTAILMENT') | list | length %}
-                                {{ compliant }}
-                            </div>
-                            <div style="color: #6b7280; font-size: 0.9rem;">Compliant Clauses</div>
-                        </div>
-                        <div style="text-align: center; padding: 1rem;">
-                            <div style="font-size: 2rem; font-weight: 700; color: #ef4444;">
-                                {% set contradictory = results | selectattr('nli_label', 'equalto', 'CONTRADICTION') | list | length %}
-                                {{ contradictory }}
-                            </div>
-                            <div style="color: #6b7280; font-size: 0.9rem;">Non-Compliant</div>
-                        </div>
-                        <div style="text-align: center; padding: 1rem;">
-                            <div style="font-size: 2rem; font-weight: 700; color: #f59e0b;">
-                                {% set neutral = results | selectattr('nli_label', 'equalto', 'NEUTRAL') | list | length %}
-                                {{ neutral }}
-                            </div>
-                            <div style="color: #6b7280; font-size: 0.9rem;">Requires Review</div>
-                        </div>
-                    </div>
-                </div>
 
             {% else %}
                 <!-- No Results Message -->

@@ -378,6 +378,176 @@ form {
     transition: width 0.5s ease;
 }
 
+/* Enhanced Summary Section Styles */
+.summary-section {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    background: #ffffff;
+    border-radius: 10px;
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.summary-header {
+    background: linear-gradient(to right, #1e40af, #2563eb);
+    color: var(--white);
+    padding: 1.25rem 2rem;
+    border-bottom: none;
+}
+
+.summary-header h3 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.5px;
+}
+
+.summary-subtitle {
+    font-size: 0.875rem;
+    opacity: 0.95;
+    font-weight: 400;
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0;
+    background: #fafbfc;
+}
+
+.stat-card {
+    padding: 1.75rem 1.5rem;
+    text-align: center;
+    position: relative;
+    border-right: 1px solid #e5e7eb;
+    background: white;
+}
+
+.stat-card:last-child {
+    border-right: none;
+}
+
+.stat-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.stat-percentage {
+    display: inline-block;
+    background-color: #f3f4f6;
+    padding: 0.25rem 0.65rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+.stat-total .stat-value {
+    color: var(--primary-color);
+}
+
+.stat-total .stat-percentage {
+    background-color: rgba(37, 99, 235, 0.1);
+    color: var(--primary-color);
+}
+
+.stat-compliant .stat-value {
+    color: var(--success-color);
+}
+
+.stat-compliant .stat-percentage {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+}
+
+.stat-non-compliant .stat-value {
+    color: var(--danger-color);
+}
+
+.stat-non-compliant .stat-percentage {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--danger-color);
+}
+
+.stat-review .stat-value {
+    color: var(--warning-color);
+}
+
+.stat-review .stat-percentage {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--warning-color);
+}
+
+/* Enhanced Confidence Score Progress Bar */
+.confidence-score-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.confidence-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.progress-bar-container {
+    width: 60%;
+    background-color: #e5e7eb;
+    border-radius: 6px;
+    height: 20px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.progress-bar-text {
+    position: relative;
+    z-index: 1;
+    color: white;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.high-confidence {
+    background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.medium-confidence {
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.low-confidence {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
 .explanation {
     background-color: var(--white);
     padding: 1rem;
@@ -500,6 +670,32 @@ form {
 
     .file-input-label {
         max-width: 100%;
+    }
+
+    /* Summary section responsive */
+    .summary-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .stat-card:last-child {
+        border-bottom: none;
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+    }
+
+    .summary-header {
+        padding: 1.25rem 1.5rem;
+    }
+
+    .summary-header h3 {
+        font-size: 1.25rem;
     }
 }
 

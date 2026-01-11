@@ -35,12 +35,12 @@ The **Argument Strength Score** is an intelligent component designed to help leg
 
 ### Solution
 A focused analysis component that:
--  Automatically analyzes legal arguments using advanced LLM technology
--  Provides objective scoring based on 8 comprehensive categories
--  Generates detailed feedback with actionable improvement suggestions
--  Supports text input for direct argument analysis
--  Delivers real-time analysis with confidence-scored results
--  Offers professional web interface for easy access
+- Automatically analyzes legal arguments using advanced LLM technology
+- Provides objective scoring based on 8 comprehensive categories
+- Generates detailed feedback with actionable improvement suggestions
+- Supports text input for direct argument analysis
+- Delivers real-time analysis with confidence-scored results
+- Offers professional web interface for easy access
 
 ---
 
@@ -409,28 +409,28 @@ Legal/
 
 Before you begin, ensure you have:
 
--  **Python 3.10+** (Python 3.12 recommended)
+- **Python 3.10+** (Python 3.12 recommended)
   ```powershell
   python --version  # Should show 3.10 or higher
   ```
 
--  **pip** (Python package manager)
+- **pip** (Python package manager)
   ```powershell
   pip --version  # Usually comes with Python
   ```
 
--  **Modern web browser**
+- **Modern web browser**
   - Chrome 90+
   - Firefox 88+
   - Edge 90+
   - Safari 14+
 
--  **OpenRouter API Key** (FREE tier available)
+- **OpenRouter API Key** (FREE tier available)
   - Sign up at: https://openrouter.ai/
   - Free models available (Llama 3.1 8B)
   - No credit card required for free tier
 
--  **Text Editor or IDE** (Recommended)
+- **Text Editor or IDE** (Recommended)
   - VS Code
   - PyCharm
   - Sublime Text
@@ -473,11 +473,11 @@ ls .venv
 # Activate virtual environment
 & .\.venv\Scripts\Activate.ps1
 
-#  Success: You should see (.venv) at the start of your prompt
+# Success: You should see (.venv) at the start of your prompt
 # Example: (.venv) PS D:\Y4S1\Research new\reserch component\Legal\backend>
 ```
 
-** Troubleshooting Activation:**
+Troubleshooting Activation:
 
 If you get an execution policy error:
 
@@ -519,7 +519,7 @@ pip list
 # fastapi, uvicorn, pydantic, requests, pypdf2, etc.
 
 # Quick verification
-python -c "import fastapi; import uvicorn; print(' All dependencies installed!')"
+python -c "import fastapi; import uvicorn; print('All dependencies installed!')"
 ```
 
 ##### 2.6 Configure Environment Variables
@@ -575,9 +575,9 @@ ENVIRONMENT=development
 # Test OpenRouter API connection
 python test_openrouter.py
 
-#  Success output:
+# Success output:
 # Testing OpenRouter API...
-#  Response received
+# Response received
 # Model used: meta-llama/llama-3.1-8b-instruct:free
 # Response preview: ...
 ```
@@ -590,7 +590,7 @@ python -m uvicorn app.main:app --reload
 
 # The server will start on: http://localhost:8000
 
-#  Success output:
+# Success output:
 # INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 # INFO:     Started reloader process
 # INFO:     Started server process
@@ -620,7 +620,7 @@ You should see the interactive API documentation!
 
 Open a **new PowerShell window** (keep backend running in the first one).
 
-##### Option 1: Direct Browser Opening (Simplest) 
+##### Option 1: Direct Browser Opening (Simplest)
 
 ```powershell
 # Navigate to frontend directory
@@ -632,14 +632,14 @@ start index.html
 # Or right-click index.html → "Open with" → Your browser
 ```
 
-** Advantages:**
+Advantages:
 - No additional setup needed
 - Instant access
 - Works immediately
 
-** Note:** This component focuses on direct text input for streamlined analysis.
+Note: This component focuses on direct text input for streamlined analysis.
 
-##### Option 2: Live Server (VS Code) - Recommended for Development 
+##### Option 2: Live Server (VS Code) - Recommended for Development
 
 ```powershell
 # If you have VS Code:
@@ -659,13 +659,13 @@ start index.html
 # Browser opens automatically at: http://127.0.0.1:5500
 ```
 
-** Advantages:**
+Advantages:
 - Auto-refresh on file changes
 - Full CORS support
 - Development-friendly
 - Professional workflow
 
-##### Option 3: Python HTTP Server 
+##### Option 3: Python HTTP Server
 
 ```powershell
 # Navigate to frontend directory
@@ -674,13 +674,13 @@ cd "d:\Y4S1\Research new\reserch component\Legal\frontend"
 # Start HTTP server on port 5500
 python -m http.server 5500
 
-#  Success output:
+# Success output:
 # Serving HTTP on :: port 5500 (http://[::]:5500/) ...
 
 # Open browser manually to: http://localhost:5500
 ```
 
-** Advantages:**
+Advantages:
 - No additional software needed
 - Full CORS support
 - Works on any Python installation
@@ -706,7 +706,7 @@ python -m http.server 5500
 2. Go to "Text Input" tab
 3. Paste any legal text (50+ characters)
 4. Click "Analyze Argument"
-5.  Results appear with scores and categories
+5. Results appear with scores and categories
 
 ---
 
@@ -739,11 +739,11 @@ python -m http.server 5500
    - Minimum: 50 characters
    - Maximum: 10,000 characters
    - Counter shows: "X / 10000 characters"
-   - Green indicator: Valid 
-   - Red indicator: Invalid 
+   - Green indicator: Valid
+   - Red indicator: Invalid
 
 5. **Submit for Analysis**
-   - Click "🔍 Analyze Argument" button
+   - Click "Analyze Argument" button
    - Loading indicator appears
    - Wait 3-10 seconds for results
 

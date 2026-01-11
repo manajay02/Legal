@@ -1,0 +1,89 @@
+# ============================================
+# Legal Argument Critic API - Dependencies
+# ============================================
+
+# Core dependencies for the FastAPI backend server
+# Install: pip install -r requirements.txt
+
+# ============================================
+# Web Framework
+# ============================================
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+
+# File Upload Support
+python-multipart>=0.0.6
+
+# PDF Processing
+pypdf>=3.17.0
+
+# HTTP Client
+requests>=2.31.0
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# ============================================
+# Optional: For Local Model Training
+# ============================================
+# (These are only needed if training on local machine)
+# Uncomment if needed:
+
+# torch>=2.0.0
+# transformers>=4.36.0
+# peft>=0.7.0
+# accelerate>=0.25.0
+# datasets>=2.16.0
+# bitsandbytes>=0.41.0
+
+# ============================================
+# Optional: For OCR (Document Processing)
+# ============================================
+# (Only needed if processing new PDFs)
+# Uncomment if needed:
+
+# pytesseract==0.3.10
+# pdf2image==1.16.3
+# Pillow==10.1.0
+# pdfplumber==0.10.3
+# pandas==2.1.4
+# numpy==1.26.2
+# tqdm==4.66.1
+
+# ============================================
+# Notes
+# ============================================
+# - For fine-tuning: Use Kaggle/Colab with GPU (see training_pipeline/)
+# - For local inference: Use OpenRouter/Gemini backends (no torch needed)
+# - For Ollama: Run scripts/merge_and_convert_ollama.py (torch needed once)
+
+huggingface-hub>=0.20.0
+
+# Unsloth for loading the adapter (install separately if needed)
+# unsloth @ git+https://github.com/unslothai/unsloth.git
+
+# Web Framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+
+# File Upload Support
+python-multipart>=0.0.6
+
+# PDF Processing for Upload Endpoint
+pypdf>=3.17.0
+
+# HTTP Client for API calls
+requests>=2.31.0
+
+# Training Utilities
+wandb==0.16.2
+tensorboard==2.15.1
+
+# Evaluation
+scikit-learn==1.3.2
+rouge-score==0.1.2
+
+# Note: Install this on Google Colab, not locally
+# Install command: pip install -r requirements-ml.txt

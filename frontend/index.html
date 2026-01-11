@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal Argument Strength scorer</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Legal Argument Strength scorer</h1>
+            <p class="subtitle">AI-Powered Legal Argument Analysis & scoring for Sri Lankan Civil Cases</p>
+            <div id="apiStatus" class="api-status"></div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs" style="display: none;">
+            <button class="tab active" data-tab="text">
+                Analyze Text
+            </button>
+        </nav>
+
+        <!-- Text Analysis Tab -->
+        <section id="textTab" class="tab-content active">
+            <div class="input-section">
+                <label for="argumentText" class="input-label">
+                    Enter Legal Argument (50-10,000 characters)
+                </label>
+                <textarea 
+                    id="argumentText" 
+                    class="text-input"
+                    rows="12" 
+                    placeholder="Paste your legal argument here...
+
+Example: The appellant challenges the District Court's decision on grounds of procedural irregularity. The lower court failed to consider Section 91 of the Civil Procedure Code which mandates proper notice to all parties. On July 15, 2023, the respondent filed an ex parte motion without providing adequate notice to the appellant as required under Section 91(1). This constitutes a fundamental breach of natural justice..."></textarea>
+                <div class="char-count" id="charCount">0 / 10,000 characters</div>
+            </div>
+            
+            <button class="btn-primary" id="analyzeBtn">
+                Analyze Argument
+            </button>
+            
+            <div id="textResults"></div>
+        </section>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

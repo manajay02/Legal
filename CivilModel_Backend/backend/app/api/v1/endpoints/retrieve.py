@@ -32,7 +32,8 @@ class MetadataResponse(BaseModel):
 class SectionResponse(BaseModel):
     """A single section."""
     title: str
-    content: str
+    content: Optional[str] = None
+    text: Optional[str] = None
 
 
 class SectionsListResponse(BaseModel):
@@ -237,14 +238,166 @@ async def list_documents_summary(
 async def health_check() -> Dict[str, Any]:
     """
     Health check endpoint.
-    
+
     Perfect for: Monitoring, load balancers, frontend connection test.
     """
     db = get_db()
     doc_count = len(db.list_all())
-    
+
     return {
         "status": "healthy",
         "service": "CivilModel API",
         "documents_count": doc_count
+    }
+
+
+# ============================================================
+# NEW STRUCTURED FIELDS ENDPOINTS
+# ============================================================
+
+@router.get("/documents/{doc_id}/outcome")
+async def get_document_outcome(doc_id: str) -> Dict[str, Any]:
+    """
+    Get the outcome classification of a processed document.
+
+    Returns: classification (Allowed/Dismissed/Partially Allowed),
+    confidence score (0-100), and a short explanation.
+    """
+    db = get_db()
+    doc_data = db.get(doc_id)
+    if not doc_data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Document not found: {doc_id}")
+    return {
+        "document_id": doc_id,
+        "status": doc_data.get("status"),
+        "outcome": doc_data.get("outcome")
+    }
+
+
+@router.get("/documents/{doc_id}/timeline")
+async def get_document_timeline(doc_id: str) -> Dict[str, Any]:
+    """
+    Get the chronological timeline of key legal events for a document.
+
+    Each event includes: event_name, date, description, event_type.
+    """
+    db = get_db()
+    doc_data = db.get(doc_id)
+    if not doc_data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Document not found: {doc_id}")
+    timeline = doc_data.get("timeline") or []
+    return {
+        "document_id": doc_id,
+        "timeline": timeline,
+        "count": len(timeline)
+    }
+
+
+@router.get("/documents/{doc_id}/citations")
+async def get_document_citations(doc_id: str) -> Dict[str, Any]:
+    """
+    Get all cited cases and legal authorities extracted from a document.
+
+    Each citation includes: case_name, year, source, usage
+    (Precedent / Principle / Reference).
+    """
+    db = get_db()
+    doc_data = db.get(doc_id)
+    if not doc_data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Document not found: {doc_id}")
+    citations = doc_data.get("citations") or []
+    return {
+        "document_id": doc_id,
+        "citations": citations,
+        "count": len(citations)
+    }
+
+
+@router.get("/documents/{doc_id}/insights")
+async def get_document_insights(doc_id: str) -> Dict[str, Any]:
+    """
+    Get high-level analytical legal insights for a document.
+
+    Includes: key_legal_issues, reliefs_requested, reliefs_granted,
+    state_involvement, doctrines, risk_level.
+    """
+    db = get_db()
+    doc_data = db.get(doc_id)
+    if not doc_data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Document not found: {doc_id}")
+    return {
+        "document_id": doc_id,
+        "insights": doc_data.get("insights")
+    }
+
+
+@router.get("/documents/{doc_id}/confidence")
+async def get_document_confidence(doc_id: str) -> Dict[str, Any]:
+    """
+    Get AI confidence scores (0-100) for each extraction task.
+
+    Scores cover: outcome, sections, citations, insights.
+    """
+    db = get_db()
+    doc_data = db.get(doc_id)
+    if not doc_data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Document not found: {doc_id}")
+    return {
+        "document_id": doc_id,
+        "confidence_scores": doc_data.get("confidence_scores")
+    }
+
+
+# ============================================================
+# BATCH ENDPOINTS
+# ============================================================
+
+@router.get("/batches/{batch_id}")
+async def get_batch(batch_id: str) -> Dict[str, Any]:
+    """
+    Retrieve all documents uploaded in a specific batch.
+
+    Use the batch_id returned by POST /upload/batch.
+    """
+    db = get_db()
+    batch_docs = db.list_by_batch(batch_id)
+
+    if not batch_docs:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Batch not found or empty: {batch_id}"
+        )
+
+    documents = []
+    for doc_data in batch_docs.values():
+        try:
+            from app.schemas import DocumentResponse
+            documents.append(DocumentResponse(**doc_data).dict())
+        except Exception:
+            continue
+
+    return {
+        "batch_id": batch_id,
+        "documents": documents,
+        "total": len(documents)
+    }
+
+
+@router.get("/batches")
+async def list_batches() -> Dict[str, Any]:
+    """
+    List all distinct batch IDs currently stored.
+    """
+    db = get_db()
+    all_docs = db.list_all()
+
+    batches: Dict[str, int] = {}
+    for doc_data in all_docs.values():
+        batch_id = doc_data.get("batch_id")
+        if batch_id:
+            batches[batch_id] = batches.get(batch_id, 0) + 1
+
+    return {
+        "batches": [{"batch_id": bid, "document_count": cnt} for bid, cnt in batches.items()],
+        "total": len(batches)
     }

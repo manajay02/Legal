@@ -11,7 +11,10 @@ from loguru import logger
 
 from app.core.config import get_settings
 from app.db.session import InMemoryDB, get_db
-from app.schemas import DocumentStatus, CaseMetadata, Section, DocumentExtraction
+from app.schemas import (
+    DocumentStatus, CaseMetadata, Section, DocumentExtraction,
+    TimelineEvent, Citation, OutcomeClassification, LegalInsight, ConfidenceScores
+)
 from app.services.llm_service import LLMService
 from app.services.ocr_service import OCRService
 from app.services.parser_service import ParserService
@@ -127,14 +130,14 @@ def process_document_background(doc_id: str, db: InMemoryDB) -> None:
             logger.info(f"[{doc_id}] ✓ Full validation successful")
             
             if extraction.metadata:
-                metadata_dict = extraction.metadata.dict()
+                metadata_dict = extraction.metadata.model_dump(mode='json')
                 logger.info(f"[{doc_id}]   - Case: {extraction.metadata.case_number}")
                 logger.info(f"[{doc_id}]   - Court: {extraction.metadata.court}")
                 logger.info(f"[{doc_id}]   - Parties: {len(extraction.metadata.parties)}")
                 logger.info(f"[{doc_id}]   - Judges: {len(extraction.metadata.judges)}")
             
             if extraction.sections:
-                sections_list = [s.dict() for s in extraction.sections]
+                sections_list = [s.model_dump(mode='json') for s in extraction.sections]
                 logger.info(f"[{doc_id}]   - Sections: {len(extraction.sections)}")
                 for i, section in enumerate(extraction.sections[:3], 1):
                     logger.info(f"[{doc_id}]     {i}. {section.title}")
@@ -147,7 +150,7 @@ def process_document_background(doc_id: str, db: InMemoryDB) -> None:
             if "metadata" in parsed_json:
                 try:
                     metadata = CaseMetadata(**parsed_json["metadata"])
-                    metadata_dict = metadata.dict()
+                    metadata_dict = metadata.model_dump(mode='json')
                     logger.info(f"[{doc_id}] ✓ Metadata extracted separately")
                 except Exception as me:
                     logger.warning(f"[{doc_id}] Metadata validation failed: {me}")
@@ -160,13 +163,86 @@ def process_document_background(doc_id: str, db: InMemoryDB) -> None:
                     sections_list = []
                     for s in parsed_json["sections"]:
                         section = Section(**s)
-                        sections_list.append(section.dict())
+                        sections_list.append(section.model_dump(mode='json'))
                     logger.info(f"[{doc_id}] ✓ Sections extracted: {len(sections_list)}")
                 except Exception as se:
                     logger.warning(f"[{doc_id}] Sections validation failed: {se}")
                     # Use raw sections as fallback
                     sections_list = parsed_json.get("sections", [])
         
+        # ========================================
+        # STEP 4b: PARSE EXTENDED FIELDS
+        # ========================================
+        logger.info(f"[{doc_id}] {'='*60}")
+        logger.info(f"[{doc_id}] STEP 4b: PARSE EXTENDED FIELDS")
+        logger.info(f"[{doc_id}] {'='*60}")
+
+        # ---- Timeline ----
+        timeline_list = None
+        raw_timeline = parsed_json.get("timeline", [])
+        if raw_timeline:
+            try:
+                timeline_list = []
+                for item in raw_timeline:
+                    if isinstance(item, dict):
+                        te = TimelineEvent(**item)
+                        timeline_list.append(te.model_dump(mode='json'))
+                logger.info(f"[{doc_id}] ✓ Timeline: {len(timeline_list)} events")
+            except Exception as te_err:
+                logger.warning(f"[{doc_id}] ⚠ Timeline parsing: {te_err}")
+                timeline_list = raw_timeline
+
+        # ---- Citations ----
+        citations_list = None
+        raw_citations = parsed_json.get("citations", [])
+        if raw_citations:
+            try:
+                citations_list = []
+                for item in raw_citations:
+                    if isinstance(item, dict):
+                        c = Citation(**item)
+                        citations_list.append(c.model_dump(mode='json'))
+                logger.info(f"[{doc_id}] ✓ Citations: {len(citations_list)}")
+            except Exception as ci_err:
+                logger.warning(f"[{doc_id}] ⚠ Citations parsing: {ci_err}")
+                citations_list = raw_citations
+
+        # ---- Outcome ----
+        outcome_dict = None
+        raw_outcome = parsed_json.get("outcome")
+        if raw_outcome:
+            try:
+                oc = OutcomeClassification(**raw_outcome)
+                outcome_dict = oc.model_dump(mode='json')
+                logger.info(f"[{doc_id}] ✓ Outcome: {outcome_dict.get('classification')} ({outcome_dict.get('confidence')}%)")
+            except Exception as oc_err:
+                logger.warning(f"[{doc_id}] ⚠ Outcome parsing: {oc_err}")
+                outcome_dict = raw_outcome
+
+        # ---- Insights ----
+        insights_dict = None
+        raw_insights = parsed_json.get("insights")
+        if raw_insights:
+            try:
+                li = LegalInsight(**raw_insights)
+                insights_dict = li.model_dump(mode='json')
+                logger.info(f"[{doc_id}] ✓ Insights (risk: {insights_dict.get('risk_level')})")
+            except Exception as li_err:
+                logger.warning(f"[{doc_id}] ⚠ Insights parsing: {li_err}")
+                insights_dict = raw_insights
+
+        # ---- Confidence Scores ----
+        confidence_dict = None
+        raw_confidence = parsed_json.get("confidence_scores")
+        if raw_confidence:
+            try:
+                cs = ConfidenceScores(**raw_confidence)
+                confidence_dict = cs.model_dump(mode='json')
+                logger.info(f"[{doc_id}] ✓ Confidence scores recorded")
+            except Exception as cs_err:
+                logger.warning(f"[{doc_id}] ⚠ Confidence parsing: {cs_err}")
+                confidence_dict = raw_confidence
+
         # ========================================
         # STEP 5: UPDATE DATABASE
         # ========================================
@@ -187,7 +263,27 @@ def process_document_background(doc_id: str, db: InMemoryDB) -> None:
         if sections_list:
             update_data["sections"] = sections_list
             logger.info(f"[{doc_id}] ✓ Sections saved ({len(sections_list)} sections)")
-        
+
+        if timeline_list:
+            update_data["timeline"] = timeline_list
+            logger.info(f"[{doc_id}] ✓ Timeline saved ({len(timeline_list)} events)")
+
+        if citations_list:
+            update_data["citations"] = citations_list
+            logger.info(f"[{doc_id}] ✓ Citations saved ({len(citations_list)})")
+
+        if outcome_dict:
+            update_data["outcome"] = outcome_dict
+            logger.info(f"[{doc_id}] ✓ Outcome saved")
+
+        if insights_dict:
+            update_data["insights"] = insights_dict
+            logger.info(f"[{doc_id}] ✓ Insights saved")
+
+        if confidence_dict:
+            update_data["confidence_scores"] = confidence_dict
+            logger.info(f"[{doc_id}] ✓ Confidence scores saved")
+
         db.update(doc_id, update_data)
         
         # Final success message
@@ -199,8 +295,13 @@ def process_document_background(doc_id: str, db: InMemoryDB) -> None:
         has_metadata = metadata_dict is not None
         has_sections = sections_list is not None and len(sections_list) > 0
         logger.info(f"[{doc_id}] Summary:")
-        logger.info(f"[{doc_id}]   - Metadata: {'✓' if has_metadata else '✗'}")
-        logger.info(f"[{doc_id}]   - Sections: {'✓' if has_sections else '✗'} ({len(sections_list) if sections_list else 0})")
+        logger.info(f"[{doc_id}]   - Metadata:   {'✓' if has_metadata else '✗'}")
+        logger.info(f"[{doc_id}]   - Sections:   {'✓' if has_sections else '✗'} ({len(sections_list) if sections_list else 0})")
+        logger.info(f"[{doc_id}]   - Timeline:   {'✓' if timeline_list else '✗'} ({len(timeline_list) if timeline_list else 0} events)")
+        logger.info(f"[{doc_id}]   - Citations:  {'✓' if citations_list else '✗'} ({len(citations_list) if citations_list else 0})")
+        logger.info(f"[{doc_id}]   - Outcome:    {'✓' if outcome_dict else '✗'}")
+        logger.info(f"[{doc_id}]   - Insights:   {'✓' if insights_dict else '✗'}")
+        logger.info(f"[{doc_id}]   - Confidence: {'✓' if confidence_dict else '✗'}")
         logger.info(f"[{doc_id}]   - Pages: {ocr_metadata['total_pages']}")
         logger.info(f"[{doc_id}]   - Words: {ocr_metadata['word_count']:,}")
     
@@ -223,23 +324,12 @@ def process_document_background(doc_id: str, db: InMemoryDB) -> None:
 async def process_document(
     doc_id: str,
     background_tasks: BackgroundTasks,
-    db: InMemoryDB = Depends(get_db)
+    db: InMemoryDB = Depends(get_db),
+    force: bool = False
 ) -> Dict[str, str]:
     """
     Start processing a document with "One Big Ask" strategy.
-    
-    This endpoint uses a simplified, more reliable pipeline:
-    1. Hybrid OCR extraction
-    2. Single LLM call with master prompt
-    3. Flexible JSON parsing and validation
-    
-    Args:
-        doc_id: Document identifier
-        background_tasks: FastAPI background tasks
-        db: Database instance
-        
-    Returns:
-        Status message
+    Pass ?force=true to reprocess an already-completed document.
     """
     # Get document
     doc_data = db.get(doc_id)
@@ -258,13 +348,18 @@ async def process_document(
             detail="Document is already being processed"
         )
     
-    if current_status == DocumentStatus.COMPLETED:
+    if current_status == DocumentStatus.COMPLETED and not force:
         return {
             "message": "Document already processed",
             "document_id": doc_id,
             "status": "completed",
-            "info": "Use GET /documents/{doc_id} to retrieve results"
+            "info": "Pass ?force=true to reprocess"
         }
+    
+    # Reset status so it gets reprocessed from scratch (keeps file_path and raw metadata)
+    if current_status == DocumentStatus.COMPLETED and force:
+        db.update(doc_id, {"status": DocumentStatus.UPLOADED})
+        logger.info(f"🔄 Force reprocess requested for: {doc_id}")
     
     # Add background task
     background_tasks.add_task(process_document_background, doc_id, db)

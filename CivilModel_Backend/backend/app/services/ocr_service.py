@@ -29,19 +29,21 @@ class OCRService:
     
     def __init__(self):
         """Initialize OCR service with Tesseract configuration."""
+        self.tesseract_available = False
+        
         if settings.TESSERACT_CMD:
             pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_CMD
             logger.info(f"Tesseract path set to: {settings.TESSERACT_CMD}")
         
         try:
             version = pytesseract.get_tesseract_version()
+            self.tesseract_available = True
             logger.info(f"Hybrid OCR Service initialized with Tesseract v{version}")
             logger.info("Strategy: Fast (pdfplumber) + OCR Fallback (Tesseract)")
         except Exception as e:
-            logger.error(f"Tesseract not found: {e}")
-            raise RuntimeError(
-                "Tesseract OCR not found. Please install Tesseract and ensure it's in your PATH."
-            ) from e
+            logger.warning(f"Tesseract not found: {e}")
+            logger.warning("OCR Service will use pdfplumber only (limited functionality for scanned PDFs)")
+            self.tesseract_available = False
     
     def needs_ocr(self, text: str) -> bool:
         """
@@ -111,6 +113,10 @@ class OCRService:
         Returns:
             Extracted text from the page
         """
+        if not self.tesseract_available:
+            logger.warning(f"  Page {page_num}: Tesseract not available, skipping OCR")
+            return ""
+            
         try:
             # Convert single page to image
             images = convert_from_path(

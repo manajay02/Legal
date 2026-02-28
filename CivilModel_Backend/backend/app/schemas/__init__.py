@@ -10,6 +10,18 @@ from app.schemas.models import (
     DocumentResponse,
     DocumentListResponse,
     UploadResponse,
+    # New schemas
+    TimelineEvent,
+    Citation,
+    CitationUsage,
+    OutcomeType,
+    OutcomeClassification,
+    RiskLevel,
+    LegalInsight,
+    ConfidenceScores,
+    BatchUploadItem,
+    BatchUploadResponse,
+    BatchDocumentList,
 )
 
 __all__ = [
@@ -22,4 +34,15 @@ __all__ = [
     "DocumentResponse",
     "DocumentListResponse",
     "UploadResponse",
+    "TimelineEvent",
+    "Citation",
+    "CitationUsage",
+    "OutcomeType",
+    "OutcomeClassification",
+    "RiskLevel",
+    "LegalInsight",
+    "ConfidenceScores",
+    "BatchUploadItem",
+    "BatchUploadResponse",
+    "BatchDocumentList",
 ]

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CivilModel - Legal Document Analyzer</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=4">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -24,6 +24,10 @@
                 <a href="#" class="nav-item" data-page="upload">
                     <i class="fas fa-upload"></i>
                     <span>Upload Document</span>
+                </a>
+                <a href="#" class="nav-item" data-page="batches">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Batches</span>
                 </a>
                 <a href="#" class="nav-item" data-page="documents">
                     <i class="fas fa-folder-open"></i>
@@ -53,40 +57,24 @@
                 
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-file-pdf"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="total-docs">0</h3>
-                            <p>Total Documents</p>
-                        </div>
+                        <div class="stat-icon"><i class="fas fa-file-pdf"></i></div>
+                        <div class="stat-info"><h3 id="total-docs">0</h3><p>Total Documents</p></div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon processing">
-                            <i class="fas fa-spinner"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="processing-docs">0</h3>
-                            <p>Processing</p>
-                        </div>
+                        <div class="stat-icon batches"><i class="fas fa-layer-group"></i></div>
+                        <div class="stat-info"><h3 id="total-batches">0</h3><p>Batches</p></div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon completed">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="completed-docs">0</h3>
-                            <p>Completed</p>
-                        </div>
+                        <div class="stat-icon completed"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-info"><h3 id="completed-docs">0</h3><p>Completed</p></div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon error">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="failed-docs">0</h3>
-                            <p>Failed</p>
-                        </div>
+                        <div class="stat-icon processing"><i class="fas fa-spinner fa-spin"></i></div>
+                        <div class="stat-info"><h3 id="processing-docs">0</h3><p>Processing</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon error"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="stat-info"><h3 id="failed-docs">0</h3><p>Failed</p></div>
                     </div>
                 </div>
 
@@ -102,43 +90,99 @@
             <section class="page" id="upload-page">
                 <header class="page-header">
                     <h1>Upload Document</h1>
-                    <p>Upload a Sri Lankan Supreme Court case PDF for extraction</p>
+                    <p>Upload one or multiple Sri Lankan Supreme Court case PDFs</p>
                 </header>
 
+                <div class="upload-mode-toggle">
+                    <button class="mode-btn active" id="mode-single" onclick="setUploadMode('single')">
+                        <i class="fas fa-file-pdf"></i> Single Document
+                    </button>
+                    <button class="mode-btn" id="mode-batch" onclick="setUploadMode('batch')">
+                        <i class="fas fa-layer-group"></i> Batch Upload
+                    </button>
+                </div>
+
                 <div class="upload-container">
-                    <div class="upload-zone" id="upload-zone">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <h3>Drag & Drop your PDF here</h3>
-                        <p>or click to browse files</p>
-                        <input type="file" id="file-input" accept=".pdf" hidden>
-                        <span class="file-info">Maximum file size: 50MB</span>
+                    <!-- Single upload -->
+                    <div id="single-upload-section">
+                        <div class="upload-zone" id="upload-zone">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <h3>Drag &amp; Drop your PDF here</h3>
+                            <p>or click to browse files</p>
+                            <input type="file" id="file-input" accept=".pdf" hidden>
+                            <span class="file-info">Maximum file size: 50MB</span>
+                        </div>
+                        <div class="upload-progress hidden" id="upload-progress">
+                            <div class="progress-info">
+                                <span class="filename" id="upload-filename"></span>
+                                <span class="status" id="upload-status">Uploading...</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-fill"></div>
+                            </div>
+                        </div>
+                        <div class="upload-result hidden" id="upload-result">
+                            <div class="result-icon"><i class="fas fa-check-circle"></i></div>
+                            <h3>Upload Successful!</h3>
+                            <p>Document ID: <code id="result-doc-id"></code></p>
+                            <div class="result-actions">
+                                <button class="btn btn-primary" id="process-btn">
+                                    <i class="fas fa-cog"></i> Process Document
+                                </button>
+                                <button class="btn btn-secondary" id="upload-another-btn">
+                                    <i class="fas fa-plus"></i> Upload Another
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="upload-progress hidden" id="upload-progress">
-                        <div class="progress-info">
-                            <span class="filename" id="upload-filename"></span>
-                            <span class="status" id="upload-status">Uploading...</span>
+                    <!-- Batch upload -->
+                    <div id="batch-upload-section" class="hidden">
+                        <div class="upload-zone" id="batch-upload-zone">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <h3>Drag &amp; Drop multiple PDFs here</h3>
+                            <p>or click to select files</p>
+                            <input type="file" id="batch-file-input" accept=".pdf" multiple hidden>
+                            <span class="file-info">Maximum 50 MB per file &nbsp;|&nbsp; Any number of files</span>
                         </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="progress-fill"></div>
+                        <div id="batch-file-list" class="batch-file-list hidden"></div>
+                        <div class="batch-upload-actions hidden" id="batch-upload-actions">
+                            <button class="btn btn-primary" id="start-batch-btn">
+                                <i class="fas fa-upload"></i> Upload All Files
+                            </button>
+                            <button class="btn btn-secondary" id="clear-batch-btn">
+                                <i class="fas fa-trash"></i> Clear
+                            </button>
+                        </div>
+                        <div class="batch-result hidden" id="batch-result">
+                            <div class="result-icon"><i class="fas fa-layer-group"></i></div>
+                            <h3>Batch Upload Complete!</h3>
+                            <p>Batch ID: <code id="batch-result-id"></code></p>
+                            <div id="batch-result-items"></div>
+                            <div class="result-actions" style="margin-top:1.5rem;">
+                                <button class="btn btn-primary" onclick="navigateTo('batches')">
+                                    <i class="fas fa-layer-group"></i> View Batch
+                                </button>
+                                <button class="btn btn-secondary" onclick="resetBatchUpload()">
+                                    <i class="fas fa-plus"></i> Upload Another Batch
+                                </button>
+                            </div>
                         </div>
                     </div>
+                </div>
+            </section>
 
-                    <div class="upload-result hidden" id="upload-result">
-                        <div class="result-icon">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <h3>Upload Successful!</h3>
-                        <p>Document ID: <code id="result-doc-id"></code></p>
-                        <div class="result-actions">
-                            <button class="btn btn-primary" id="process-btn">
-                                <i class="fas fa-cog"></i> Process Document
-                            </button>
-                            <button class="btn btn-secondary" id="upload-another-btn">
-                                <i class="fas fa-plus"></i> Upload Another
-                            </button>
-                        </div>
-                    </div>
+            <!-- Batches Page -->
+            <section class="page" id="batches-page">
+                <header class="page-header">
+                    <h1>Batches</h1>
+                    <p>Groups of documents uploaded together</p>
+                    <button class="btn btn-primary refresh-btn" id="refresh-batches-btn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </header>
+                <div id="batches-container">
+                    <p class="empty-state">No batches found. Use Batch Upload to group documents.</p>
                 </div>
             </section>
 
@@ -178,52 +222,68 @@
                     <div class="output-content hidden" id="output-content">
                         <!-- Tabs -->
                         <div class="output-tabs">
-                            <button class="tab-btn active" data-tab="metadata">
-                                <i class="fas fa-info-circle"></i> Metadata
-                            </button>
-                            <button class="tab-btn" data-tab="sections">
-                                <i class="fas fa-list"></i> Sections
-                            </button>
-                            <button class="tab-btn" data-tab="rawtext">
-                                <i class="fas fa-file-alt"></i> Raw Text
-                            </button>
-                            <button class="tab-btn" data-tab="json">
-                                <i class="fas fa-code"></i> JSON Export
-                            </button>
+                            <button class="tab-btn active" data-tab="metadata"><i class="fas fa-info-circle"></i> Metadata</button>
+                            <button class="tab-btn" data-tab="outcome"><i class="fas fa-gavel"></i> Outcome</button>
+                            <button class="tab-btn" data-tab="sections"><i class="fas fa-list"></i> Sections</button>
+                            <button class="tab-btn" data-tab="timeline"><i class="fas fa-stream"></i> Timeline</button>
+                            <button class="tab-btn" data-tab="citations"><i class="fas fa-quote-left"></i> Citations</button>
+                            <button class="tab-btn" data-tab="insights"><i class="fas fa-lightbulb"></i> Insights</button>
+                            <button class="tab-btn" data-tab="confidence"><i class="fas fa-chart-bar"></i> Confidence</button>
+                            <button class="tab-btn" data-tab="rawtext"><i class="fas fa-file-alt"></i> Raw Text</button>
+                            <button class="tab-btn" data-tab="json"><i class="fas fa-code"></i> JSON Export</button>
                         </div>
 
                         <!-- Metadata Tab -->
                         <div class="tab-content active" id="metadata-tab">
                             <div class="metadata-card">
                                 <h3><i class="fas fa-gavel"></i> Case Information</h3>
-                                <div class="metadata-grid" id="case-metadata">
-                                    <!-- Will be populated by JS -->
-                                </div>
+                                <div class="metadata-grid" id="case-metadata"></div>
                             </div>
                             <div class="metadata-card">
-                                <h3><i class="fas fa-users"></i> Parties & Judges</h3>
-                                <div class="metadata-grid" id="parties-metadata">
-                                    <!-- Will be populated by JS -->
-                                </div>
+                                <h3><i class="fas fa-users"></i> Parties &amp; Judges</h3>
+                                <div class="metadata-grid" id="parties-metadata"></div>
                             </div>
+                            <div class="metadata-card">
+                                <h3><i class="fas fa-book"></i> Legal Provisions</h3>
+                                <div id="legal-provisions-metadata"></div>
+                            </div>
+                        </div>
+
+                        <!-- Outcome Tab -->
+                        <div class="tab-content" id="outcome-tab">
+                            <div id="outcome-content"></div>
                         </div>
 
                         <!-- Sections Tab -->
                         <div class="tab-content" id="sections-tab">
-                            <div class="sections-list" id="sections-list">
-                                <!-- Will be populated by JS -->
-                            </div>
+                            <div class="sections-list" id="sections-list"></div>
+                        </div>
+
+                        <!-- Timeline Tab -->
+                        <div class="tab-content" id="timeline-tab">
+                            <div id="timeline-content"></div>
+                        </div>
+
+                        <!-- Citations Tab -->
+                        <div class="tab-content" id="citations-tab">
+                            <div id="citations-content"></div>
+                        </div>
+
+                        <!-- Insights Tab -->
+                        <div class="tab-content" id="insights-tab">
+                            <div id="insights-content"></div>
+                        </div>
+
+                        <!-- Confidence Tab -->
+                        <div class="tab-content" id="confidence-tab">
+                            <div id="confidence-content"></div>
                         </div>
 
                         <!-- Raw Text Tab -->
                         <div class="tab-content" id="rawtext-tab">
                             <div class="raw-text-actions">
-                                <button class="btn btn-secondary" id="copy-raw-btn">
-                                    <i class="fas fa-copy"></i> Copy Text
-                                </button>
-                                <button class="btn btn-secondary" id="download-raw-btn">
-                                    <i class="fas fa-download"></i> Download TXT
-                                </button>
+                                <button class="btn btn-secondary" id="copy-raw-btn"><i class="fas fa-copy"></i> Copy Text</button>
+                                <button class="btn btn-secondary" id="download-raw-btn"><i class="fas fa-download"></i> Download TXT</button>
                             </div>
                             <pre class="raw-text-preview" id="raw-text-content"></pre>
                         </div>
@@ -231,12 +291,8 @@
                         <!-- JSON Export Tab -->
                         <div class="tab-content" id="json-tab">
                             <div class="json-actions">
-                                <button class="btn btn-secondary" id="copy-json-btn">
-                                    <i class="fas fa-copy"></i> Copy JSON
-                                </button>
-                                <button class="btn btn-primary" id="download-json-btn">
-                                    <i class="fas fa-download"></i> Download JSON
-                                </button>
+                                <button class="btn btn-secondary" id="copy-json-btn"><i class="fas fa-copy"></i> Copy JSON</button>
+                                <button class="btn btn-primary" id="download-json-btn"><i class="fas fa-download"></i> Download JSON</button>
                             </div>
                             <pre class="json-preview" id="json-content"></pre>
                         </div>
@@ -269,6 +325,6 @@
         </main>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=4"></script>
 </body>
 </html>

@@ -14,8 +14,13 @@ if sys.platform == 'win32':
     def _safe_print(*args, **kwargs):
         try:
             _original_print(*args, **kwargs)
-        except OSError:
-            pass  # Ignore broken pipe errors on Windows
+        except (OSError, UnicodeEncodeError):
+            try:
+                # Try encoding as ASCII with replacement for unsupported chars
+                safe_args = [str(a).encode('ascii', errors='replace').decode('ascii') if isinstance(a, str) else a for a in args]
+                _original_print(*safe_args, **kwargs)
+            except Exception:
+                pass  # Silently ignore if all else fails
     builtins.print = _safe_print
 
 import pytesseract
@@ -128,7 +133,7 @@ async def health_check():
 async def startup_event():
     """Run on application startup."""
     print(f"\n{'='*60}")
-    print(f"🚀 {settings.PROJECT_NAME} Starting...")
+    print(f"{settings.PROJECT_NAME} Starting...")
     print(f"{'='*60}")
     print(f"Environment: {'DEBUG' if settings.DEBUG else 'PRODUCTION'}")
     print(f"Tesseract Language: {settings.TESSERACT_LANG}")
@@ -152,7 +157,7 @@ async def startup_event():
 async def shutdown_event():
     """Run on application shutdown."""
     print(f"\n{'='*60}")
-    print(f"🛑 {settings.PROJECT_NAME} Shutting down...")
+    print(f"{settings.PROJECT_NAME} Shutting down...")
     print(f"{'='*60}\n")
 
 

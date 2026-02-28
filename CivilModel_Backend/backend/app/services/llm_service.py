@@ -20,29 +20,69 @@ settings = get_settings()
 class LLMService:
     """Service for LLM inference with multiple provider support."""
     
-    # Master System Prompt (same as used in training)
-    MASTER_SYSTEM_PROMPT = """You are an expert Sri Lankan paralegal. Extract metadata and content from the OCR text of a Supreme Court judgment and return ONLY a valid JSON object.
+    # Master System Prompt — full structured legal extraction
+    MASTER_SYSTEM_PROMPT = """You are an expert Sri Lankan paralegal AI. Extract structured legal data from the OCR text of a Supreme Court judgment and return ONLY a valid JSON object.
 
-RULES:
-1. Return ONLY the JSON object. No explanatory text before or after.
-2. Do NOT invent data. Use null for missing fields.
-3. parties and judges must be flat lists of strings.
-4. Divide content into logical sections.
+STRICT RULES:
+1. Return ONLY the JSON object. No text, explanation, or markdown before or after it.
+2. Do NOT invent data. Use null for any field that cannot be found in the document.
+3. All list fields must be JSON arrays, even if only one item.
+4. Confidence scores are integers 0-100 reflecting your certainty.
+5. Dates may be YYYY-MM-DD, YYYY-MM, or YYYY — use whatever precision is available.
+6. Section "text" fields must be concise summaries (3-6 sentences each), NOT verbatim copies of the text.
 
-Required JSON format:
+REQUIRED JSON FORMAT — fill EVERY field; null only if truly absent:
 {
   "metadata": {
     "case_number": "SC Appeal No. X/YYYY",
     "court": "Supreme Court of Sri Lanka",
     "date": "YYYY-MM-DD",
-    "parties": ["Party 1", "Party 2"],
-    "judges": ["Judge 1", "Judge 2"],
-    "case_type": "Appeal"
+    "year": 2012,
+    "case_type": "Property Dispute | FR Application | Civil Appeal | Criminal Appeal | ...",
+    "petitioners": ["Petitioner 1", "Petitioner 2"],
+    "respondents": ["Respondent 1", "Respondent 2"],
+    "parties": ["all petitioners and respondents combined"],
+    "judges": ["Judge Name 1", "Judge Name 2"],
+    "legal_provisions": ["Article 17 of the Constitution", "Section 66 of the Civil Procedure Code"],
+    "page_count": null
+  },
+  "outcome": {
+    "classification": "Allowed | Dismissed | Partially Allowed",
+    "confidence": 88,
+    "explanation": "The court allowed the appeal because ..."
+  },
+  "timeline": [
+    {"event_name": "Case Filed", "date": "2012-03-15", "description": "Writ petition filed in the Court of Appeal", "event_type": "Filing"},
+    {"event_name": "Supreme Court Hearing", "date": "2013", "description": "Leave to appeal granted", "event_type": "Hearing"},
+    {"event_name": "Final Judgment", "date": "2014-07-22", "description": "Appeal allowed", "event_type": "Judgment"}
+  ],
+  "citations": [
+    {"case_name": "Wijesinghe v. Attorney General", "year": "1998", "source": "1 SLR 100", "usage": "Precedent"},
+    {"case_name": "Perera v. Perera", "year": "2001", "source": "NLR 245", "usage": "Reference"}
+  ],
+  "insights": {
+    "key_legal_issues": ["Violation of fundamental rights", "Locus standi"],
+    "reliefs_requested": "Writ of mandamus compelling respondent to ...",
+    "reliefs_granted": "Appeal allowed, matter remanded to High Court",
+    "state_involvement": true,
+    "state_involvement_level": "High — multiple government departments named as respondents",
+    "doctrines": ["Legitimate expectation", "Natural justice"],
+    "risk_level": "High"
+  },
+  "confidence_scores": {
+    "outcome": 90,
+    "sections": 85,
+    "citations": 78,
+    "insights": 72
   },
   "sections": [
-    {"title": "Header and Case Details", "content": "..."},
-    {"title": "Judgment and Legal Analysis", "content": "..."},
-    {"title": "Conclusion and Order", "content": "..."}
+    {"title": "Header and Case Details", "text": "3-6 sentence summary of the header", "order_index": 1},
+    {"title": "Case Overview / Background", "text": "3-6 sentence summary of the background", "order_index": 2},
+    {"title": "Facts", "text": "3-6 sentence summary of key facts", "order_index": 3},
+    {"title": "Legal Issues", "text": "3-6 sentence summary of legal issues", "order_index": 4},
+    {"title": "Arguments", "text": "3-6 sentence summary of arguments", "order_index": 5},
+    {"title": "Court Reasoning", "text": "3-6 sentence summary of court reasoning", "order_index": 6},
+    {"title": "Decision and Orders", "text": "3-6 sentence summary of decision", "order_index": 7}
   ]
 }"""
 
@@ -135,7 +175,7 @@ Required JSON format:
         result = response.json()
         return result.get("message", {}).get("content", "").strip()
 
-    def generate_response(self, prompt: str, max_retries: Optional[int] = None) -> str:
+    def generate_response(self, prompt: str, max_retries: Optional[int] = None, max_tokens: int = 4096) -> str:
         """Generate a response from the LLM with retry logic."""
         max_retries = max_retries or self.settings.LLM_MAX_RETRIES
         
@@ -144,7 +184,7 @@ Required JSON format:
                 logger.info(f"🔄 Calling {self.provider.upper()} API (attempt {attempt}/{max_retries})...")
                 
                 if self.provider == "openrouter":
-                    content = self._call_openrouter(prompt)
+                    content = self._call_openrouter(prompt, max_tokens=max_tokens)
                 elif self.provider == "ollama":
                     content = self._call_ollama(prompt)
                 else:
@@ -178,9 +218,37 @@ Required JSON format:
         
         raise Exception(f"Failed after {max_retries} attempts")
 
-    def extract_document_data(self, ocr_text: str, max_text_length: int = 15000) -> str:
-        """Extract structured data from OCR text."""
-        # Truncate if too long (DeepSeek supports large context)
+    def extract_document_data(self, ocr_text: str, max_text_length: int = 50000) -> str:
+        """Extract full structured legal data (metadata, outcome, sections, timeline, citations, insights) from OCR text."""
+        import re
+
+        # Smart preprocessing: if the document has a very long party-address header section,
+        # skip ahead to the actual judgment content to avoid wasting the context window.
+        # Detect the "Before :" line (judges panel) as the start of judgment content.
+        judgment_start_patterns = [
+            r'Before\s*:\s*[A-Z]',
+            r'BEFORE\s*:\s*[A-Z]',
+            r'Argued on\s*:',
+            r'ARGUED ON\s*:',
+        ]
+        judgment_start_idx = None
+        for pattern in judgment_start_patterns:
+            m = re.search(pattern, ocr_text)
+            if m:
+                # Only skip if this is far into the document (meaning a long header)
+                if m.start() > len(ocr_text) * 0.3:
+                    judgment_start_idx = m.start()
+                    break
+
+        if judgment_start_idx is not None:
+            # Keep the first 2000 chars (case number / caption) + judgment content
+            header_snippet = ocr_text[:2000]
+            judgment_body = ocr_text[judgment_start_idx:]
+            combined = header_snippet + "\n\n[... party address list omitted ...]\n\n" + judgment_body
+            logger.info(f"Smart trim: header={judgment_start_idx} chars, body={len(judgment_body)} chars, combined={len(combined)} chars")
+            ocr_text = combined
+
+        # Truncate if still too long
         if len(ocr_text) > max_text_length:
             truncated = ocr_text[:max_text_length]
             last_period = truncated.rfind('.')
@@ -188,11 +256,11 @@ Required JSON format:
                 truncated = truncated[:last_period + 1]
             ocr_text = truncated
             logger.warning(f"⚠️ Text truncated to ~{max_text_length} chars")
-        
+
         prompt = f"""DOCUMENT OCR TEXT:
 
 {ocr_text}
 
-Extract all metadata and sections from the above document. Return ONLY valid JSON."""
-        
-        return self.generate_response(prompt)
+Extract ALL fields (metadata, outcome, timeline, citations, insights, confidence_scores, sections) from the above judgment. Return ONLY valid JSON matching the required format. Keep section "text" values as concise summaries (3-6 sentences), not verbatim copies."""
+
+        return self.generate_response(prompt, max_tokens=8192)

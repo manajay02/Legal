@@ -1,7 +1,8 @@
 // Main Application Logic
 class LegalCriticApp {
     constructor() {
-        this.selectedFile = null;
+        this.pendingSupportFiles = [];
+        this.uploadedSupportDocs = []; // { doc_id, filename, file_type, text_length }
         this.init();
     }
 
@@ -17,11 +18,6 @@ class LegalCriticApp {
      * Setup all event listeners
      */
     setupEventListeners() {
-        // Tab switching
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', (e) => this.switchTab(e.target.dataset.tab));
-        });
-
         // Text analysis
         const argumentText = document.getElementById('argumentText');
         argumentText.addEventListener('input', () => {
@@ -32,40 +28,38 @@ class LegalCriticApp {
             this.analyzeText();
         });
 
-        // File upload
-        const fileInput = document.getElementById('fileInput');
-        const fileUploadArea = document.getElementById('fileUploadArea');
+        // Supporting documents upload
+        const supportFileInput = document.getElementById('supportFileInput');
+        const supportUploadArea = document.getElementById('supportUploadArea');
+        const supportUploadBtn = document.getElementById('supportUploadBtn');
 
-        fileUploadArea.addEventListener('click', () => {
-            fileInput.click();
+        supportUploadArea.addEventListener('click', () => {
+            supportFileInput.click();
         });
 
-        fileInput.addEventListener('change', (e) => {
-            this.handleFileSelect(e.target.files[0]);
+        supportFileInput.addEventListener('change', (e) => {
+            this.handleSupportFileSelection(Array.from(e.target.files || []));
+            supportFileInput.value = '';
         });
 
-        // Drag and drop
-        fileUploadArea.addEventListener('dragover', (e) => {
+        supportUploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            fileUploadArea.classList.add('dragover');
+            supportUploadArea.classList.add('dragover');
         });
 
-        fileUploadArea.addEventListener('dragleave', () => {
-            fileUploadArea.classList.remove('dragover');
+        supportUploadArea.addEventListener('dragleave', () => {
+            supportUploadArea.classList.remove('dragover');
         });
 
-        fileUploadArea.addEventListener('drop', (e) => {
+        supportUploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
-            fileUploadArea.classList.remove('dragover');
-            
-            const file = e.dataTransfer.files[0];
-            if (file) {
-                this.handleFileSelect(file);
-            }
+            supportUploadArea.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files || []);
+            this.handleSupportFileSelection(files);
         });
 
-        document.getElementById('uploadBtn').addEventListener('click', () => {
-            this.uploadFile();
+        supportUploadBtn.addEventListener('click', () => {
+            this.uploadSupportingDocuments();
         });
     }
 
@@ -75,30 +69,6 @@ class LegalCriticApp {
     async checkAPIStatus() {
         const health = await API.checkHealth();
         UI.updateAPIStatus(health !== null);
-    }
-
-    /**
-     * Switch between tabs
-     */
-    switchTab(tabName) {
-        // Update tab buttons
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.classList.remove('active');
-            if (tab.dataset.tab === tabName) {
-                tab.classList.add('active');
-            }
-        });
-
-        // Update tab content
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.remove('active');
-        });
-
-        if (tabName === 'text') {
-            document.getElementById('textTab').classList.add('active');
-        } else if (tabName === 'file') {
-            document.getElementById('fileTab').classList.add('active');
-        }
     }
 
     /**
@@ -134,7 +104,8 @@ class LegalCriticApp {
         UI.showLoading('textResults');
 
         try {
-            const data = await API.analyzeText(text);
+            const docIds = this.uploadedSupportDocs.map(d => d.doc_id);
+            const data = await API.analyzeTextGrounded(text, docIds, true);
             UI.displayResults(data, 'textResults');
         } catch (error) {
             console.error('Analysis error:', error);
@@ -145,65 +116,122 @@ class LegalCriticApp {
         }
     }
 
-    /**
-     * Handle file selection
-     */
-    handleFileSelect(file) {
-        if (!file) return;
-
-        // Validate file type
+    handleSupportFileSelection(files) {
+        if (!files || files.length === 0) return;
         const validTypes = ['.pdf', '.txt'];
-        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-        
-        if (!validTypes.includes(fileExtension)) {
-            alert('Please select a PDF or TXT file');
-            return;
-        }
-
-        // Validate file size
-        if (file.size > CONFIG.MAX_FILE_SIZE) {
-            alert(`File size must not exceed ${CONFIG.MAX_FILE_SIZE / 1024 / 1024}MB`);
-            return;
-        }
-
-        this.selectedFile = file;
-        UI.updateFileDisplay(file.name, file.size);
-        document.getElementById('uploadBtn').disabled = false;
+        const accepted = files.filter(f => {
+            const ext = '.' + f.name.split('.').pop().toLowerCase();
+            return validTypes.includes(ext) && f.size <= CONFIG.MAX_FILE_SIZE;
+        });
+        // Merge, avoid duplicates by name
+        accepted.forEach(f => {
+            if (!this.pendingSupportFiles.find(p => p.name === f.name))
+                this.pendingSupportFiles.push(f);
+        });
+        document.getElementById('supportUploadBtn').disabled = (this.pendingSupportFiles.length === 0);
+        this.renderSupportDocsList();
     }
 
-    /**
-     * Upload and analyze file
-     */
-    async uploadFile() {
-        if (!this.selectedFile) return;
+    removePendingFile(index) {
+        this.pendingSupportFiles.splice(index, 1);
+        document.getElementById('supportUploadBtn').disabled = (this.pendingSupportFiles.length === 0);
+        this.renderSupportDocsList();
+    }
 
-        const uploadBtn = document.getElementById('uploadBtn');
+    removeUploadedDoc(index) {
+        this.uploadedSupportDocs.splice(index, 1);
+        this.renderSupportDocsList();
+    }
 
-        // Show loading state
-        uploadBtn.disabled = true;
-        uploadBtn.textContent = 'Uploading...';
-        UI.showLoading('fileResults', 'Uploading and analyzing file... This may take 20-60 seconds.');
+    clearAllDocs() {
+        this.pendingSupportFiles = [];
+        this.uploadedSupportDocs = [];
+        document.getElementById('supportUploadBtn').disabled = true;
+        this.renderSupportDocsList();
+    }
 
-        try {
-            const data = await API.uploadFile(this.selectedFile);
-            
-            const fileInfo = {
-                filename: data.filename || this.selectedFile.name,
-                text_length: data.text_length || 0
-            };
-            
-            UI.displayResults(data, 'fileResults', fileInfo);
-        } catch (error) {
-            console.error('Upload error:', error);
-            UI.showError('fileResults', error.message);
-        } finally {
-            uploadBtn.disabled = false;
-            uploadBtn.textContent = 'Upload & Analyze';
+    async uploadSupportingDocuments() {
+        if (!this.pendingSupportFiles || this.pendingSupportFiles.length === 0) return;
+
+        const btn = document.getElementById('supportUploadBtn');
+        btn.disabled = true;
+        btn.textContent = 'Uploading...';
+
+        const failed = [];
+        for (const file of [...this.pendingSupportFiles]) {
+            try {
+                const res = await API.uploadSupportingDocument(file);
+                this.uploadedSupportDocs.push(res);
+                // remove from pending on success
+                this.pendingSupportFiles = this.pendingSupportFiles.filter(f => f !== file);
+            } catch (error) {
+                console.error('Upload error:', error);
+                failed.push(`${file.name}: ${error.message}`);
+            }
         }
+
+        this.renderSupportDocsList();
+        btn.disabled = (this.pendingSupportFiles.length === 0);
+        btn.textContent = 'Upload Supporting Documents';
+
+        if (failed.length > 0) {
+            alert('Some files failed to upload:\n' + failed.join('\n'));
+        }
+    }
+
+    renderSupportDocsList() {
+        const container = document.getElementById('supportDocsList');
+        const pending  = this.pendingSupportFiles  || [];
+        const uploaded = this.uploadedSupportDocs || [];
+
+        if (pending.length === 0 && uploaded.length === 0) {
+            container.innerHTML = '<p class="small" style="margin-top:10px;color:#999;">No documents selected.</p>';
+            return;
+        }
+
+        const totalCount = pending.length + uploaded.length;
+        let html = '<div class="doc-list">';
+
+        // Header with Clear All
+        html += `
+            <div class="doc-list-header">
+                <span class="doc-list-title">
+                    ${uploaded.length} uploaded&nbsp;&nbsp;·&nbsp;&nbsp;${pending.length} pending
+                </span>
+                ${totalCount > 0
+                    ? `<button class="btn-clear-all" onclick="window._app.clearAllDocs()">&#10005; Clear All</button>`
+                    : ''}
+            </div>`;
+
+        // Uploaded docs (permanent until removed)
+        uploaded.forEach((d, i) => {
+            html += `
+                <div class="doc-row">
+                    <span class="doc-row-icon">📄</span>
+                    <span class="doc-row-name" title="${UI.escapeHtml(d.filename)}">${UI.escapeHtml(d.filename)}</span>
+                    <span class="doc-row-badge uploaded">✔ Uploaded</span>
+                    <span class="doc-row-id" title="${UI.escapeHtml(d.doc_id)}">${UI.escapeHtml(d.doc_id.substring(0, 8))}&hellip;</span>
+                    <button class="btn-remove-doc" title="Remove" onclick="window._app.removeUploadedDoc(${i})">&times;</button>
+                </div>`;
+        });
+
+        // Pending (selected but not yet uploaded)
+        pending.forEach((f, i) => {
+            html += `
+                <div class="doc-row pending">
+                    <span class="doc-row-icon">⏳</span>
+                    <span class="doc-row-name" title="${UI.escapeHtml(f.name)}">${UI.escapeHtml(f.name)}</span>
+                    <span class="doc-row-badge pending">Pending</span>
+                    <button class="btn-remove-doc" title="Remove" onclick="window._app.removePendingFile(${i})">&times;</button>
+                </div>`;
+        });
+
+        html += '</div>';
+        container.innerHTML = html;
     }
 }
 
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new LegalCriticApp();
+    window._app = new LegalCriticApp();
 });

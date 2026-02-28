@@ -83,6 +83,8 @@ async def root():
         "endpoints": {
             "analyze": "POST /api/v1/analyze - Analyze text directly",
             "upload": "POST /api/v1/upload - Upload PDF/TXT file for analysis",
+            "documents_upload": "POST /api/v1/documents/upload - Upload supporting case documents",
+            "analyze_grounded": "POST /api/v1/analyze_grounded - Analyze typed argument with evidence grounding",
             "health": "GET /api/v1/health - Check service health",
             "docs": "GET /docs - Interactive API documentation"
         }

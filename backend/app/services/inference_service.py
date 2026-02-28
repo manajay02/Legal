@@ -746,48 +746,76 @@ class InferenceService:
         text and the argument text so the frontend always has content to show."""
         import re as _re
 
-        # Split argument into individual sentences for quote matching
-        arg_sentences = [s.strip() for s in _re.split(r'(?<=[.!?])\s+', argument_text.strip()) if len(s.strip()) > 15]
+        # ── Build sentence list — try punctuation split, then newline, then words ──
+        raw_sentences = _re.split(r'(?<=[.!?])\s+|\n{1,}', argument_text.strip())
+        arg_sentences = [s.strip() for s in raw_sentences if len(s.strip()) > 12]
+        # Last resort: chunk into ~80-char pieces so we always have something to quote
+        if not arg_sentences:
+            words = argument_text.split()
+            arg_sentences = [" ".join(words[i:i+15]) for i in range(0, len(words), 15) if words[i:i+15]]
+        if not arg_sentences:
+            arg_sentences = [argument_text[:200]] if argument_text.strip() else ["(no argument text provided)"]
 
         def best_arg_sentence(rationale: str) -> str:
             """Return the argument sentence with highest word overlap to the rationale."""
-            if not arg_sentences:
-                return ""
             words = set(_re.findall(r'[a-z]{4,}', rationale.lower()))
+            if not words:
+                return arg_sentences[0]
             best, best_score = arg_sentences[0], -1
             for s in arg_sentences:
                 s_words = set(_re.findall(r'[a-z]{4,}', s.lower()))
                 score = len(words & s_words)
                 if score > best_score:
                     best_score, best = score, s
-            return best
+            # Trim to reasonable quote length
+            return best[:250]
+
+        def split_rationale(rationale: str) -> list:
+            """Split rationale into sentences, falling back to period-separated chunks."""
+            parts = [s.strip() for s in _re.split(r'(?<=[.!?])\s+', rationale) if s.strip()]
+            if len(parts) < 2:
+                # Try splitting at '. ' even without trailing space
+                parts = [s.strip() for s in rationale.split('. ') if s.strip()]
+            return parts
 
         def extract_strengths(rationale: str, category: str) -> list:
-            """Extract the positive-sounding part of the rationale as a strength."""
-            sentences = [s.strip() for s in _re.split(r'(?<=[.!?])\s+', rationale) if s.strip()]
-            # First sentence usually describes what IS present
-            pos = sentences[0] if sentences else f"The {category} aspect is addressed in the argument."
-            return [pos[:200]]
+            """Extract positive part of rationale as a strength bullet."""
+            parts = split_rationale(rationale)
+            # Look for the sentence that starts with a positive/descriptive phrase
+            pos_keywords = ['state', 'mention', 'include', 'address', 'identify',
+                            'present', 'provide', 'contain', 'refer', 'note']
+            for p in parts:
+                if any(p.lower().startswith(k) or f' {k}' in p.lower() for k in pos_keywords):
+                    return [p[:220]]
+            # Default: first sentence = describes what IS there
+            return [(parts[0] if parts else f"The {category} aspect is addressed.")[:220]]
 
         def extract_gaps(rationale: str, category: str) -> list:
-            """Extract the gap/action-needed part of the rationale."""
-            sentences = [s.strip() for s in _re.split(r'(?<=[.!?])\s+', rationale) if s.strip()]
-            # Second sentence = what's missing; third = how to improve
+            """Extract what-is-missing and how-to-fix sentences as gap bullets."""
+            parts = split_rationale(rationale)
             gaps_out = []
-            if len(sentences) >= 2:
-                gaps_out.append(sentences[1][:200])
-            if len(sentences) >= 3:
-                gaps_out.append(sentences[2][:200])
+            gap_keywords = ['missing', 'without', 'not', 'lack', 'absent', 'fail',
+                            'no ', 'does not', 'does not', 'insufficient', 'unclear', 'vague']
+            fix_keywords = ['to reach', 'to score', 'must', 'should', 'would', 'add', 'include',
+                            'provide', 'cite', 'state', 'specify']
+            for p in parts:
+                pl = p.lower()
+                if any(k in pl for k in gap_keywords) and len(gaps_out) < 2:
+                    gaps_out.append(p[:220])
+                elif any(k in pl for k in fix_keywords) and len(gaps_out) < 2:
+                    gaps_out.append(p[:220])
+            if not gaps_out and len(parts) >= 2:
+                gaps_out = [p[:220] for p in parts[1:3]]
             if not gaps_out:
-                gaps_out = [f"The {category} section needs more specific detail and textual support."]
-            return gaps_out
+                gaps_out = [f"The {category} section needs more specific detail and citation."]
+            return gaps_out[:2]
 
         enriched = 0
         for item in critique.get("breakdown", []):
             rationale = item.get("rationale", "") or ""
             cat = item.get("category", "this category")
 
-            # argument_quote
+            # argument_quote — always fill if empty
             if not str(item.get("argument_quote", "")).strip():
                 item["argument_quote"] = best_arg_sentence(rationale)
                 enriched += 1

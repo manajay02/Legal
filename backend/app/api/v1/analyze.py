@@ -64,12 +64,16 @@ through registered deeds and established a valid tenancy relationship."""
 
 class CategoryBreakdown(BaseModel):
     """Breakdown of scores for a single category."""
-    
+
     category: str = Field(..., description="Category name")
     weight: int = Field(..., description="Category weight (points)")
     rubric_score: int = Field(..., ge=0, le=5, description="Rubric score (0-5)")
     points: float = Field(..., description="Calculated points")
     rationale: str = Field(..., description="Explanation of the score")
+    argument_quote: Optional[str] = Field(None, description="Verbatim sentence from the submitted argument")
+    judgment_quote: Optional[str] = Field(None, description="Verbatim sentence from the source judgment/document")
+    strengths: Optional[List[str]] = Field(default_factory=list, description="What the argument does well in this category")
+    gaps: Optional[List[str]] = Field(default_factory=list, description="What is missing or weak in this category")
 
 
 class AnalyzeResponse(BaseModel):

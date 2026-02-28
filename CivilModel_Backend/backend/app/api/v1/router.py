@@ -5,7 +5,7 @@ Combines all endpoint routers.
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import process, retrieve, upload
+from app.api.v1.endpoints import process, retrieve, search, upload
 
 api_router = APIRouter()
 
@@ -23,4 +23,9 @@ api_router.include_router(
 api_router.include_router(
     retrieve.router,
     tags=["documents"]
+)
+
+api_router.include_router(
+    search.router,
+    tags=["search"]
 )

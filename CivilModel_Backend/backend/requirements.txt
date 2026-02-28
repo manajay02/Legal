@@ -42,6 +42,13 @@ pytest-asyncio==0.23.3
 pytest-cov==4.1.0
 
 # ============================================================
+# Semantic Search (Hybrid Search Engine)
+# ============================================================
+sentence-transformers>=2.7.0
+faiss-cpu>=1.7.4
+numpy>=1.24.0
+
+# ============================================================
 # For running trained model locally (OPTIONAL)
 # Only needed if using LLM_PROVIDER=ollama
 # ============================================================

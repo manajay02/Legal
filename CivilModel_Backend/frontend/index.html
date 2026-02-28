@@ -33,6 +33,10 @@
                     <i class="fas fa-folder-open"></i>
                     <span>Documents</span>
                 </a>
+                <a href="#" class="nav-item" data-page="search">
+                    <i class="fas fa-search"></i>
+                    <span>Search</span>
+                </a>
                 <a href="#" class="nav-item" data-page="output">
                     <i class="fas fa-file-export"></i>
                     <span>Output</span>
@@ -304,6 +308,154 @@
                         <p>Select a completed document from the dropdown above to view its extracted data.</p>
                     </div>
                 </div>
+            </section>
+
+            <!-- Search Page -->
+            <section class="page" id="search-page">
+                <header class="page-header search-page-header">
+                    <div>
+                        <h1>Case Search</h1>
+                        <p>Hybrid structured + semantic search across all processed cases</p>
+                    </div>
+                    <button class="btn btn-secondary" id="rebuild-index-btn" onclick="rebuildSearchIndex()">
+                        <i class="fas fa-sync-alt"></i> Rebuild Index
+                    </button>
+                </header>
+
+                <!-- Search Bar -->
+                <div class="search-bar-row">
+                    <div class="search-input-wrap">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="search-query" class="search-input"
+                               placeholder="e.g. high risk state discrimination cases after 2020"
+                               onkeydown="if(event.key==='Enter') runSearch()" />
+                        <button class="btn btn-primary search-btn" onclick="runSearch()">
+                            Search
+                        </button>
+                    </div>
+                    <button class="btn btn-secondary filter-toggle-btn" id="filter-toggle" onclick="toggleFilterDrawer()">
+                        <i class="fas fa-sliders-h"></i> Filters
+                        <span class="filter-badge hidden" id="filter-count">0</span>
+                    </button>
+                </div>
+
+                <!-- Preset chips -->
+                <div class="presets-row" id="presets-row">
+                    <span class="presets-label">Quick filters:</span>
+                    <!-- populated by JS -->
+                </div>
+
+                <!-- Index status bar -->
+                <div class="index-status-bar" id="index-status-bar">
+                    <i class="fas fa-database"></i>
+                    <span id="index-status-text">Checking index...</span>
+                </div>
+
+                <!-- Results area -->
+                <div class="search-results-area">
+                    <div class="search-results-header" id="search-results-header" style="display:none">
+                        <span id="search-results-count"></span>
+                        <div class="search-sort-row">
+                            <label>Sort by:</label>
+                            <select id="sort-select" onchange="sortResults()">
+                                <option value="final_score">Best Match</option>
+                                <option value="semantic_score">Semantic Score</option>
+                                <option value="structured_score">Filter Score</option>
+                                <option value="year">Year</option>
+                            </select>
+                            <label>Alpha (structured weight):</label>
+                            <input type="range" id="alpha-slider" min="0" max="1" step="0.1" value="0.4"
+                                   oninput="document.getElementById('alpha-val').textContent=this.value"
+                                   onchange="runSearch()" />
+                            <span id="alpha-val">0.4</span>
+                        </div>
+                    </div>
+                    <div id="search-results-list"></div>
+                    <div class="search-empty-state" id="search-empty-state">
+                        <i class="fas fa-search"></i>
+                        <h3>Search your case library</h3>
+                        <p>Type a query above or apply a quick filter to get started.</p>
+                    </div>
+                </div>
+
+                <!-- Filter Drawer -->
+                <div class="filter-drawer-overlay hidden" id="filter-overlay" onclick="toggleFilterDrawer()"></div>
+                <aside class="filter-drawer hidden" id="filter-drawer">
+                    <div class="filter-drawer-header">
+                        <h2><i class="fas fa-sliders-h"></i> Advanced Filters</h2>
+                        <button class="btn-icon" onclick="toggleFilterDrawer()"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="filter-drawer-body">
+
+                        <div class="filter-group">
+                            <label>Outcome</label>
+                            <select id="f-outcome">
+                                <option value="">Any</option>
+                                <option value="Allowed">Allowed</option>
+                                <option value="Dismissed">Dismissed</option>
+                                <option value="Partially Allowed">Partially Allowed</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Court</label>
+                            <input type="text" id="f-court" placeholder="e.g. Supreme Court" />
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Year Range</label>
+                            <div class="year-range">
+                                <input type="number" id="f-year-from" placeholder="From" min="1900" max="2099" />
+                                <span>–</span>
+                                <input type="number" id="f-year-to" placeholder="To" min="1900" max="2099" />
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Case Type</label>
+                            <input type="text" id="f-case-type" placeholder="e.g. FR Application" />
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Legal Provision</label>
+                            <input type="text" id="f-legal-prov" placeholder="e.g. Article 12" />
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Risk Level</label>
+                            <select id="f-risk-level">
+                                <option value="">Any</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label>State Involvement</label>
+                            <select id="f-state">
+                                <option value="">Any</option>
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Min Confidence (%)</label>
+                            <input type="number" id="f-confidence" placeholder="e.g. 70" min="0" max="100" />
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Batch ID</label>
+                            <input type="text" id="f-batch-id" placeholder="e.g. Upload_2026_..." />
+                        </div>
+
+                    </div>
+                    <div class="filter-drawer-footer">
+                        <button class="btn btn-secondary" onclick="clearFilters()">Clear All</button>
+                        <button class="btn btn-primary" onclick="applyFiltersAndSearch()">Apply &amp; Search</button>
+                    </div>
+                </aside>
             </section>
 
             <!-- Document Detail Modal -->

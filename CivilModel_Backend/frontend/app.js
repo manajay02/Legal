@@ -37,6 +37,7 @@ function navigateTo(pageName) {
     if (pageName === 'documents') loadDocuments();
     if (pageName === 'batches') loadBatchesPage();
     if (pageName === 'output') loadOutputPage();
+    if (pageName === 'search') initSearchPage();
 }
 
 navItems.forEach(item => {
@@ -1137,3 +1138,302 @@ async function init() {
 }
 
 init();
+
+
+// ============================================================
+// SEARCH PAGE
+// ============================================================
+
+let _searchResults = []; // current result set for re-sorting
+
+async function initSearchPage() {
+    await loadSearchPresets();
+    await refreshIndexStatus();
+}
+
+// --------- index status ----------
+async function refreshIndexStatus() {
+    const bar = document.getElementById('index-status-bar');
+    const txt = document.getElementById('index-status-text');
+    if (!bar || !txt) return;
+    try {
+        const res = await fetch(`${API_V1_URL}/search/index/status`);
+        if (res.ok) {
+            const data = await res.json();
+            txt.innerHTML = `<b>${data.index_size}</b> vectors in FAISS index &nbsp;|&nbsp; <b>${data.total_documents}</b> total documents`;
+            bar.classList.remove('index-warn');
+            if (data.index_size === 0 && data.total_documents > 0) {
+                txt.innerHTML += ' &nbsp;<span style="color:var(--warning)">⚠ Index empty – click Rebuild Index</span>';
+                bar.classList.add('index-warn');
+            }
+        }
+    } catch (e) {
+        txt.textContent = 'Could not fetch index status';
+    }
+}
+
+// --------- presets ----------
+async function loadSearchPresets() {
+    const row = document.getElementById('presets-row');
+    if (!row) return;
+    try {
+        const res = await fetch(`${API_V1_URL}/search/presets`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const presets = data.presets || {};
+        // keep the label
+        row.innerHTML = '<span class="presets-label">Quick filters:</span>';
+        Object.entries(presets).forEach(([id, preset]) => {
+            const chip = document.createElement('button');
+            chip.className = 'preset-chip';
+            chip.textContent = preset.label;
+            chip.title = preset.description || '';
+            chip.onclick = () => applyPreset(id, preset);
+            row.appendChild(chip);
+        });
+    } catch (e) { /* ignore */ }
+}
+
+function applyPreset(id, preset) {
+    // Set filter drawer fields from preset
+    const f = preset.filters || {};
+    _setFilterField('f-outcome',     f.outcome      || '');
+    _setFilterField('f-risk-level',  f.risk_level   || '');
+    _setFilterField('f-state',       f.state_involvement !== undefined ? String(f.state_involvement) : '');
+    _setFilterField('f-case-type',   f.case_type    || '');
+    _setFilterField('f-legal-prov',  f.legal_provision || '');
+    _setFilterField('f-year-from',   f.year_from    || '');
+    _setFilterField('f-year-to',     f.year_to      || '');
+    // Mark chip active
+    document.querySelectorAll('.preset-chip').forEach(c => c.classList.remove('active'));
+    const chips = document.querySelectorAll('.preset-chip');
+    chips.forEach(c => { if (c.textContent === preset.label) c.classList.add('active'); });
+    // Run search with preset label as query
+    document.getElementById('search-query').value = preset.label;
+    updateFilterBadge();
+    runSearch();
+}
+
+function _setFilterField(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = String(val);
+}
+
+// --------- filter drawer ----------
+function toggleFilterDrawer() {
+    const drawer  = document.getElementById('filter-drawer');
+    const overlay = document.getElementById('filter-overlay');
+    if (!drawer) return;
+    drawer.classList.toggle('hidden');
+    overlay.classList.toggle('hidden');
+}
+
+function clearFilters() {
+    ['f-outcome','f-court','f-year-from','f-year-to','f-case-type',
+     'f-legal-prov','f-risk-level','f-state','f-confidence','f-batch-id']
+        .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    document.querySelectorAll('.preset-chip').forEach(c => c.classList.remove('active'));
+    updateFilterBadge();
+}
+
+function updateFilterBadge() {
+    const fields = ['f-outcome','f-court','f-year-from','f-year-to','f-case-type',
+                    'f-legal-prov','f-risk-level','f-state','f-confidence','f-batch-id'];
+    const count = fields.filter(id => { const el = document.getElementById(id); return el && el.value.trim() !== ''; }).length;
+    const badge = document.getElementById('filter-count');
+    if (!badge) return;
+    badge.textContent = count;
+    count > 0 ? badge.classList.remove('hidden') : badge.classList.add('hidden');
+}
+
+function applyFiltersAndSearch() {
+    toggleFilterDrawer();
+    updateFilterBadge();
+    runSearch();
+}
+
+// --------- core search ----------
+async function runSearch() {
+    const query = (document.getElementById('search-query')?.value || '').trim();
+    if (!query) return;
+    const alpha = parseFloat(document.getElementById('alpha-slider')?.value ?? 0.4);
+
+    // Collect explicit filters
+    const filters = {};
+    const outcome = document.getElementById('f-outcome')?.value;
+    if (outcome) filters.outcome = outcome;
+    const court = document.getElementById('f-court')?.value?.trim();
+    if (court) filters.court = court;
+    const yf = document.getElementById('f-year-from')?.value;
+    if (yf) filters.year_from = parseInt(yf);
+    const yt = document.getElementById('f-year-to')?.value;
+    if (yt) filters.year_to = parseInt(yt);
+    const ct = document.getElementById('f-case-type')?.value?.trim();
+    if (ct) filters.case_type = ct;
+    const lp = document.getElementById('f-legal-prov')?.value?.trim();
+    if (lp) filters.legal_provision = lp;
+    const rl = document.getElementById('f-risk-level')?.value;
+    if (rl) filters.risk_level = rl;
+    const si = document.getElementById('f-state')?.value;
+    if (si === 'true')  filters.state_involvement = true;
+    if (si === 'false') filters.state_involvement = false;
+    const conf = document.getElementById('f-confidence')?.value;
+    if (conf) filters.confidence_min = parseFloat(conf);
+    const batchId = document.getElementById('f-batch-id')?.value?.trim();
+    if (batchId) filters.batch_id = batchId;
+
+    const body = { query, filters, alpha, k: 50 };
+
+    // Show loading
+    const list = document.getElementById('search-results-list');
+    list.innerHTML = '<div class="search-loading"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
+    document.getElementById('search-empty-state').style.display = 'none';
+    document.getElementById('search-results-header').style.display = 'none';
+
+    try {
+        const res = await fetch(`${API_V1_URL}/search`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        _searchResults = data.results || [];
+        renderSearchResults(_searchResults, data);
+    } catch (e) {
+        list.innerHTML = `<div class="error-msg"><i class="fas fa-exclamation-triangle"></i> Search failed: ${escapeHtml(e.message)}</div>`;
+    }
+}
+
+function sortResults() {
+    const key = document.getElementById('sort-select')?.value || 'final_score';
+    const sorted = [..._searchResults].sort((a, b) => {
+        if (key === 'year') return (b[key] || 0) - (a[key] || 0);
+        return (b[key] || 0) - (a[key] || 0);
+    });
+    renderResultCards(sorted);
+}
+
+async function rebuildSearchIndex() {
+    const btn = document.getElementById('rebuild-index-btn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Rebuilding...'; }
+    try {
+        const res = await fetch(`${API_V1_URL}/search/index/rebuild`, { method: 'POST' });
+        const data = await res.json();
+        showToast(data.message || 'Index rebuild started', 'success');
+    } catch (e) {
+        showToast('Rebuild failed: ' + e.message, 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-sync-alt"></i> Rebuild Index'; }
+        setTimeout(refreshIndexStatus, 3000);
+    }
+}
+
+// --------- render ----------
+function renderSearchResults(results, data) {
+    const header = document.getElementById('search-results-header');
+    const empty  = document.getElementById('search-empty-state');
+    const countEl = document.getElementById('search-results-count');
+    if (results.length === 0) {
+        document.getElementById('search-results-list').innerHTML = '';
+        empty.style.display = 'flex';
+        empty.innerHTML = '<i class="fas fa-search-minus"></i><h3>No results found</h3><p>Try adjusting your query or removing filters.</p>';
+        header.style.display = 'none';
+        return;
+    }
+    empty.style.display = 'none';
+    header.style.display = 'flex';
+    countEl.textContent = `${results.length} result${results.length !== 1 ? 's' : ''} found`;
+    if (data?.parsed_filters && Object.keys(data.parsed_filters).length) {
+        const f = JSON.stringify(data.parsed_filters, null, 0);
+        countEl.textContent += ` · Filters: ${f}`;
+    }
+    renderResultCards(results);
+}
+
+function renderResultCards(results) {
+    const list = document.getElementById('search-results-list');
+    if (!list) return;
+    list.innerHTML = '';
+    results.forEach(r => list.appendChild(buildResultCard(r)));
+}
+
+function buildResultCard(r) {
+    const card = document.createElement('div');
+    card.className = 'search-result-card';
+
+    // Score badge colour
+    const score = r.final_score || 0;
+    const scoreClass = score >= 70 ? 'score-high' : score >= 40 ? 'score-mid' : 'score-low';
+
+    // Risk badge
+    const riskBadge = r.risk_level
+        ? `<span class="risk-badge risk-${(r.risk_level||'').toLowerCase()}">${escapeHtml(r.risk_level)}</span>`
+        : '';
+
+    // Outcome badge
+    const outcomeBadge = r.outcome
+        ? `<span class="outcome-badge outcome-${(r.outcome||'').toLowerCase().replace(' ','-')}">${escapeHtml(r.outcome)}</span>`
+        : '';
+
+    // State involvement
+    const stateBadge = r.state_involvement === true
+        ? '<span class="state-badge"><i class="fas fa-university"></i> State</span>'
+        : '';
+
+    // Confidence bar
+    const conf = r.outcome_confidence != null
+        ? `<div class="conf-bar-wrap" title="Extraction confidence"><div class="conf-bar" style="width:${r.outcome_confidence}%"></div><span>${r.outcome_confidence.toFixed(0)}%</span></div>`
+        : '';
+
+    // Legal issues chips
+    const issueChips = (r.key_legal_issues || []).slice(0, 3)
+        .map(i => `<span class="issue-chip">${escapeHtml(i)}</span>`).join('');
+
+    card.innerHTML = `
+        <div class="src-card-top">
+            <div class="src-card-meta">
+                <span class="src-case-num">${escapeHtml(r.case_number || r.filename || r.document_id)}</span>
+                <span class="src-court">${escapeHtml(r.court || '—')}</span>
+                <span class="src-year">${escapeHtml(String(r.year || '—'))}</span>
+            </div>
+            <div class="src-badges">${outcomeBadge}${riskBadge}${stateBadge}</div>
+            <div class="src-score ${scoreClass}">
+                <span class="score-num">${score.toFixed(0)}</span>
+                <span class="score-lbl">/ 100</span>
+            </div>
+        </div>
+        <div class="src-card-body">
+            ${r.reasoning_summary ? `<p class="src-reasoning">${escapeHtml(r.reasoning_summary)}</p>` : ''}
+            ${issueChips ? `<div class="src-issues">${issueChips}</div>` : ''}
+        </div>
+        <div class="src-card-footer">
+            <div class="src-score-details">
+                <span title="Semantic similarity"><i class="fas fa-brain"></i> ${r.semantic_score?.toFixed(1)}%</span>
+                <span title="Filter match"><i class="fas fa-filter"></i> ${r.structured_score?.toFixed(1)}%</span>
+                ${conf}
+            </div>
+            <button class="btn btn-sm" onclick="openDocumentModal('${escapeHtml(r.document_id)}')">
+                <i class="fas fa-eye"></i> View
+            </button>
+        </div>
+    `;
+    return card;
+}
+
+// --------- toast ----------
+function showToast(msg, type = 'info') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    const colour = type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--error)' : 'var(--primary)';
+    toast.style.cssText = `background:${colour};color:#fff;padding:.75rem 1.25rem;border-radius:.5rem;font-size:.875rem;box-shadow:0 4px 12px rgba(0,0,0,.3);max-width:320px;`;
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+}

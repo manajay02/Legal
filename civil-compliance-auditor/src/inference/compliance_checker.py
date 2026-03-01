@@ -42,32 +42,88 @@ def detect_domain(text):
 
 
 # ==============================
-# Mandatory Clause Checker
+# Mandatory Clause Checker (NLI-based)
 # ==============================
 def check_mandatory_clauses(contract_text, domain):
+    """
+    Uses NLI model to detect missing mandatory clauses.
+    If contract does NOT entail the requirement → marked as missing.
+    """
 
-    mandatory_requirements = {
+    mandatory_rules = {
         "employment": [
-            "salary",
-            "working hours",
-            "leave",
-            "epf",
-            "etf",
-            "maternity"
+            {
+                "name": "Salary Clause",
+                "rule": "An employment contract must specify the employee's salary."
+            },
+            {
+                "name": "Working Hours Clause",
+                "rule": "An employment contract must define the employee's working hours."
+            },
+            {
+                "name": "EPF Contribution Clause",
+                "rule": "An employment contract must mention EPF contributions."
+            },
+            {
+                "name": "ETF Contribution Clause",
+                "rule": "An employment contract must mention ETF contributions."
+            },
+            {
+                "name": "Maternity Leave Clause",
+                "rule": "Female employees must be granted maternity leave under law."
+            },
+            {
+                "name": "Public Holiday Clause",
+                "rule": "Employees must be granted public holidays according to law."
+            },
+            {
+                "name": "Leave Entitlement Clause",
+                "rule": "Employees must be entitled to annual leave."
+            },
+            {
+                "name": "Termination Notice Clause",
+                "rule": "Employment contract must specify termination notice period."
+            }
         ],
         "rental": [
-            "rent",
-            "notice",
-            "termination"
+            {
+                "name": "Rent Amount Clause",
+                "rule": "A rental agreement must specify the rent amount."
+            },
+            {
+                "name": "Notice Period Clause",
+                "rule": "A rental agreement must specify the notice period for termination."
+            },
+            {
+                "name": "Security Deposit Clause",
+                "rule": "A rental agreement must mention security deposit terms."
+            }
+        ],
+        "consumer": [
+            {
+                "name": "Interest Rate Clause",
+                "rule": "A loan agreement must specify the interest rate."
+            },
+            {
+                "name": "Repayment Terms Clause",
+                "rule": "A loan agreement must define repayment terms."
+            }
         ]
     }
 
     missing = []
 
-    if domain in mandatory_requirements:
-        for item in mandatory_requirements[domain]:
-            if item.lower() not in contract_text.lower():
-                missing.append(item)
+    for requirement in mandatory_rules.get(domain, []):
+        # Use NLI: premise = requirement rule, hypothesis = contract text
+        result = predict(requirement["rule"], contract_text)
+
+        # If NOT entailed (not compliant) → clause is missing or not properly addressed
+        if result["status"] != "🟢 Compliant":
+            missing.append({
+                "clause": requirement["name"],
+                "rule": requirement["rule"],
+                "confidence": result["confidence"]
+            })
 
     return missing
 
@@ -92,6 +148,7 @@ def check_compliance(contract_text):
         clause_status = "🟢 Compliant"
         violated_act = None
         violated_section = None
+        confidence = None
 
         for rule in statutes:
 
@@ -102,17 +159,19 @@ def check_compliance(contract_text):
             premise = rule["rule"]
             result = predict(premise, clause)
 
-            if result == "🔴 Violation":
+            if result["status"] == "🔴 Violation":
                 clause_status = "🔴 Violation"
                 violated_act = rule["act"]
                 violated_section = rule["section"]
+                confidence = result["confidence"]
                 break  # Stop after first violation
 
         report["clauses"].append({
             "clause": clause,
             "status": clause_status,
             "violated_act": violated_act,
-            "section": violated_section
+            "section": violated_section,
+            "confidence": confidence
         })
 
     # Check mandatory clauses

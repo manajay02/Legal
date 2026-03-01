@@ -33,18 +33,33 @@ function ResultPage({ results, onBack }) {
             <span className="label">Violations</span>
             <span className="value">{violatedClauses.length}</span>
           </div>
+          <div className="summary-card missing">
+            <span className="label">Missing</span>
+            <span className="value">{missing_mandatory?.length || 0}</span>
+          </div>
         </div>
       </div>
 
       {/* Missing Mandatory Clauses */}
-      {missing_mandatory && missing_mandatory.length > 0 && (
+      {missing_mandatory && missing_mandatory.length > 0 ? (
         <div className="missing-section">
           <h3>⚠️ Missing Mandatory Clauses</h3>
           <div className="missing-list">
             {missing_mandatory.map((item, index) => (
-              <span key={index} className="missing-item">{item}</span>
+              <div key={index} className="missing-card">
+                <div className="missing-name">{item.clause}</div>
+                <div className="missing-rule">{item.rule}</div>
+                <div className="missing-confidence">
+                  Confidence: {item.confidence?.toFixed(1)}%
+                </div>
+              </div>
             ))}
           </div>
+        </div>
+      ) : (
+        <div className="no-missing-section">
+          <h3>✅ No Missing Mandatory Clauses</h3>
+          <p>All required clauses are present in the document.</p>
         </div>
       )}
 
@@ -63,6 +78,11 @@ function ResultPage({ results, onBack }) {
                   <span className="section">
                     <strong>Section:</strong> {clause.section || 'N/A'}
                   </span>
+                  {clause.confidence && (
+                    <span className="confidence">
+                      <strong>Confidence:</strong> {clause.confidence.toFixed(1)}%
+                    </span>
+                  )}
                 </div>
               </div>
             ))}

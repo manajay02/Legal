@@ -91,6 +91,14 @@
   color: #ef4444;
 }
 
+.summary-card.missing {
+  border-top: 4px solid #f59e0b;
+}
+
+.summary-card.missing .value {
+  color: #f59e0b;
+}
+
 /* Missing Mandatory */
 .missing-section {
   background: #fef3c7;
@@ -107,8 +115,35 @@
 
 .missing-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.missing-card {
+  background: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #fcd34d;
+}
+
+.missing-name {
+  font-weight: bold;
+  color: #92400e;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.missing-rule {
+  color: #666;
+  font-style: italic;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.missing-confidence {
+  color: #b45309;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .missing-item {
@@ -118,6 +153,25 @@
   font-size: 0.9rem;
   color: #92400e;
   border: 1px solid #fcd34d;
+}
+
+/* No Missing Section */
+.no-missing-section {
+  background: #dcfce7;
+  padding: 1.5rem;
+  border-radius: 10px;
+  margin-bottom: 2rem;
+  border-left: 4px solid #22c55e;
+}
+
+.no-missing-section h3 {
+  margin: 0 0 0.5rem 0;
+  color: #166534;
+}
+
+.no-missing-section p {
+  margin: 0;
+  color: #15803d;
 }
 
 /* Clauses Sections */

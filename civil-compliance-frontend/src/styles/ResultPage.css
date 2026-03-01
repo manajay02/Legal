@@ -1,0 +1,179 @@
+.result-page {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.back-btn {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 2px solid #1a365d;
+  color: #1a365d;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  background: #1a365d;
+  color: white;
+}
+
+/* Summary Section */
+.summary-section {
+  margin-bottom: 2rem;
+}
+
+.summary-section h2 {
+  color: #1a365d;
+  margin: 0 0 1rem 0;
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.summary-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.summary-card .label {
+  font-size: 0.85rem;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.summary-card .value {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.summary-card.domain {
+  border-top: 4px solid #3b82f6;
+}
+
+.summary-card.domain .value {
+  color: #3b82f6;
+}
+
+.summary-card.total {
+  border-top: 4px solid #6366f1;
+}
+
+.summary-card.total .value {
+  color: #6366f1;
+}
+
+.summary-card.compliant {
+  border-top: 4px solid #22c55e;
+}
+
+.summary-card.compliant .value {
+  color: #22c55e;
+}
+
+.summary-card.violations {
+  border-top: 4px solid #ef4444;
+}
+
+.summary-card.violations .value {
+  color: #ef4444;
+}
+
+/* Missing Mandatory */
+.missing-section {
+  background: #fef3c7;
+  padding: 1.5rem;
+  border-radius: 10px;
+  margin-bottom: 2rem;
+  border-left: 4px solid #f59e0b;
+}
+
+.missing-section h3 {
+  margin: 0 0 1rem 0;
+  color: #92400e;
+}
+
+.missing-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.missing-item {
+  background: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+/* Clauses Sections */
+.clauses-section {
+  margin-bottom: 2rem;
+}
+
+.clauses-section h3 {
+  color: #1a365d;
+  margin: 0 0 1rem 0;
+}
+
+.clause-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.clause-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.clause-card.violation {
+  border-left: 4px solid #ef4444;
+}
+
+.clause-card.compliant {
+  border-left: 4px solid #22c55e;
+}
+
+.clause-text {
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.clause-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.clause-details strong {
+  color: #333;
+}
+
+/* No Results */
+.no-results {
+  text-align: center;
+  padding: 3rem;
+  background: white;
+  border-radius: 10px;
+  color: #666;
+}

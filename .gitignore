@@ -30,6 +30,9 @@ Thumbs.db
 # Reports (optional - remove if you want to track reports)
 # civil-compliance-auditor/reports/
 
+# Model files (too large for Git - download/train separately)
+civil-compliance-auditor/models/
+
 # Environment files
 .env
 .env.local

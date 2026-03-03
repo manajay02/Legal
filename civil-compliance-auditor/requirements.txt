@@ -8,3 +8,5 @@ pdfplumber
 pytesseract
 spacy
 sentencepiece
+pymongo
+dnspython

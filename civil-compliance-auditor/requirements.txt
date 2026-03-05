@@ -6,6 +6,8 @@ pandas
 numpy
 pdfplumber
 pytesseract
+pdf2image
+Pillow
 spacy
 sentencepiece
 pymongo

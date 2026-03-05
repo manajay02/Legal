@@ -51,18 +51,18 @@ def predict(premise, hypothesis):
     # ==============================
     # IMPORTANT LABEL MAPPING
     # ==============================
-    # Based on your training:
-    # 0 = Contradiction
-    # 1 = Entailment
+    # Based on training data analysis:
+    # 0 = Entailment (Compliant)
+    # 1 = Contradiction (Violation)
 
-    if prediction == 1:
+    if prediction == 0:
         return {
             "status": "🟢 Compliant",
             "confidence": round(confidence, 2),
             "label_id": prediction
         }
 
-    elif prediction == 0:
+    elif prediction == 1:
         return {
             "status": "🔴 Violation",
             "confidence": round(confidence, 2),

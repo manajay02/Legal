@@ -129,6 +129,29 @@ def check_mandatory_clauses(contract_text, domain):
 
 
 # ==============================
+# Act-to-Domain Mapping
+# ==============================
+ACT_DOMAIN_MAP = {
+    "Industrial Disputes Act": ["employment", "general"],
+    "Shop and Office Employees Act": ["employment", "general"],
+    "Maternity Benefits Ordinance": ["employment"],
+    "EPF Act": ["employment"],
+    "ETF Act": ["employment"],
+    "Gratuity Act": ["employment"],
+    "Termination of Employment Act": ["employment"],
+    "Wages Boards Ordinance": ["employment"],
+    "Rent Act": ["rental"],
+    "Consumer Credit Act": ["consumer"],
+    "Consumer Affairs Authority Act": ["consumer"],
+}
+
+
+def get_rule_domains(act_name):
+    """Get domains that an act applies to"""
+    return ACT_DOMAIN_MAP.get(act_name, ["general"])
+
+
+# ==============================
 # Main Compliance Function
 # ==============================
 def check_compliance(contract_text):
@@ -152,8 +175,9 @@ def check_compliance(contract_text):
 
         for rule in statutes:
 
-            # Skip unrelated domains
-            if rule.get("domain") != domain:
+            # Check if rule applies to detected domain
+            rule_domains = get_rule_domains(rule["act"])
+            if domain not in rule_domains and "general" not in rule_domains:
                 continue
 
             premise = rule["rule"]

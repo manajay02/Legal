@@ -1,0 +1,1467 @@
+[
+    {
+        "act": "Industrial Disputes Act",
+        "section": "2",
+        "rule": "The Commissioner must investigate and attempt to settle any industrial dispute that exists or may arise."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "3",
+        "rule": "The Commissioner may refer any industrial dispute for conciliation, arbitration, or to a labour tribunal."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "8",
+        "rule": "A collective agreement in force is binding on all parties and its terms are part of their employment contracts."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "11",
+        "rule": "The Commissioner or authorized officer must attempt to settle any dispute referred for conciliation."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "12",
+        "rule": "A settlement must be in writing and signed by both parties or their representatives."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "14",
+        "rule": "Any valid settlement is binding on all parties and becomes part of their employment contracts."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "31B(1)(a)",
+        "rule": "Employees have the legal right to challenge termination by applying to a labour tribunal."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "31B(4)",
+        "rule": "Contract clauses cannot override worker rights granted by labour tribunals."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "31B(7)",
+        "rule": "Complaints about termination must be filed within six months."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "31E(1)(a)",
+        "rule": "Retrenchment protections apply only to employers with 15 or more employees."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "31F",
+        "rule": "Employers must give written notice before retrenching an employee."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "31G",
+        "rule": "Retrenchment cannot occur until two months after notice is given."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "32A(a)",
+        "rule": "Employers cannot force union membership or non-membership."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "32A(b)",
+        "rule": "Employees cannot be dismissed for union involvement."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "32A(g)",
+        "rule": "Employers must negotiate with unions that represent at least 40% of workers."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "33(1)(b)",
+        "rule": "Labour tribunals can order reinstatement of dismissed workers."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "33(1)(d)",
+        "rule": "Employers may be ordered to pay compensation for wrongful dismissal."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "40(1)(j)",
+        "rule": "Employers cannot punish workers for participating in legal proceedings."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "40(1)(k)",
+        "rule": "Employees cannot be punished for claiming lawful employment benefits."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "47A",
+        "rule": "Any contract clause that limits worker rights under this Act is invalid."
+    },
+    {
+        "act": "Industrial Disputes Act",
+        "section": "50",
+        "rule": "Retrenched workers must be given priority when rehiring."
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "3(1)",
+        "rule": "An employee must not be employed for more than 8 hours per day or 45 hours per week (excluding rest/meal breaks)."
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "4",
+        "rule": "If an employee has worked earlier for another employer that day, the total hours for both employments must not exceed the legal daily limit."
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "5(1)",
+        "rule": "An employee must be given one full holiday and one half-holiday each week with pay if they have worked at least 28 hours that week."
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "6(1)(a)",
+        "rule": "In the first year of employment, an employee must be granted paid annual leave based on the start date (14/10/7/4 days)."
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "6(1)(b)",
+        "rule": "From the second year onward, an employee is entitled to at least 14 days of paid annual leave, including at least 7 consecutive days."
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "6(2)",
+        "rule": "Annual leave must be taken in the year after the year of employment with dates agreed by employer and employee."
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "6(3)",
+        "rule": "An employee is entitled to up to 7 days of paid casual/medical leave per year."
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "6(4)(a)",
+        "rule": "In the first year, casual leave accrues at 1 day per 2 months of service."
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "6(4)(b)",
+        "rule": "From the second year onward, casual leave may be taken during that year."
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "6(5)",
+        "rule": "Approved absences do not affect service continuity."
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "6(6)",
+        "rule": "On termination, the employee must be allowed unused annual leave with pay or be paid in lieu if leave cannot be taken."
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "6(7)",
+        "rule": "Employees retain leave rights during notice periods"
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "7(1)",
+        "rule": "An employee must be given paid public holidays, up to 9 days per year."
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "7(2)",
+        "rule": "If an employee works on a public holiday, they must receive a replacement holiday or double pay."
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "7A",
+        "rule": "An employee must be granted a holiday on each Full Moon Poya Day."
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "7B",
+        "rule": "If an employee works on a Full Moon Poya Day, they must be paid at least 1.5× the normal daily rate."
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "9(1)",
+        "rule": "An employee must be given meal intervals as specified in the Act’s Schedule."
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "10(1)",
+        "rule": "No person under 16 years old may be employed in a shop or office."
+    },
+    {
+        "act": "Shop and Office Employees Act",
+        "section": "10(2)",
+        "rule": "Employees aged 16–18 (male) and all female employees cannot be employed before 6 a.m. or after 6 p.m., except: (i) females 18+ in hotels/restaurants until 10 p.m., (ii) females 18+ in residential hotels, (iii) females 18+ in shops/offices until 8 p.m., (iv) males 16+ in hotels/restaurants/entertainment until 10 p.m., (v) females 18+ in IT/BPO/back offices"
+    },
+    {
+        "act": "Shop and Office Employees Act, No. 19 of 1954",
+        "section": "11",
+        "rule": "Employers must provide adequate lighting and ventilation."
+    },
+    {
+        "act": "Shop and Office Employees Act, No. 19 of 1954",
+        "section": "13",
+        "rule": "Employers must provide sanitary and washing facilities, including separate female facilities."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "2(1)",
+        "rule": "An employer must not terminate a worker’s employment unless the worker gives written consent or the Labour Commissioner gives prior written approval."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "2(2)(a)",
+        "rule": "The employer must give the worker a copy of the termination request and allow the worker to respond before a decision is made."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "2(2)(b)",
+        "rule": "The Labour Commissioner has full authority to approve or reject a termination request."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "2(2)(c)",
+        "rule": "The Commissioner must grant or refuse approval to terminate employment within 3 months of the employer’s application."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "2(2)(d)",
+        "rule": "The Commissioner must notify both employer and worker in writing of the decision on a termination application."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "2(2)(e)",
+        "rule": "The Commissioner may set terms and conditions for termination, including gratuity or compensation payable by the employer."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "2(2)(f)",
+        "rule": "The Commissioner’s decision on termination approval cannot be challenged in court."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "2(2A)",
+        "rule": "The worker must be informed within 3 days and given 7 days to respond to a termination request."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "2(3)",
+        "rule": "Disobeying the Commissioner’s order is a criminal offence."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "2(3A)(1)",
+        "rule": "Employers must pay a daily fine for continuing to ignore the Commissioner’s order."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "2(4)",
+        "rule": "Termination includes any form of non-employment by the employer, whether temporary or permanent, including termination due to business closure, but excluding disciplinary dismissal."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "2(5)",
+        "rule": "Employers must give written reasons within 2 working days for disciplinary termination."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "3(1)(a)",
+        "rule": "The Act applies only to employers with 15 or more workers."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "3(1)(b)",
+        "rule": "A worker is not protected by this Act if their total period of employment is less than 180 days, even after counting approved leave, injury leave, occupational disease leave, employer-caused work stoppages, lawful strikes or lockouts (up to 30 days), and statutory holidays."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "3(1)(c)",
+        "rule": "Retirement-related termination is excluded from this Act."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "4",
+        "rule": "Workers covered by this Act are excluded from Industrial Disputes Act retrenchment rules."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "5",
+        "rule": "A termination that violates this Act is illegal and has no legal effect."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "6",
+        "rule": "If a termination is unlawful, the Commissioner may order reinstatement and payment of wages and benefits, and the employer must comply."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "6A(1)",
+        "rule": "If employment is terminated due to business closure in violation of the Act, the Commissioner may order compensation instead of reinstatement."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "6B(1)",
+        "rule": "Workers must complain within 6 months of termination."
+    },
+    {
+        "act": "Termination of Employment of Workmen Act",
+        "section": "6D",
+        "rule": "Compensation amounts are calculated according to a Gazette formula determined by the Commissioner and Minister."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "2",
+        "rule": "An employer must not employ a woman worker during the four weeks immediately after her confinement."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "3(1)(a)",
+        "rule": "A woman worker is entitled to 12 weeks of maternity benefit for a live child: 2 weeks before confinement + 10 weeks after."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "3(1)(b)",
+        "rule": "A woman worker is entitled to 6 weeks of maternity benefit for a still birth: 2 weeks before + 4 weeks after."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "3(1) proviso",
+        "rule": "If a woman worker worked any days during the 2‑week pre‑confinement period, she is entitled to maternity benefit for the same number of days after the standard period ends."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "3(2)",
+        "rule": "If the woman worker dies during her maternity benefit period, she (or her nominee) is paid benefits only up to the day of her death."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "5(1)",
+        "rule": "An employer must pay maternity benefit at the prescribed rate for the full statutory period (12 weeks for live birth, 6 weeks for non‑live), including extra days under the proviso rule."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "5(2)",
+        "rule": "Maternity benefit periods are in addition to any other leave or holiday rights the woman worker has."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "7(1)",
+        "rule": "A woman worker may give notice to her employer of her expected confinement within one month before the date."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "7(2)",
+        "rule": "After confinement, a woman worker must give notice within one week of the confinement date and indicate if it was a live birth."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "7(3)",
+        "rule": "A woman worker may nominate someone to receive her maternity benefit on her behalf."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "7(4)",
+        "rule": "An employer must allow the woman worker to be absent for the full statutory maternity benefit period."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "9",
+        "rule": "If the woman worker dies, the employer must pay due maternity benefit to her nominee or her legal heir."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "10",
+        "rule": "An employer must not dismiss a woman worker during maternity absence, nor have notice expire during that absence."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "10A(1)",
+        "rule": "An employer must not terminate employment solely because of the worker’s pregnancy, confinement, or related illness."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "10B(1)",
+        "rule": "If a worker gives notice of expected confinement, the employer must not assign her work harmful to her or her child during pregnancy and 3 months after confinement."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "10B(2)",
+        "rule": "After confinement, the employer must not employ the worker in harmful work for 3 months."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "11(2)",
+        "rule": "If there is a dispute about whether a dismissal notice given to a woman worker was for sufficient cause, the matter must be decided by the Commissioner of Labour, whose decision is final."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "12(B)",
+        "rule": "A woman worker who is nursing a child under one year of age must be allowed two nursing intervals within any nine-hour work period. Each interval must be at least 30 minutes if a creche or suitable place is provided, or at least one hour if not provided, and these intervals are in addition to other breaks and count as paid working time."
+    },
+    {
+        "act": "Maternity Benefits Ordinance",
+        "section": "12A(1)",
+        "rule": "If the employer has more than the prescribed number of women workers, it must provide and maintain a crèche for children under five and allow eligible workers to use it."
+    },
+    {
+        "act": "Payment of Gratuity Act",
+        "section": "2(1)",
+        "rule": "Employers must pay gratuity to workmen who have completed the minimum service period."
+    },
+    {
+        "act": "Payment of Gratuity Act",
+        "section": "2(3)",
+        "rule": "If the employer dies, the legal representative is responsible for paying the gratuity."
+    },
+    {
+        "act": "Payment of Gratuity Act",
+        "section": "3(1)",
+        "rule": "The rate of gratuity depends on the employee’s role and period of service."
+    },
+    {
+        "act": "Payment of Gratuity Act",
+        "section": "4(1)",
+        "rule": "The Commissioner certifies the gratuity amount owed by an employer."
+    },
+    {
+        "act": "Payment of Gratuity Act",
+        "section": "5(1)",
+        "rule": "Gratuity must be paid when an employee with sufficient service is terminated."
+    },
+    {
+        "act": "Payment of Gratuity Act",
+        "section": "5(4)",
+        "rule": "Late gratuity payments incur additional surcharges."
+    },
+    {
+        "act": "Payment of Gratuity Act",
+        "section": "6(2)",
+        "rule": "Gratuity is calculated based on wage or salary for each year of service."
+    },
+    {
+        "act": "Payment of Gratuity Act",
+        "section": "7",
+        "rule": "Employees who are domestic servants or entitled to a non-contributory pension are not eligible for gratuity."
+    },
+    {
+        "act": "Payment of Gratuity Act",
+        "section": "13",
+        "rule": "The Employer may withhold or forfeit gratuity if termination is due to proven misconduct causing loss."
+    },
+    {
+        "act": "Payment of Gratuity Act",
+        "section": "9",
+        "rule": "Gratuity must be paid to heirs if the employee dies before receiving it."
+    },
+    {
+        "act": "Payment of Gratuity Act",
+        "section": "7A(1)",
+        "rule": "Gratuity for employees in converted public companies can be paid via cash or bonds."
+    },
+    {
+        "act": "Payment of Gratuity Act",
+        "section": "7A(2)",
+        "rule": "Bonds issued as gratuity accrue interest and can be encashed under specified conditions."
+    },
+    {
+        "act": "Payment of Gratuity Act",
+        "section": "11(1)",
+        "rule": "The Commissioner can inspect employer records for gratuity compliance."
+    },
+    {
+        "act": "Payment of Gratuity Act",
+        "section": "12",
+        "rule": "Employers must comply with official directions to provide records for gratuity verification."
+    },
+    {
+        "act": "Payment of Gratuity Act",
+        "section": "14",
+        "rule": "Service under previous employers counts toward gratuity if ownership changes within five years."
+    },
+    {
+        "act": "Employees’ Provident Fund Act",
+        "section": "10(1)",
+        "rule": "Employees must contribute 8% of their monthly earnings to the Employees’ Provident Fund for each month worked in covered employment."
+    },
+    {
+        "act": "Employees’ Provident Fund Act",
+        "section": "10(2)",
+        "rule": "Employers must pay 12% of the employee’s monthly earnings to EPF by the last day of the following month."
+    },
+    {
+        "act": "Employees’ Provident Fund Act",
+        "section": "11",
+        "rule": "EPF contributions can be voluntarily increased above statutory minimums."
+    },
+    {
+        "act": "Employees’ Provident Fund Act",
+        "section": "12(1)",
+        "rule": "If an employer reduces an employee’s earnings to lower EPF contributions, the Commissioner can direct the employer to pay the difference."
+    },
+    {
+        "act": "Employees’ Provident Fund Act",
+        "section": "16",
+        "rule": "Employers must pay a surcharge for late contributions ranging from 5% to 50% depending on the period of delay."
+    },
+    {
+        "act": "Employees’ Provident Fund Act",
+        "section": "18",
+        "rule": "All contributions and interest must be credited to the employee’s individual EPF account."
+    },
+    {
+        "act": "Employees’ Provident Fund Act",
+        "section": "19",
+        "rule": "Employers must not reduce an employee’s earnings or benefits because of EPF obligations."
+    },
+    {
+        "act": "Employees’ Provident Fund Act",
+        "section": "20",
+        "rule": "Employers cannot deduct EPF contributions or surcharge from employee wages; contracts attempting this are void."
+    },
+    {
+        "act": "Employees’ Provident Fund Act",
+        "section": "22",
+        "rule": "EPF funds cannot be assigned or attached except as permitted by law."
+    },
+    {
+        "act": "Employees’ Trust Fund Act",
+        "section": "4",
+        "rule": "The Employees’ Trust Fund Board must be set up to administer and manage the Fund."
+    },
+    {
+        "act": "Employees’ Trust Fund Act",
+        "section": "8(e)",
+        "rule": "The Board must maintain a general Fund account and individual accounts for each member."
+    },
+    {
+        "act": "Employees’ Trust Fund Act",
+        "section": "16(1)",
+        "rule": "Employers must contribute 3% of each employee’s monthly earnings to the Fund, payable by the last day of the following month."
+    },
+    {
+        "act": "Employees’ Trust Fund Act",
+        "section": "16(3)",
+        "rule": "All ETF contributions must be credited to the employee’s individual account."
+    },
+    {
+        "act": "Employees’ Trust Fund Act",
+        "section": "17(1)(a)",
+        "rule": "If an employer makes higher voluntary contributions, 3% must go to ETF, and any excess may be allocated to approved provident funds."
+    },
+    {
+        "act": "Employees’ Trust Fund Act",
+        "section": "18",
+        "rule": "Self-employed persons or migrant workers may join the Fund voluntarily by notifying the Board in writing."
+    },
+    {
+        "act": "Employees’ Trust Fund Act",
+        "section": "22(1)",
+        "rule": "ETF contributions earn statutory interest, at a minimum rate of 3% per annum, as fixed by the Board"
+    },
+    {
+        "act": "Employees’ Trust Fund Act",
+        "section": "23(1)",
+        "rule": "On termination of employment, the employee is entitled to receive the amount standing to their credit in the Fund, subject to statutory conditions."
+    },
+    {
+        "act": "Employees’ Trust Fund Act",
+        "section": "23(1) proviso",
+        "rule": "Withdrawals from individual ETF accounts are restricted to once every 5 years, except for members over 60 or those permanently leaving Sri Lanka."
+    },
+    {
+        "act": "Employees’ Trust Fund Act",
+        "section": "15(2)",
+        "rule": "Rights to the Fund’s monies are strictly limited to statutory provisions; no additional or extrastatutory claims are allowed."
+    },
+    {
+        "act": "Employment of Women, Young Persons, and Children Act",
+        "section": "2(1)",
+        "rule": "Persons under 18 cannot be employed at night in industrial undertakings."
+    },
+    {
+        "act": "Employment of Women, Young Persons, and Children Act",
+        "section": "2A(2)",
+        "rule": "Night work for women is allowed only voluntarily, with Labour Commissioner approval, additional pay, welfare supervision, rest facilities, and maximum 10 nights per month."
+    },
+    {
+        "act": "Employment of Women, Young Persons, and Children Act",
+        "section": "6",
+        "rule": "Young persons may not be employed at night except as permitted by law."
+    },
+    {
+        "act": "Employment of Women, Young Persons, and Children Act",
+        "section": "7(1)",
+        "rule": "No child under 14 may be employed in industrial undertakings."
+    },
+    {
+        "act": "Employment of Women, Young Persons, and Children Act",
+        "section": "8(1)",
+        "rule": "Employers must maintain accurate employment registers for women and young persons."
+    },
+    {
+        "act": "Employment of Women, Young Persons, and Children Act",
+        "section": "9(1)",
+        "rule": "No person under 15 may be employed on Sri Lankan or Sri Lanka-connected vessels."
+    },
+    {
+        "act": "Employment of Women, Young Persons, and Children Act",
+        "section": "16(1)",
+        "rule": "Employment details of children must be disclosed to authorized officers when requested."
+    },
+    {
+        "act": "Employment of Women, Young Persons, and Children Act",
+        "section": "18(1)",
+        "rule": "Children cannot participate in entertainment for which payment is charged."
+    },
+    {
+        "act": "Employment of Women, Young Persons, and Children Act",
+        "section": "20A(1)",
+        "rule": "No person under 18 may be employed in hazardous occupations."
+    },
+    {
+        "act": "Employment of Women, Young Persons, and Children Act",
+        "section": "22(1)",
+        "rule": "Employers and guardians must provide employment information of women and young persons to authorized officers when requested."
+    },
+    {
+        "act": "Employment of Women, Young Persons, and Children Act",
+        "section": "25(1)",
+        "rule": "Labour officers may inspect workplaces and investigate compliance."
+    },
+    {
+        "act": "National Minimum Wage of Workers Act, No. 3 of 2016",
+        "section": "3(1)",
+        "rule": "Employers must pay every worker at least LKR 10,000 per month or LKR 400 per day, regardless of industry or service."
+    },
+    {
+        "act": "National Minimum Wage of Workers Act, No. 3 of 2016",
+        "section": "3(2)",
+        "rule": "No employer may pay less than the national minimum wage, even if other laws allow lower payments."
+    },
+    {
+        "act": "National Minimum Wage of Workers Act, No. 3 of 2016",
+        "section": "4",
+        "rule": "Existing employees must not have reduced wages or benefits after the Act starts."
+    },
+    {
+        "act": "National Minimum Wage of Workers Act, No. 3 of 2016",
+        "section": "5(1)",
+        "rule": "Employers must keep a wage register showing employee names, job type, and wages."
+    },
+    {
+        "act": "National Minimum Wage of Workers Act, No. 3(2)",
+        "section": "5(2)",
+        "rule": "Wage registers must be kept for 6 years."
+    },
+    {
+        "act": "National Minimum Wage of Workers Act, No. 3 of 2016",
+        "section": "6",
+        "rule": "Labour inspectors can check compliance, review registers, and demand wage info from employers."
+    },
+    {
+        "act": "National Minimum Wage of Workers Act, No. 3 of 2016",
+        "section": "8(1)",
+        "rule": "If wages are unpaid, the Commissioner-General can order the employer to pay the defaulted amount."
+    },
+    {
+        "act": "National Minimum Wage of Workers Act, No. 3 of 2016",
+        "section": "8(3)",
+        "rule": "Non-payment can lead to court action and fines imposed by a Magistrate."
+    },
+    {
+        "act": "National Minimum Wage of Workers Act, No. 3 of 2016",
+        "section": "9(1)",
+        "rule": "Violating minimum wage rules can result in fines up to LKR 25,000 or 6 months imprisonment."
+    },
+    {
+        "act": "National Minimum Wage of Workers Act, No. 3 of 2016",
+        "section": "14",
+        "rule": "Definitions: Employer = person/company hiring workers; Worker = anyone under a contract; National minimum wage = salary or allowance meeting minimum wage."
+    },
+    {
+        "act": "Rent Act, No. 7 of 1972",
+        "section": "3(1)",
+        "rule": "A landlord must not charge rent higher than the authorized or receivable rent fixed under the Act."
+    },
+    {
+        "act": "Rent Act, No. 7 of 1972",
+        "section": "9(1)(a)",
+        "rule": "Advance rent cannot exceed three months of the lawful rent."
+    },
+    {
+        "act": "Rent Act, No. 7 of 1972",
+        "section": "9(1)(b)",
+        "rule": "Extra payments such as key money or premiums are illegal."
+    },
+    {
+        "act": "Rent Act, No. 7 of 1972",
+        "section": "10(2)(a)",
+        "rule": "A tenant must obtain written consent before subletting."
+    },
+    {
+        "act": "Rent Act, No. 7 of 1972",
+        "section": "10(5)",
+        "rule": "Unauthorized subletting allows lawful eviction through court."
+    },
+    {
+        "act": "Rent Act, No. 7 of 1972",
+        "section": "10(6)",
+        "rule": "Even tenants subletting must not charge above authorized or proportionate rent."
+    },
+    {
+        "act": "Rent Act, No. 7 of 1972",
+        "section": "10(11)",
+        "rule": "Landlord must not charge above fixed proportionate rent for parts of premises."
+    },
+    {
+        "act": "Rent Act, No. 7 of 1972",
+        "section": "11(1)",
+        "rule": "A landlord cannot separately charge for furniture or fittings."
+    },
+    {
+        "act": "Rent Act, No. 7 of 1972",
+        "section": "15(1)",
+        "rule": "A landlord must not cut off essential services such as water, electricity, or sanitation."
+    },
+    {
+        "act": "Rent Act, No. 7 of 1972",
+        "section": "16",
+        "rule": "Force or harassment to evict a tenant is strictly prohibited."
+    },
+    {
+        "act": "Rent Act, No. 7 of 1972",
+        "section": "17(1)",
+        "rule": "A landlord must not interfere with a tenant’s lawful occupation."
+    },
+    {
+        "act": "Rent Act, No. 7 of 1972",
+        "section": "22(3)(a)",
+        "rule": "For rent arrears eviction, advance notice is mandatory (3 months first time, 2 months second, 1 month thereafter)."
+    },
+    {
+        "act": "Rent Act, No. 7 of 1972",
+        "section": "22(6)",
+        "rule": "Eviction for landlord’s own use requires one year’s written notice."
+    },
+    {
+        "act": "Rent Act, No. 7 of 1972",
+        "section": "22(7)",
+        "rule": "New owners cannot evict existing tenants for personal use in most cases."
+    },
+    {
+        "act": "Rent Act, No. 7 of 1972",
+        "section": "32",
+        "rule": "Tenants can recover or deduct excess rent paid."
+    },
+    {
+        "act": "Rent Act, No. 7 of 1972",
+        "section": "33(1)",
+        "rule": "Landlords must provide a written rent statement when requested."
+    },
+    {
+        "act": "Rent Act, No. 7 of 1972",
+        "section": "33(2)",
+        "rule": "Rent receipts are mandatory for all payments."
+    },
+    {
+        "act": "Registration of Documents Ordinance",
+        "section": "3",
+        "rule": "Any document affecting land, ownership, or mortgages falls under this law and may require registration."
+    },
+    {
+        "act": "Registration of Documents Ordinance",
+        "section": "7(1)",
+        "rule": "An unregistered land document is legally weaker and loses priority to a later registered document."
+    },
+    {
+        "act": "Registration of Documents Ordinance",
+        "section": "8",
+        "rule": "Sale deeds, transfers, mortgages, land agreements, wills, and court orders must be registered to affect land rights."
+    },
+    {
+        "act": "Registration of Documents Ordinance",
+        "section": "11(1)",
+        "rule": "Pending court cases affecting land are not enforceable against buyers unless officially registered."
+    },
+    {
+        "act": "Registration of Documents Ordinance",
+        "section": "13(1)",
+        "rule": "Land documents must clearly describe the property (location, boundaries, size) to be valid for registration."
+    },
+    {
+        "act": "Registration of Documents Ordinance",
+        "section": "13(5)",
+        "rule": "Documents missing required land details can be legally rejected and treated as non-compliant."
+    },
+    {
+        "act": "Registration of Documents Ordinance",
+        "section": "26(1)",
+        "rule": "The parties to the document or anyone with a legal interest can submit it for registration."
+    },
+    {
+        "act": "Registration of Documents Ordinance",
+        "section": "27(1)",
+        "rule": "Registration time determines legal priority between competing land documents."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "10(3)",
+        "rule": "Manufacturers and traders must comply with labelling, price marking, and packaging directions issued by the Authority."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "11",
+        "rule": "Selling goods above the marked price is illegal."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "13(4)",
+        "rule": "Goods or services must conform to standards and warranties. Failure requires compensation, replacement, or refund."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "14(1)",
+        "rule": "Agreements can set maximum prices for goods."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "15(1)",
+        "rule": "Traders cannot refuse to sell goods they have in stock for trade purposes."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "16(b)",
+        "rule": "Traders cannot impose conditions requiring purchase of additional goods or services (no forced bundling)."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "17(2)",
+        "rule": "Traders cannot hoard goods beyond normal trading requirements."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "18(2)",
+        "rule": "Price increases for essential goods/services require Authority approval."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "26(1)",
+        "rule": "Traders must display price lists conspicuously in their business premises."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "28",
+        "rule": "Traders must issue receipts showing date, quantity, price, and transaction type."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "30",
+        "rule": "Traders cannot engage in misleading or deceptive conduct."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "31(a)",
+        "rule": "False claims about quality, standard, grade, style, or model are illegal."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "31(b)",
+        "rule": "Falsely claiming goods are new is illegal."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "31(c)",
+        "rule": "False claims about product features, benefits, or endorsements are illegal."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "31(e)",
+        "rule": "False claims about discounts or price changes are illegal."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "31(f)",
+        "rule": "False claims about necessity of goods, services, or repairs are illegal."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "31(g)",
+        "rule": "False claims about warranties or guarantees are illegal."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "32(1)(a)",
+        "rule": "All service contracts have an implied warranty of due care and skill."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "32(1)(b)",
+        "rule": "Materials supplied with services must be fit for their intended purpose."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "32(1)(c)",
+        "rule": "All goods and services must meet determined standards and specifications."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "32(1)(d)",
+        "rule": "All goods must be reasonably fit for their intended purpose."
+    },
+    {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "32(2)",
+        "rule": "When consumers specify a purpose, there is an implied warranty goods/services will be fit for that stated purpose."
+    },
+    {
+        "act": "Unfair Contract Terms Act No. 26 of 1997",
+        "section": "3(1)",
+        "rule": "Contract clauses excluding liability for death or personal injury from negligence must be ignored."
+    },
+    {
+        "act": "Unfair Contract Terms Act No. 26 of 1997",
+        "section": "3(2)",
+        "rule": "Contract clauses excluding liability for other loss/damage from negligence must be reasonable."
+    },
+    {
+        "act": "Unfair Contract Terms Act No. 26 of 1997",
+        "section": "3(3)",
+        "rule": "Awareness or agreement to a negligence exclusion clause does not mean acceptance of risk."
+    },
+    {
+        "act": "Unfair Contract Terms Act No. 26 of 1997",
+        "section": "4(2)(b)(i)",
+        "rule": "Cannot perform substantially different obligations than agreed."
+    },
+    {
+        "act": "Unfair Contract Terms Act No. 26 of 1997",
+        "section": "4(2)(b)(ii)",
+        "rule": "Cannot avoid performance completely unless contract term is reasonable."
+    },
+    {
+        "act": "Unfair Contract Terms Act No. 26 of 1997",
+        "section": "5(1)",
+        "rule": "Consumer cannot be required to indemnify another’s negligence or breach unless reasonable."
+    },
+    {
+        "act": "Unfair Contract Terms Act No. 26 of 1997",
+        "section": "6(1)(a)",
+        "rule": "Guarantees cannot exclude liability for defective goods in consumer use."
+    },
+    {
+        "act": "Unfair Contract Terms Act No. 26 of 1997",
+        "section": "6(1)(b)",
+        "rule": "Guarantees cannot exclude liability for manufacturer/distributor negligence."
+    },
+    {
+        "act": "Unfair Contract Terms Act No. 26 of 1997",
+        "section": "7(2)(a)",
+        "rule": "Cannot exclude consumer protections for quality, fitness for purpose, and sale by sample."
+    },
+    {
+        "act": "Unfair Contract Terms Act No. 26 of 1997",
+        "section": "7(2)(b)",
+        "rule": "Cannot exclude consumer protections in hire-purchase agreements."
+    },
+    {
+        "act": "Unfair Contract Terms Act No. 26 of 1997",
+        "section": "9",
+        "rule": "Cannot use another contract to bypass protections under this Act."
+    },
+    {
+        "act": "Unfair Contract Terms Act No. 26 of 1997",
+        "section": "10(1)",
+        "rule": "Reasonableness test: term must be fair given circumstances at contract formation."
+    },
+    {
+        "act": "Unfair Contract Terms Act No. 26 of 1997",
+        "section": "10(5)",
+        "rule": "Party claiming reasonableness must prove it."
+    },
+    {
+        "act": "Unfair Contract Terms Act No. 26 of 1997",
+        "section": "11(a)",
+        "rule": "Cannot avoid liability by imposing burdensome conditions."
+    },
+    {
+        "act": "Unfair Contract Terms Act No. 26 of 1997",
+        "section": "11(b)",
+        "rule": "Cannot restrict remedies or penalize someone for pursuing rights."
+    },
+    {
+        "act": "Unfair Contract Terms Act No. 26 of 1997",
+        "section": "11(c)",
+        "rule": "Cannot restrict rules of evidence or procedure via contract."
+    },
+    {
+        "act": "Sale of Goods Ordinance, No. 11 of 1896",
+        "section": "2(1)",
+        "rule": "A sale of goods contract involves transfer of ownership for money."
+    },
+    {
+        "act": "Sale of Goods Ordinance, No. 11 of 1896",
+        "section": "5(1)",
+        "rule": "A sale of goods contract must be evidenced in writing or performance (acceptance or payment)."
+    },
+    {
+        "act": "Sale of Goods Ordinance, No. 11 of 1896",
+        "section": "13(a)",
+        "rule": "Seller must have the legal right to sell the goods."
+    },
+    {
+        "act": "Sale of Goods Ordinance, No. 11 of 1896",
+        "section": "13(b)",
+        "rule": "Buyer has right to quiet possession of the goods."
+    },
+    {
+        "act": "Sale of Goods Ordinance, No. 11 of 1896",
+        "section": "13(c)",
+        "rule": "Goods must be free from unknown liens/encumbrances."
+    },
+    {
+        "act": "Sale of Goods Ordinance, No. 11 of 1896",
+        "section": "14",
+        "rule": "Goods sold by description must match that description."
+    },
+    {
+        "act": "Sale of Goods Ordinance, No. 11 of 1896",
+        "section": "15(1)",
+        "rule": "If buyer states a specific purpose, goods must be fit for that purpose."
+    },
+    {
+        "act": "Sale of Goods Ordinance, No. 11 of 1896",
+        "section": "15(2)",
+        "rule": "Goods bought by description must be of merchantable quality."
+    },
+    {
+        "act": "Sale of Goods Ordinance, No. 11 of 1896",
+        "section": "15(4)",
+        "rule": "Express contract terms cannot remove implied warranties unless they directly conflict."
+    },
+    {
+        "act": "Sale of Goods Ordinance, No. 11 of 1896",
+        "section": "16(2)(a)",
+        "rule": "Goods sold by sample must match the sample in quality."
+    },
+    {
+        "act": "Sale of Goods Ordinance, No. 11 of 1896",
+        "section": "16(2)(c)",
+        "rule": "Goods sold by sample must be free from hidden defects."
+    },
+    {
+        "act": "Sale of Goods Ordinance, No. 11 of 1896",
+        "section": "27",
+        "rule": "Seller must deliver goods and buyer must accept and pay as agreed."
+    },
+    {
+        "act": "Sale of Goods Ordinance, No. 11 of 1896",
+        "section": "28",
+        "rule": "Delivery and payment must occur at the same time unless agreed otherwise."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "3(1)",
+        "rule": "Cash price must be disclosed in writing before entering a hire-purchase agreement."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "3(2)",
+        "rule": "Hire-purchase agreements not complying with statutory form and disclosure requirements are unenforceable."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "3(2)(b)",
+        "rule": "Hire-purchase agreements must clearly state price, instalments, deposit, and goods details."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "3(2)(c)",
+        "rule": "Mandatory statutory notice must be prominently included in the agreement."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "4(1)(a)",
+        "rule": "Hirer must have quiet possession of the goods."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "4(1)(b)",
+        "rule": "Owner must have the legal right to sell the goods."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "4(1)(c)",
+        "rule": "Goods must be free from undisclosed charges or encumbrances."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "4(2)",
+        "rule": "Goods must be of merchantable quality unless a lawful exception applies."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "4(3)",
+        "rule": "Goods must be fit for the purpose made known by the hirer."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "4(4)(a)",
+        "rule": "Goods sold by sample must match the sample."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "4(5)",
+        "rule": "Goods sold by description must match the description."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "4(6)",
+        "rule": "Fitness-for-purpose exclusions are invalid unless clearly disclosed."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "5(3)",
+        "rule": "Excessive hire-purchase charges must be reduced to statutory limits."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "7(1)",
+        "rule": "Hirer has a right to early purchase with rebate."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "8(4)",
+        "rule": "Clauses restricting the hirer’s right to terminate are void."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "16(1)",
+        "rule": "Hirer is entitled to compensation on unfair repossession."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "18(1)",
+        "rule": "Owner must give proper notice before terminating for default."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "20(1)",
+        "rule": "Goods cannot be repossessed without court action after 75% payment."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "24(1)",
+        "rule": "Owner must provide agreement copies and payment information on request."
+    },
+    {
+        "act": "Consumer Credit Act No. 29 of 1982",
+        "section": "29",
+        "rule": "Unfair hire-purchase clauses listed in the Act are void."
+    },
+    {
+        "act": "Finance Leasing Act, No. 56 of 2000",
+        "section": "2",
+        "rule": "A person must be registered to legally run a finance leasing business."
+    },
+    {
+        "act": "Finance Leasing Act, No. 56 of 2000",
+        "section": "3",
+        "rule": "Only approved financial institutions can get a finance leasing registration."
+    },
+    {
+        "act": "Finance Leasing Act, No. 56 of 2000",
+        "section": "11 (1)",
+        "rule": "A lessee has a right to peaceful possession of leased equipment; the lessor must protect it."
+    },
+    {
+        "act": "Finance Leasing Act, No. 56 of 2000",
+        "section": "12",
+        "rule": "A lessee must care for and properly use the leased equipment."
+    },
+    {
+        "act": "Finance Leasing Act, No. 56 of 2000",
+        "section": "13 (1)",
+        "rule": "If the equipment is not delivered on time or is defective, the lessee may reject and end the lease."
+    },
+    {
+        "act": "Finance Leasing Act, No. 56 of 2000",
+        "section": "15",
+        "rule": "At the end of the lease, the lessee must return the equipment unless ownership was agreed."
+    },
+    {
+        "act": "Finance Leasing Act, No. 56 of 2000",
+        "section": "20",
+        "rule": "If the lessee defaults, the lessor can demand full payment, end the lease, reclaim equipment, and seek damages."
+    },
+    {
+        "act": "Finance Leasing Act, No. 56 of 2000",
+        "section": "21 (1)",
+        "rule": "Before enforcing default rights, the lessor must serve a written notice specifying the default and a timeline to fix it."
+    },
+    {
+        "act": "Wages Boards Ordinance, No. 27 of 1941",
+        "section": "2(a)",
+        "rule": "Employers must pay wages in cash/legal tender directly to employees and cannot make unauthorized deductions."
+    },
+    {
+        "act": "Wages Boards Ordinance, No. 27 of 1941",
+        "section": "2(b)",
+        "rule": "Employers must set a wage period and pay wages within the legal timeframe (3–10 days depending on period length)."
+    },
+    {
+        "act": "Wages Boards Ordinance, No. 27 of 1941",
+        "section": "2(c)",
+        "rule": "When employment ends, the employer must pay all wages due within two working days."
+    },
+    {
+        "act": "Wages Boards Ordinance, No. 27 of 1941",
+        "section": "3(1)",
+        "rule": "Employers must keep accurate written wage records including wages paid, dates, hours worked, and deductions."
+    },
+    {
+        "act": "Wages Boards Ordinance, No. 27 of 1941",
+        "section": "3(2)",
+        "rule": "Wage records must be kept for at least four years and produced when requested."
+    },
+    {
+        "act": "Wages Boards Ordinance, No. 27 of 1941",
+        "section": "3A",
+        "rule": "Employers must give a holiday on Poya days and pay at least 1.5× normal wage if work is done on that day."
+    },
+    {
+        "act": "Wages Boards Ordinance, No. 27 of 1941",
+        "section": "20",
+        "rule": "A Wages Board sets mandatory minimum wage and overtime rates for specific trades."
+    },
+    {
+        "act": "Wages Boards Ordinance, No. 27 of 1941",
+        "section": "21",
+        "rule": "Employers must pay wages at least at the minimum rate fixed by the relevant Wages Board."
+    },
+    {
+        "act": "Wages Boards Ordinance, No. 27 of 1941",
+        "section": "4(1)",
+        "rule": "Violating wage provisions can result in fines up to Rs. 5,000 or imprisonment up to 6 months, or both"
+    },
+    {
+        "act": "Microfinance Act No. 6 of 2016",
+        "section": "11(b)",
+        "rule": "Loan agreements must comply with Board-set maximum interest rates and loan term limits."
+    },
+    {
+        "act": "Microfinance Act No. 6 of 2016",
+        "section": "23(2)(d)",
+        "rule": "Microfinance NGO loan agreements must comply with maximum interest rates and other terms set by the Registrar."
+    },
+    {
+        "act": "Microfinance Act No. 6 of 2016",
+        "section": "23(2)(e)",
+        "rule": "Savings agreements issued by microfinance NGOs must comply with maximum interest rate limits set by the Registrar."
+    },
+    {
+        "act": "Microfinance Act No. 6 of 2016",
+        "section": "23(2)(h)",
+        "rule": "Loan agreements must include consumer protection measures as required by Registrar-issued rules."
+    },
+    {
+        "act": "Microfinance Act No. 6 of 2016",
+        "section": "32",
+        "rule": "Only licensed or exempt entities can provide microfinance services; agreements from unlicensed lenders are illegal."
+    },
+    {
+        "act": "Pawnbrokers Ordinance",
+        "section": "17",
+        "rule": "Pawnbroker loan contracts must not charge interest above the legally specified maximum rate."
+    },
+    {
+        "act": "Pawnbrokers Ordinance",
+        "section": "18",
+        "rule": "Pawnbroker loan agreements must allow redemption of pledged goods within 12 months."
+    },
+    {
+        "act": "Pawnbrokers Ordinance",
+        "section": "20(1)",
+        "rule": "Pawn contracts must allow redemption on surrender of pawn ticket foil and proper signature."
+    },
+    {
+        "act": "Pawnbrokers Ordinance",
+        "section": "27",
+        "rule": "Pawnbroker must give 14 days notice before selling a pledged item."
+    },
+    {
+        "act": "Pawnbrokers Ordinance",
+        "section": "29",
+        "rule": "After sale of a pledged item, the pawnbroker must pay the debtor any surplus within one year if demanded."
+    },
+    {
+        "act": "Prevention of Frauds Ordinance, No. 7 of 1840",
+        "section": "2(1)",
+        "rule": "Contracts involving land or immovable property must be in writing, signed by all parties, and notarised, otherwise they are legally invalid."
+    },
+    {
+        "act": "Prevention of Frauds Ordinance, No. 7 of 1840",
+        "section": "2(1)(b)",
+        "rule": "Land transaction documents must include the thumb impression of each party, affixed before a notary and witnesses."
+    },
+    {
+        "act": "Prevention of Frauds Ordinance, No. 7 of 1840",
+        "section": "18(a)",
+        "rule": "Agreements to guarantee or be responsible for another’s debt must be in writing and signed to be enforceable."
+    },
+    {
+        "act": "Prevention of Frauds Ordinance, No. 7 of 1840",
+        "section": "18(b)",
+        "rule": "Contracts to pledge movable property are invalid unless the property has been physically delivered to the pledgee."
+    },
+    {
+        "act": "Prevention of Frauds Ordinance, No. 7 of 1840",
+        "section": "18(c)",
+        "rule": "Partnership agreements with capital exceeding Rs. 1,000 must be in writing and signed by all partners to be valid."
+    },
+    {
+        "act": "Electronic Transactions Act, No. 19 of 2006",
+        "section": "3",
+        "rule": "Contracts or clauses formed electronically (e‑contracts) cannot be treated as invalid just because they are electronic."
+    },
+    {
+        "act": "Electronic Transactions Act, No. 19 of 2006",
+        "section": "4",
+        "rule": "When a law requires writing, an electronic record that can be accessed later is legally equivalent to written form."
+    },
+    {
+        "act": "Electronic Transactions Act, No. 19 of 2006",
+        "section": "5",
+        "rule": "If a contract must be kept in original form, an electronic record that reliably preserves integrity counts as original."
+    },
+    {
+        "act": "Electronic Transactions Act, No. 19 of 2006",
+        "section": "7",
+        "rule": "Electronic signatures (e‑signatures) are legally valid if they identify the signer and show intent to authenticate the contract."
+    },
+    {
+        "act": "Electronic Transactions Act, No. 19 of 2006",
+        "section": "11",
+        "rule": "A contract formed by offer and acceptance electronically is valid and enforceable even if entirely digital."
+    },
+    {
+        "act": "Electronic Transactions Act, No. 19 of 2006",
+        "section": "17(a)",
+        "rule": "If a contract uses electronic records or e‑signatures, it cannot be denied legal effect just because it uses digital formats or e‑signatures."
+    },
+    {
+        "act": "Electronic Transactions Act, No. 19 of 2006",
+        "section": "14(2)(a)(i)",
+        "rule": "An electronic contract is deemed received when it arrives at the recipient’s designated electronic address and can be retrieved, not when actually read."
+    },
+    {
+        "act": "Electronic Transactions Act, No. 19 of 2006",
+        "section": "14A(1)",
+        "rule": "If an input error occurs in an electronic contract and cannot be corrected immediately, the person may withdraw that portion of the contract if notified promptly."
+    },
+    {
+        "act": "Electronic Transactions Act, No. 19 of 2006",
+        "section": "21(2)",
+        "rule": "Electronic documents and records are admissible as evidence in court proceedings."
+    },
+    {
+        "act": "Electronic Transactions Act, No. 19 of 2006",
+        "section": "21(3)",
+        "rule": "Courts will presume electronic documents and e-signatures are genuine unless proven otherwise."
+    },
+    {
+        "act": "Partnership Ordinance",
+        "section": "3",
+        "rule": "A person who lends money and receives profit-based interest or a share of profits does not automatically become a partner and is not liable as a partner."
+    },
+    {
+        "act": "Partnership Ordinance",
+        "section": "4",
+        "rule": "An employee or agent paid through profit-sharing does not become a partner and has no partnership rights or liabilities."
+    },
+    {
+        "act": "Partnership Ordinance",
+        "section": "5",
+        "rule": "A widow or child receiving profit payments after a partner’s death is not considered a partner and is not liable for business debts."
+    },
+    {
+        "act": "Partnership Ordinance",
+        "section": "6",
+        "rule": "A person who sold a business and receives ongoing profit payments is not a partner and is not liable for the business’s debts."
+    },
+    {
+        "act": "Partnership Ordinance",
+        "section": "7",
+        "rule": "If the business becomes bankrupt or insolvent, a lender with profit-based interest can only recover after all other creditors are fully paid."
+    },
+    {
+        "act": "Money Lending Ordinance, No. 2 of 1918",
+        "section": "2(1)(a)",
+        "rule": "If a loan’s total charges (interest, fees, penalties) are excessive and the transaction is harsh or unfair, the court can review the loan and reduce the amount owed to what is fair."
+    },
+    {
+        "act": "Money Lending Ordinance, No. 2 of 1918",
+        "section": "4(2)(a)",
+        "rule": "For loans up to Rs. 100, any interest rate above 20% per year is presumed unreasonable unless the lender proves otherwise."
+    },
+    {
+        "act": "Money Lending Ordinance, No. 2 of 1918",
+        "section": "4(2)(b)",
+        "rule": "For loans between Rs. 100 and Rs. 2,500, any interest rate above 18% per year is presumed unreasonable unless the lender proves otherwise."
+    },
+    {
+        "act": "Money Lending Ordinance, No. 2 of 1918",
+        "section": "4(2)(c)",
+        "rule": "For loans over Rs. 2,500, any interest rate above 15% per year is presumed unreasonable unless the lender proves it is reasonable."
+    },
+    {
+        "act": "Money Lending Ordinance, No. 2 of 1918",
+        "section": "5",
+        "rule": "The total interest charged on a loan can never exceed the original principal amount at any point in time."
+    },
+    {
+        "act": "Money Lending Ordinance, No. 2 of 1918",
+        "section": "6(1)",
+        "rule": "A loan agreement is invalid if obtained through undue influence where one party dominates the other and gains an unfair advantage."
+    },
+    {
+        "act": "Money Lending Ordinance, No. 2 of 1918",
+        "section": "8(1)",
+        "rule": "Money lenders must keep clear written records of all loan transactions showing amounts, payments, and charges in plain language."
+    },
+    {
+        "act": "Money Lending Ordinance, No. 2 of 1918",
+        "section": "8(2)",
+        "rule": "If a money lender fails to keep proper loan records, they cannot legally enforce the loan in court."
+    },
+    {
+        "act": "Money Lending Ordinance, No. 2 of 1918",
+        "section": "10(1)",
+        "rule": "Every promissory note must clearly state the amount borrowed, any advance deductions, and the annual interest rate."
+    },
+    {
+        "act": "Money Lending Ordinance, No. 2 of 1918",
+        "section": "10(2)",
+        "rule": "A promissory note that does not clearly state loan details cannot be enforced in court."
+    },
+    {
+        "act": "Money Lending Ordinance, No. 2 of 1918",
+        "section": "13",
+        "rule": "It is a criminal offence for a lender to accept a promissory note with a false or blank amount."
+    },
+    {
+        "act": "Money Lending Ordinance, No. 2 of 1918",
+        "section": "15",
+        "rule": "Money lenders are not allowed to harass or intimidate borrowers by targeting their home or workplace."
+    },
+    {
+        "act": "Money Lending Ordinance, No. 2 of 1918",
+        "section": "16",
+        "rule": "It is illegal for a lender to persuade a borrower’s spouse or child to take a loan without written consent."
+    }
+]

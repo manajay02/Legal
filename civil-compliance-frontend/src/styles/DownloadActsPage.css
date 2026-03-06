@@ -65,7 +65,7 @@
 
 /* Hero Section */
 .acts-hero {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  background: linear-gradient(135deg, #4918bb 0%, #8c10b9 100%);
   border-radius: 24px;
   padding: 3rem 2rem;
   margin-bottom: 2rem;
@@ -108,7 +108,7 @@
   gap: 0.75rem;
   padding: 0.75rem 1.25rem;
   background: #f8fafc;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #bdc5cf;
   border-radius: 12px;
   margin-bottom: 1rem;
   transition: all 0.2s ease;
@@ -121,7 +121,7 @@
 
 .search-box .search-icon {
   font-size: 1.25rem;
-  color: #64748b;
+  color: #6785ad;
 }
 
 .search-box input {
@@ -168,7 +168,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 1.25rem;
-  background: #f1f5f9;
+  background: #c7d3da;
   border: 2px solid transparent;
   border-radius: 25px;
   font-size: 0.9rem;
@@ -285,7 +285,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.25rem;
-  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  background: linear-gradient(135deg, #f2f0ee 0%, #bdb9b5 100%);
   border-bottom: 1px solid #fed7aa;
 }
 
@@ -337,7 +337,7 @@
   gap: 0.5rem;
   width: 100%;
   padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  background: linear-gradient(135deg, #500bdb 0%, #4e10b9 100%);
   border: none;
   border-radius: 10px;
   color: white;
@@ -348,7 +348,7 @@
 }
 
 .act-card .download-btn:hover {
-  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  background: linear-gradient(135deg, #1041a4 0%, #1637ba 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
 }

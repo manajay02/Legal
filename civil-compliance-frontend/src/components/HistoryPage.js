@@ -130,32 +130,6 @@ function HistoryPage({ onViewAnalysis, onBack }) {
         </div>
       ) : (
         <>
-          <div className="history-stats-bar">
-            <div className="stats-row">
-              <div className="stat-item total">
-                <div className="stat-badge">
-                  <span className="badge-icon">📋</span>
-                  <span className="badge-value">{totalAnalyses}</span>
-                </div>
-                <span className="stat-text">Total Documents</span>
-              </div>
-              <div className="stat-item compliant">
-                <div className="stat-badge">
-                  <span className="badge-icon">✅</span>
-                  <span className="badge-value">{analyses.filter(a => (a.compliance_score || 0) >= 80).length}</span>
-                </div>
-                <span className="stat-text">Compliant</span>
-              </div>
-              <div className="stat-item review">
-                <div className="stat-badge">
-                  <span className="badge-icon">⚠️</span>
-                  <span className="badge-value">{analyses.filter(a => (a.compliance_score || 0) < 80).length}</span>
-                </div>
-                <span className="stat-text">Needs Review</span>
-              </div>
-            </div>
-          </div>
-
           <div className="history-carousel">
             <button 
               className="carousel-arrow left"

@@ -27,19 +27,19 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  background: white;
+  background: #bfbfc0;
   border: none;
   border-radius: 10px;
-  color: #3b82f6;
+  color: rgb(36, 35, 35);
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .back-btn:hover {
-  background: #eff6ff;
+  background: #595a5b;
   transform: translateX(-3px);
 }
 

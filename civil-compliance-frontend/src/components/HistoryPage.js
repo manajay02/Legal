@@ -101,7 +101,6 @@ function HistoryPage({ onViewAnalysis, onBack }) {
           Back to Upload
         </button>
         <h1 className="history-title">
-          <span className="title-icon">📋</span>
           Analysis History
         </h1>
         <p className="history-subtitle">View your previously analyzed documents</p>
@@ -131,17 +130,42 @@ function HistoryPage({ onViewAnalysis, onBack }) {
         </div>
       ) : (
         <>
-          <div className="history-stats">
-            <div className="stat-card">
-              <span className="stat-icon">📊</span>
-              <div className="stat-info">
-                <span className="stat-number">{totalAnalyses}</span>
-                <span className="stat-label">Total Analyses</span>
+          <div className="history-stats-bar">
+            <div className="stats-row">
+              <div className="stat-item total">
+                <div className="stat-badge">
+                  <span className="badge-icon">📋</span>
+                  <span className="badge-value">{totalAnalyses}</span>
+                </div>
+                <span className="stat-text">Total Documents</span>
+              </div>
+              <div className="stat-item compliant">
+                <div className="stat-badge">
+                  <span className="badge-icon">✅</span>
+                  <span className="badge-value">{analyses.filter(a => (a.compliance_score || 0) >= 80).length}</span>
+                </div>
+                <span className="stat-text">Compliant</span>
+              </div>
+              <div className="stat-item review">
+                <div className="stat-badge">
+                  <span className="badge-icon">⚠️</span>
+                  <span className="badge-value">{analyses.filter(a => (a.compliance_score || 0) < 80).length}</span>
+                </div>
+                <span className="stat-text">Needs Review</span>
               </div>
             </div>
           </div>
 
-          <div className="history-list">
+          <div className="history-carousel">
+            <button 
+              className="carousel-arrow left"
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              ‹
+            </button>
+            
+            <div className="history-list">
             {analyses.map((analysis) => (
               <div 
                 key={analysis._id} 
@@ -157,10 +181,6 @@ function HistoryPage({ onViewAnalysis, onBack }) {
                     <span className="meta-item">
                       <span className="meta-icon">📁</span>
                       {analysis.document_type || analysis.domain || 'Unknown'}
-                    </span>
-                    <span className="meta-item">
-                      <span className="meta-icon">🕒</span>
-                      {formatDate(analysis.analyzed_at)}
                     </span>
                   </div>
                   {analysis.text_snippet && (
@@ -202,25 +222,18 @@ function HistoryPage({ onViewAnalysis, onBack }) {
             ))}
           </div>
 
+            <button 
+              className="carousel-arrow right"
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              ›
+            </button>
+          </div>
+
           {totalPages > 1 && (
-            <div className="pagination">
-              <button 
-                className="page-button"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-              >
-                ← Previous
-              </button>
-              <span className="page-info">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button 
-                className="page-button"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-              >
-                Next →
-              </button>
+            <div className="pagination-info">
+              <span>Page {currentPage} of {totalPages}</span>
             </div>
           )}
         </>

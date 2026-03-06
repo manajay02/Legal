@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import UploadPage from './components/UploadPage';
 import ResultPage from './components/ResultPage';
 import HistoryPage from './components/HistoryPage';
+import MandatoryClausesPage from './components/MandatoryClausesPage';
+import DownloadActsPage from './components/DownloadActsPage';
 import './styles/App.css';
 
 function App() {
   const [results, setResults] = useState(null);
   const [currentPage, setCurrentPage] = useState('upload');
+  const [activeFilter, setActiveFilter] = useState('all');
 
   const handleResults = (data) => {
     setResults(data);
@@ -14,6 +17,10 @@ function App() {
   };
 
   const handleBack = () => {
+    setCurrentPage('upload');
+  };
+
+  const handleReAnalyze = () => {
     setResults(null);
     setCurrentPage('upload');
   };
@@ -24,6 +31,19 @@ function App() {
 
   const handleViewAnalysis = (data) => {
     setResults(data);
+    setCurrentPage('results');
+  };
+
+  const handleViewMandatoryClauses = () => {
+    setCurrentPage('mandatory');
+  };
+
+  const handleViewDownloadActs = () => {
+    setCurrentPage('acts');
+  };
+
+  const handleFilterNavigation = (filter) => {
+    setActiveFilter(filter);
     setCurrentPage('results');
   };
 
@@ -40,16 +60,41 @@ function App() {
             className={`nav-link ${currentPage === 'upload' ? 'active' : ''}`}
             onClick={handleBack}
           >
+            <span className="nav-icon">🏠</span>
             Home
           </button>
+          {results && (
+            <>
+              <button 
+                className={`nav-link ${currentPage === 'results' ? 'active' : ''}`}
+                onClick={() => setCurrentPage('results')}
+              >
+                <span className="nav-icon">📊</span>
+                Results
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'mandatory' ? 'active' : ''}`}
+                onClick={handleViewMandatoryClauses}
+              >
+                <span className="nav-icon">📜</span>
+                Mandatory Clauses
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'acts' ? 'active' : ''}`}
+                onClick={handleViewDownloadActs}
+              >
+                <span className="nav-icon">📚</span>
+                Download Acts
+              </button>
+            </>
+          )}
           <button 
             className={`nav-link ${currentPage === 'history' ? 'active' : ''}`}
             onClick={handleViewHistory}
           >
-            📋 History
+            <span className="nav-icon">📋</span>
+            History
           </button>
-          <a href="#about" className="nav-link">About</a>
-          <a href="#help" className="nav-link">Help</a>
         </div>
       </nav>
 
@@ -59,7 +104,27 @@ function App() {
           <UploadPage onResults={handleResults} />
         )}
         {currentPage === 'results' && results && (
-          <ResultPage results={results} onBack={handleBack} />
+          <ResultPage 
+            results={results} 
+            onBack={handleReAnalyze}
+            onViewMandatory={handleViewMandatoryClauses}
+            onViewActs={handleViewDownloadActs}
+            activeFilter={activeFilter}
+            setActiveFilter={setActiveFilter}
+          />
+        )}
+        {currentPage === 'mandatory' && results && (
+          <MandatoryClausesPage 
+            results={results} 
+            onBack={() => setCurrentPage('results')}
+            onReAnalyze={handleReAnalyze}
+          />
+        )}
+        {currentPage === 'acts' && (
+          <DownloadActsPage 
+            onBack={() => results ? setCurrentPage('results') : setCurrentPage('upload')}
+            onReAnalyze={handleReAnalyze}
+          />
         )}
         {currentPage === 'history' && (
           <HistoryPage onViewAnalysis={handleViewAnalysis} onBack={handleBack} />

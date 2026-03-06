@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from src.inference.compliance_checker_v2 import check_compliance
@@ -15,6 +16,32 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = FastAPI()
+
+# Path to the folder containing Acts PDFs
+ACTS_PDF_FOLDER = os.path.join(os.path.dirname(__file__), '../data/acts_pdfs')
+
+# Ensure the folder exists
+os.makedirs(ACTS_PDF_FOLDER, exist_ok=True)
+# ROOT ENDPOINT
+# ...existing code...
+
+# ----------------------------
+# ACTS PDF LIST & DOWNLOAD ENDPOINTS
+# ----------------------------
+@app.get("/acts/list")
+def list_acts():
+    try:
+        files = [f for f in os.listdir(ACTS_PDF_FOLDER) if f.lower().endswith('.pdf')]
+        return JSONResponse(content={"acts": files})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/acts/download/{filename}")
+def download_act(filename: str):
+    file_path = os.path.join(ACTS_PDF_FOLDER, filename)
+    if not os.path.isfile(file_path) or not filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(path=file_path, filename=filename, media_type='application/pdf')
 
 # ----------------------------
 # MongoDB Connection

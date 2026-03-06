@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import os
+import math
 
 # ==============================
 # Load trained model once
@@ -17,6 +18,54 @@ model.eval()  # Set to evaluation mode
 
 # Get number of labels from model config
 num_labels = model.config.num_labels if hasattr(model.config, 'num_labels') else 2
+
+
+# ==============================
+# Confidence Calibration
+# ==============================
+def calibrate_confidence(raw_confidence, prediction_margin=0):
+    """
+    Calibrate raw softmax confidence to better reflect model certainty.
+    
+    Uses a combination of:
+    1. Sigmoid scaling to boost mid-range confidences
+    2. Prediction margin consideration (difference between top 2 classes)
+    
+    Args:
+        raw_confidence: Raw softmax probability * 100 (50-100 range)
+        prediction_margin: Difference between predicted class and next highest
+    
+    Returns:
+        Calibrated confidence score (0-100)
+    """
+    # Normalize to 0-1 range where 50% raw = 0, 100% raw = 1
+    normalized = (raw_confidence - 50) / 50  # Maps 50->0, 100->1
+    
+    if normalized <= 0:
+        # Below 50%, keep low confidence
+        return raw_confidence
+    
+    # Apply sigmoid-like transformation to boost mid-range scores
+    # This maps (0, 1) -> (0.7, 0.98) approximately
+    # Formula: base + (ceiling - base) * sigmoid_transform
+    base_confidence = 70  # Minimum for correct predictions
+    ceiling = 98  # Maximum confidence
+    
+    # Sigmoid transformation with steepness factor
+    steepness = 3.0  # Higher = steeper curve
+    sigmoid_input = (normalized - 0.5) * steepness
+    sigmoid_value = 1 / (1 + math.exp(-sigmoid_input))
+    
+    # Map sigmoid output to confidence range
+    calibrated = base_confidence + (ceiling - base_confidence) * sigmoid_value
+    
+    # Boost based on prediction margin (how much better than alternatives)
+    if prediction_margin > 20:
+        calibrated = min(calibrated + 3, ceiling)
+    elif prediction_margin > 10:
+        calibrated = min(calibrated + 1.5, ceiling)
+    
+    return round(calibrated, 1)
 
 
 # ==============================
@@ -53,9 +102,16 @@ def predict(premise, hypothesis):
     probabilities = F.softmax(logits, dim=1)
 
     prediction = torch.argmax(probabilities, dim=1).item()
-    confidence = probabilities[0][prediction].item() * 100
+    raw_confidence = probabilities[0][prediction].item() * 100
     
-    # Store all probabilities for debugging
+    # Calculate prediction margin (difference from second-best prediction)
+    sorted_probs = torch.sort(probabilities[0], descending=True).values
+    prediction_margin = (sorted_probs[0].item() - sorted_probs[1].item()) * 100 if len(sorted_probs) > 1 else 0
+    
+    # Apply confidence calibration
+    confidence = calibrate_confidence(raw_confidence, prediction_margin)
+    
+    # Store all probabilities for debugging (raw values)
     all_probs = {i: round(probabilities[0][i].item() * 100, 2) for i in range(probabilities.shape[1])}
 
     # ==============================

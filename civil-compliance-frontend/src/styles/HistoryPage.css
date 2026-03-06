@@ -7,6 +7,9 @@
 .history-header {
   text-align: center;
   margin-bottom: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+  border-radius: 20px;
 }
 
 .back-button {
@@ -14,7 +17,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: rgba(255, 255, 255, 0.2);
   color: white;
   border: none;
   border-radius: 8px;
@@ -27,7 +30,8 @@
 
 .back-button:hover {
   transform: translateX(-5px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .back-icon {
@@ -36,7 +40,7 @@
 
 .history-title {
   font-size: 2.5rem;
-  color: #1e293b;
+  color: white;
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
@@ -45,11 +49,11 @@
 }
 
 .title-icon {
-  font-size: 2.5rem;
+  display: none;
 }
 
 .history-subtitle {
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.9);
   font-size: 1.1rem;
 }
 
@@ -88,6 +92,60 @@
 .stat-label {
   color: #64748b;
   font-size: 0.9rem;
+}
+
+/* History Stats Bar */
+.history-stats-bar {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.history-stats-bar .stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+}
+
+.history-stats-bar .stat-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.history-stats-bar .stat-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+.history-stats-bar .stat-item:nth-child(2) .stat-badge {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+.history-stats-bar .stat-item:nth-child(3) .stat-badge {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.history-stats-bar .badge-icon {
+  font-size: 1.5rem;
+}
+
+.history-stats-bar .badge-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.history-stats-bar .stat-text {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 500;
 }
 
 /* Loading State */
@@ -186,11 +244,56 @@
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
+/* History Carousel */
+.history-carousel {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.carousel-arrow {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.carousel-arrow:hover:not(:disabled) {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.carousel-arrow:disabled {
+  background: #e2e8f0;
+  color: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.pagination-info {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
 /* History List */
 .history-list {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  flex: 1;
 }
 
 .history-card {

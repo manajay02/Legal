@@ -9,17 +9,7 @@ function UploadPage({ onResults }) {
   const [error, setError] = useState(null);
   const [uploadMode, setUploadMode] = useState('file');
   const [isDragging, setIsDragging] = useState(false);
-  const [documentType, setDocumentType] = useState('employment');
   const fileInputRef = useRef(null);
-
-  const documentTypes = [
-    { value: 'employment', label: 'Employment Contract', icon: '👔' },
-    { value: 'rental', label: 'Rental Agreement', icon: '🏠' },
-    { value: 'sales', label: 'Sales Contract', icon: '📦' },
-    { value: 'service', label: 'Service Agreement', icon: '🛠️' },
-    { value: 'nda', label: 'Non-Disclosure Agreement', icon: '🔒' },
-    { value: 'other', label: 'Other Legal Document', icon: '📄' },
-  ];
 
   const supportedFormats = [
     { ext: 'PDF', icon: '📕', color: '#dc2626' },
@@ -83,7 +73,6 @@ function UploadPage({ onResults }) {
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('document_type', documentType);
 
     try {
       const response = await axios.post('http://localhost:8002/upload-pdf', formData, {
@@ -91,7 +80,6 @@ function UploadPage({ onResults }) {
           'Content-Type': 'multipart/form-data',
         },
       });
-      // Use backend's detected domain/document_type - don't override
       onResults(response.data);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to analyze document');
@@ -113,7 +101,6 @@ function UploadPage({ onResults }) {
       const response = await axios.post('http://localhost:8002/check', {
         contract_text: contractText,
       });
-      // Use backend's detected domain/document_type - don't override
       onResults(response.data);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to check compliance');
@@ -150,41 +137,27 @@ function UploadPage({ onResults }) {
       {/* Hero Section */}
       <div className="hero-section">
         <div className="hero-content">
+         
           <h1 className="hero-title">
-            <span className="hero-icon">📋</span>
+            <span className="hero-icon">⚖️</span>
             Legal Document Compliance Analyzer
           </h1>
           <p className="hero-subtitle">
             Upload your legal documents and get instant AI-powered compliance analysis 
-            against Sri Lankan laws and regulations
+            against Sri Lankan laws and regulations. Our system automatically detects 
+            document types and analyzes them accordingly.
           </p>
         </div>
       </div>
 
       {/* Main Upload Container */}
       <div className="upload-container">
-        {/* Document Type Selector */}
-        <div className="document-type-section">
-          <h3 className="section-title">
-            <span className="section-icon">📑</span>
-            Select Document Type
-          </h3>
-          <div className="document-type-grid">
-            {documentTypes.map((type) => (
-              <button
-                key={type.value}
-                className={`document-type-btn ${documentType === type.value ? 'active' : ''}`}
-                onClick={() => setDocumentType(type.value)}
-              >
-                <span className="doc-type-icon">{type.icon}</span>
-                <span className="doc-type-label">{type.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Upload Mode Toggle */}
         <div className="mode-toggle-section">
+          <h3 className="section-title">
+            <span className="section-icon">📤</span>
+            Upload Your Document
+          </h3>
           <div className="mode-toggle">
             <button 
               className={`mode-btn ${uploadMode === 'file' ? 'active' : ''}`}
@@ -333,33 +306,78 @@ The Employee will receive a monthly salary of Rs 50,000..."
           <div className="security-icon">🔐</div>
           <div className="security-text">
             <strong>Your privacy is protected</strong>
-            <p>Documents are processed in real-time and are never stored on our servers. 
-            All analysis is performed securely using encrypted connections.</p>
+            <p>Documents are processed securely. Analysis results are stored for your reference 
+            and can be accessed from your history at any time.</p>
           </div>
         </div>
       </div>
 
       {/* Features Section */}
-      <div className="features-section">
-        <div className="feature-card">
-          <div className="feature-icon">⚡</div>
-          <h4>Instant Analysis</h4>
-          <p>Get compliance results in seconds with our AI-powered engine</p>
+      <div className="features-container">
+        <div className="features-box">
+          <div className="features-grid">
+            <div className="feature-card">
+              <div className="feature-icon">⚡</div>
+              <h4>Instant Analysis</h4>
+              <p>Get compliance results in seconds with our AI-powered Legal-BERT engine</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">📚</div>
+              <h4>Sri Lankan Laws</h4>
+              <p>Analysis based on Shop and Office Employees Act, EPF/ETF & more</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">✅</div>
+              <h4>Mandatory Checks</h4>
+              <p>Identify missing required clauses for your document type</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">📊</div>
+              <h4>Detailed Reports</h4>
+              <p>Comprehensive breakdown with confidence scores & export options</p>
+            </div>
+          </div>
         </div>
-        <div className="feature-card">
-          <div className="feature-icon">📚</div>
-          <h4>Sri Lankan Laws</h4>
-          <p>Analysis based on Shop and Office Employees Act & more</p>
-        </div>
-        <div className="feature-card">
-          <div className="feature-icon">✅</div>
-          <h4>Mandatory Checks</h4>
-          <p>Identify missing required clauses for your document type</p>
-        </div>
-        <div className="feature-card">
-          <div className="feature-icon">📊</div>
-          <h4>Detailed Reports</h4>
-          <p>Comprehensive breakdown with confidence scores</p>
+      </div>
+
+      {/* How It Works Section */}
+      <div className="how-it-works-section">
+        <h3 className="section-heading">How It Works</h3>
+        <div className="steps-container">
+          <div className="step-card">
+            <div className="step-number">1</div>
+            <div className="step-icon">📤</div>
+            <h4>Upload Document</h4>
+            <p>Upload your legal document in PDF, DOCX, or TXT format</p>
+          </div>
+          <div className="step-arrow">→</div>
+          <div className="step-card">
+            <div className="step-number">2</div>
+            <div className="step-icon">🤖</div>
+            <h4>AI Analysis</h4>
+            <p>Our Legal-BERT model analyzes your document against Sri Lankan laws</p>
+          </div>
+          <div className="step-arrow">→</div>
+          <div className="step-card">
+            <div className="step-number">3</div>
+            <div className="step-icon">📋</div>
+            <h4>Get Results</h4>
+            <p>Receive detailed compliance report with recommendations</p>
+          </div>
+          <div className="step-arrow">→</div>
+          <div className="step-card">
+            <div className="step-number">4</div>
+            <div className="step-icon">🔍</div>
+            <h4>Check Missing Clauses</h4>
+            <p>View mandatory clauses status and identify missing requirements</p>
+          </div>
+          <div className="step-arrow">→</div>
+          <div className="step-card">
+            <div className="step-number">5</div>
+            <div className="step-icon">⬇️</div>
+            <h4>Download Report</h4>
+            <p>Export comprehensive PDF report for your records</p>
+          </div>
         </div>
       </div>
     </div>

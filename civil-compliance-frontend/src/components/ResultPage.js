@@ -1,10 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import '../styles/ResultPage.css';
 
-function ResultPage({ results, onBack }) {
+function ResultPage({ results, onBack, onViewMandatory, onViewActs, activeFilter, setActiveFilter }) {
   const { domain, clauses, present_mandatory, missing_mandatory, document_type } = results;
-  const [activeFilter, setActiveFilter] = useState('all');
   const [expandedCards, setExpandedCards] = useState({});
+  const [showExportMenu, setShowExportMenu] = useState(false);
+
+  // Refs for scrolling to sections
+  const clauseDetailsRef = useRef(null);
 
   // Mandatory clauses definition for different document types
   const mandatoryClausesByType = {
@@ -64,12 +67,6 @@ function ResultPage({ results, onBack }) {
         { id: 'borrower_rights', name: 'Borrower Rights', description: 'Early settlement rights, complaint procedures' },
         { id: 'late_payment_penalty', name: 'Late Payment Penalty', description: 'Reasonable and legally permitted late fees' },
         { id: 'debt_recovery', name: 'Debt Recovery Procedures', description: 'Collection and recovery procedures' },
-        { id: 'assignment_of_debt', name: 'Assignment of Debt', description: 'Terms for transferring debt to third parties' },
-        { id: 'written_modifications', name: 'Written Modifications Only', description: 'Agreement can only be modified in writing' },
-        { id: 'electronic_validity', name: 'Electronic Communications', description: 'Validity of electronic signatures and communications' },
-        { id: 'limitation_of_liability', name: 'Limitation of Liability', description: 'Cannot waive statutory obligations' },
-        { id: 'signatures', name: 'Signatures of Parties', description: 'Both parties must sign the agreement' },
-        { id: 'sale_delivery_terms', name: 'Sale/Delivery of Goods Terms', description: 'Terms for sale and delivery of goods' },
       ]
     },
     partnership: {
@@ -82,42 +79,6 @@ function ResultPage({ results, onBack }) {
         { id: 'decision_making', name: 'Decision-Making Authority', description: 'How decisions are made in the partnership' },
         { id: 'partnership_duration', name: 'Duration of Partnership', description: 'How long the partnership will last' },
         { id: 'dissolution', name: 'Termination/Dissolution Terms', description: 'How the partnership can be ended' },
-        { id: 'partner_signatures', name: 'Signatures of All Partners', description: 'All partners must sign the agreement' },
-      ]
-    },
-    sales: {
-      name: 'Sales Contract',
-      icon: '📦',
-      clauses: [
-        { id: 'goods_description', name: 'Goods Description', description: 'Detailed description of items being sold' },
-        { id: 'price', name: 'Price Terms', description: 'Total price and payment terms' },
-        { id: 'delivery', name: 'Delivery Terms', description: 'Delivery date, location, and method' },
-        { id: 'warranty', name: 'Warranty', description: 'Warranty period and coverage' },
-        { id: 'title_transfer', name: 'Title Transfer', description: 'When ownership transfers to buyer' },
-        { id: 'returns', name: 'Return Policy', description: 'Conditions for returns and refunds' },
-      ]
-    },
-    service: {
-      name: 'Service Agreement',
-      icon: '🛠️',
-      clauses: [
-        { id: 'service_description', name: 'Service Description', description: 'Detailed scope of services' },
-        { id: 'payment_terms', name: 'Payment Terms', description: 'Fees, schedule, and method' },
-        { id: 'duration', name: 'Duration', description: 'Start and end date of service' },
-        { id: 'deliverables', name: 'Deliverables', description: 'Expected outputs and milestones' },
-        { id: 'liability', name: 'Liability', description: 'Limitation of liability' },
-        { id: 'termination', name: 'Termination', description: 'How either party can end agreement' },
-      ]
-    },
-    nda: {
-      name: 'Non-Disclosure Agreement',
-      icon: '🔒',
-      clauses: [
-        { id: 'confidential_info', name: 'Confidential Information', description: 'Definition of what is confidential' },
-        { id: 'obligations', name: 'Obligations', description: 'What recipient must do to protect info' },
-        { id: 'duration', name: 'Duration', description: 'How long confidentiality lasts' },
-        { id: 'exceptions', name: 'Exceptions', description: 'What is not considered confidential' },
-        { id: 'remedies', name: 'Remedies', description: 'Consequences of breach' },
       ]
     },
     general: {
@@ -140,13 +101,8 @@ function ResultPage({ results, onBack }) {
     }
   };
 
-  // Get the mandatory clauses for current document type
-  // Use document_type first, fallback to domain, then to 'other'
   const docType = document_type || domain || 'other';
   const currentDocType = mandatoryClausesByType[docType] || mandatoryClausesByType.other;
-  
-  // Debug logging (can be removed in production)
-  console.log('Document Type:', document_type, '| Domain:', domain, '| Using:', docType);
 
   // Categorize clauses
   const categorizedClauses = useMemo(() => {
@@ -186,15 +142,12 @@ function ResultPage({ results, onBack }) {
     };
   }, [clauses, categorizedClauses]);
 
-  // Determine which mandatory clauses are present vs missing
-  // Uses backend's present_mandatory/missing_mandatory arrays (Hybrid: Rule-Based + NLI)
+  // Mandatory analysis
   const mandatoryAnalysis = useMemo(() => {
     const present = [];
     const missing = [];
     
-    // If backend provides present_mandatory array, use it directly
     if (present_mandatory && present_mandatory.length > 0) {
-      // Use backend data directly - map to frontend clause definitions for display
       present_mandatory.forEach(backendClause => {
         const matchingFrontendClause = currentDocType.clauses.find(
           fc => fc.id === backendClause.id || 
@@ -208,7 +161,6 @@ function ResultPage({ results, onBack }) {
             legal_basis: backendClause.legal_basis
           });
         } else {
-          // Backend has clause not in frontend definition - add it
           present.push({
             id: backendClause.id,
             name: backendClause.clause,
@@ -219,7 +171,6 @@ function ResultPage({ results, onBack }) {
       });
     }
     
-    // If backend provides missing_mandatory array, use it directly
     if (missing_mandatory && missing_mandatory.length > 0) {
       missing_mandatory.forEach(backendClause => {
         const matchingFrontendClause = currentDocType.clauses.find(
@@ -234,7 +185,6 @@ function ResultPage({ results, onBack }) {
             rule: backendClause.rule
           });
         } else {
-          // Backend has clause not in frontend definition - add it
           missing.push({
             id: backendClause.id,
             name: backendClause.clause,
@@ -245,7 +195,6 @@ function ResultPage({ results, onBack }) {
       });
     }
     
-    // Fallback: If backend doesn't provide these arrays, use old keyword-based detection
     if ((!present_mandatory || present_mandatory.length === 0) && 
         (!missing_mandatory || missing_mandatory.length === 0)) {
       currentDocType.clauses.forEach(mandatoryClause => {
@@ -292,185 +241,414 @@ function ResultPage({ results, onBack }) {
   };
 
   const getConfidenceColor = (confidence, statusType) => {
-    // Green for entailment, Orange for contradiction, Yellow for neutral
-    if (statusType === 'entailment') return '#10b981';  // Green
-    if (statusType === 'contradiction') return '#f97316';  // Orange
-    return '#f59e0b';  // Yellow for neutral/needs review
+    if (statusType === 'entailment') return '#10b981';
+    if (statusType === 'contradiction') return '#f97316';
+    return '#f59e0b';
+  };
+
+  // Handle stat card clicks
+  const handleStatClick = (filter) => {
+    setActiveFilter(filter);
+    if (clauseDetailsRef.current) {
+      clauseDetailsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // Generate TXT Report
+  const generateTXTReport = () => {
+    const reportContent = `
+LEGAL COMPLIANCE ANALYSIS REPORT
+================================
+Generated: ${new Date().toLocaleString()}
+Document Type: ${currentDocType.name}
+Domain: ${domain?.toUpperCase() || 'GENERAL'}
+
+EXECUTIVE SUMMARY
+-----------------
+Total Clauses Analyzed: ${stats.total}
+Compliant (Entailment): ${stats.compliant} (${stats.compliantPercent}%)
+Non-Compliant (Contradiction): ${stats.nonCompliant} (${stats.nonCompliantPercent}%)
+Missing Mandatory Clauses: ${mandatoryAnalysis.missing.length}
+
+COMPLIANCE STATUS: ${stats.nonCompliant > 0 ? 'ISSUES FOUND' : 'COMPLIANT'}
+
+DETAILED CLAUSE ANALYSIS
+------------------------
+${clauses?.map((clause, index) => {
+  const status = getStatusBadge(clause);
+  return `
+[${index + 1}] ${status.label}
+Clause: ${clause.clause}
+Status: ${status.type === 'entailment' ? 'LEGAL' : 'ILLEGAL'}
+Confidence: ${(clause.confidence || 0).toFixed(1)}%
+Law Reference: ${clause.law_reference || clause.violated_act || 'N/A'}
+${clause.matched_rule ? `Applicable Law: ${clause.matched_rule}` : ''}
+---
+`;
+}).join('\n')}
+
+MANDATORY CLAUSES CHECK
+-----------------------
+Present Clauses (${mandatoryAnalysis.present.length}):
+${mandatoryAnalysis.present.map(c => `  ✓ ${c.name}`).join('\n') || '  None found'}
+
+Missing Clauses (${mandatoryAnalysis.missing.length}):
+${mandatoryAnalysis.missing.map(c => `  ✗ ${c.name} - ${c.description}`).join('\n') || '  All mandatory clauses present'}
+
+RECOMMENDATIONS
+---------------
+${mandatoryAnalysis.missing.length > 0 
+  ? `Your document is missing ${mandatoryAnalysis.missing.length} mandatory clause(s). Consider adding these clauses to ensure full legal compliance under Sri Lankan law.`
+  : 'All mandatory clauses are present in this document.'}
+
+${stats.nonCompliant > 0 
+  ? `\n${stats.nonCompliant} clause(s) were identified as potentially non-compliant and require legal review.`
+  : ''}
+
+---
+Report generated by Legal Compliance Analyzer
+Powered by Legal-BERT NLI & Advanced AI
+    `;
+
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `compliance_report_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Generate Colorful PDF Report
+  const generatePDFReport = () => {
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Legal Compliance Report</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.6; }
+    .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; border-radius: 16px; margin-bottom: 30px; text-align: center; }
+    .header h1 { font-size: 28px; margin-bottom: 10px; }
+    .header p { opacity: 0.9; font-size: 14px; }
+    .badge { display: inline-block; padding: 6px 16px; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 12px; margin-top: 15px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+    .summary-card { background: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.08); border-top: 4px solid; }
+    .summary-card.total { border-color: #3b82f6; }
+    .summary-card.compliant { border-color: #10b981; }
+    .summary-card.non-compliant { border-color: #ef4444; }
+    .summary-card.missing { border-color: #8b5cf6; }
+    .card-value { font-size: 32px; font-weight: 700; }
+    .summary-card.total .card-value { color: #3b82f6; }
+    .summary-card.compliant .card-value { color: #10b981; }
+    .summary-card.non-compliant .card-value { color: #ef4444; }
+    .summary-card.missing .card-value { color: #8b5cf6; }
+    .card-label { font-size: 12px; color: #64748b; margin-top: 5px; }
+    .section { background: white; border-radius: 16px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .section-title { font-size: 18px; color: #1e293b; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+    .clause-item { padding: 15px; border-radius: 10px; margin-bottom: 12px; border-left: 4px solid; }
+    .clause-item.entailment { background: linear-gradient(to right, #f0fdf4, #ffffff); border-color: #10b981; }
+    .clause-item.contradiction { background: linear-gradient(to right, #fef2f2, #ffffff); border-color: #ef4444; }
+    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 15px; font-size: 11px; font-weight: 600; }
+    .status-badge.entailment { background: #dcfce7; color: #166534; }
+    .status-badge.contradiction { background: #fee2e2; color: #991b1b; }
+    .clause-text { font-size: 14px; color: #475569; margin: 10px 0; font-style: italic; }
+    .clause-meta { font-size: 12px; color: #64748b; display: flex; gap: 20px; }
+    .mandatory-item { display: flex; align-items: center; gap: 10px; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; }
+    .mandatory-item.present { background: #f0fdf4; }
+    .mandatory-item.missing { background: #fef2f2; }
+    .check-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .check-icon.present { background: #10b981; color: white; }
+    .check-icon.missing { background: #ef4444; color: white; }
+    .footer { text-align: center; padding: 20px; color: #64748b; font-size: 12px; border-top: 1px solid #e2e8f0; margin-top: 30px; }
+    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⚖️ Legal Compliance Analysis Report</h1>
+      <p>Generated on ${new Date().toLocaleString()}</p>
+      <div class="badge">${currentDocType.icon} ${currentDocType.name}</div>
+    </div>
+    
+    <div class="summary-grid">
+      <div class="summary-card total">
+        <div class="card-value">${stats.total}</div>
+        <div class="card-label">Total Clauses</div>
+      </div>
+      <div class="summary-card compliant">
+        <div class="card-value">${stats.compliant}</div>
+        <div class="card-label">Compliant</div>
+      </div>
+      <div class="summary-card non-compliant">
+        <div class="card-value">${stats.nonCompliant}</div>
+        <div class="card-label">Non-Compliant</div>
+      </div>
+      <div class="summary-card missing">
+        <div class="card-value">${mandatoryAnalysis.missing.length}</div>
+        <div class="card-label">Missing Clauses</div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">📝 Detailed Clause Analysis</div>
+      ${clauses?.map((clause, index) => {
+        const status = getStatusBadge(clause);
+        return `
+        <div class="clause-item ${status.type}">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 600; color: #374151;">#${index + 1}</span>
+            <span class="status-badge ${status.type}">${status.label}</span>
+          </div>
+          <p class="clause-text">"${clause.clause?.substring(0, 200)}${clause.clause?.length > 200 ? '...' : ''}"</p>
+          <div class="clause-meta">
+            <span>📊 Confidence: ${(clause.confidence || 0).toFixed(1)}%</span>
+            <span>⚖️ ${clause.law_reference || clause.violated_act || 'N/A'}</span>
+          </div>
+        </div>
+        `;
+      }).join('')}
+    </div>
+    
+    <div class="section">
+      <div class="section-title">📋 Mandatory Clauses Check</div>
+      <h4 style="color: #10b981; margin-bottom: 10px;">✅ Present Clauses (${mandatoryAnalysis.present.length})</h4>
+      ${mandatoryAnalysis.present.map(c => `
+        <div class="mandatory-item present">
+          <div class="check-icon present">✓</div>
+          <span>${c.name}</span>
+        </div>
+      `).join('')}
+      
+      ${mandatoryAnalysis.missing.length > 0 ? `
+        <h4 style="color: #ef4444; margin: 20px 0 10px;">❌ Missing Clauses (${mandatoryAnalysis.missing.length})</h4>
+        ${mandatoryAnalysis.missing.map(c => `
+          <div class="mandatory-item missing">
+            <div class="check-icon missing">✗</div>
+            <span>${c.name}</span>
+          </div>
+        `).join('')}
+      ` : ''}
+    </div>
+    
+    <div class="footer">
+      <p>Report generated by Legal Compliance Analyzer</p>
+      <p>Powered by Legal-BERT NLI & Advanced AI</p>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.onload = function() {
+      printWindow.print();
+    };
+  };
+
+  // Export as JSON
+  const exportJSON = () => {
+    const reportData = {
+      generated: new Date().toISOString(),
+      documentType: currentDocType.name,
+      domain: domain,
+      summary: {
+        total: stats.total,
+        compliant: stats.compliant,
+        nonCompliant: stats.nonCompliant,
+        needsReview: stats.needsReview,
+        missingMandatory: mandatoryAnalysis.missing.length
+      },
+      clauses: clauses?.map(clause => ({
+        text: clause.clause,
+        prediction: clause.prediction,
+        confidence: clause.confidence,
+        lawReference: clause.law_reference || clause.violated_act,
+        matchedRule: clause.matched_rule
+      })),
+      mandatoryClauses: {
+        present: mandatoryAnalysis.present.map(c => c.name),
+        missing: mandatoryAnalysis.missing.map(c => c.name)
+      }
+    };
+
+    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `compliance_report_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   };
 
   return (
     <div className="result-page">
-      {/* Navigation */}
-      <div className="result-nav">
-        <button className="back-btn" onClick={onBack}>
-          <span className="back-arrow">←</span>
-          <span>Analyze Another Document</span>
-        </button>
-      </div>
-
-      {/* Main Results Card */}
-      <div className="results-main-card">
-        {/* Header */}
-        <div className="results-header">
-          <div className="results-title">
-            <span className="title-icon">📊</span>
-            <h1>Compliance Analysis Results</h1>
-          </div>
-          <div className="domain-badge">
-            <span>Domain: {domain?.toUpperCase() || 'GENERAL'}</span>
-          </div>
+      {/* Page Header with Navigation */}
+      <div className="page-header">
+        <div className="header-left">
+          <button className="back-btn" onClick={onBack}>
+            <span className="back-arrow">←</span>
+            <span>Analyze New Document</span>
+          </button>
         </div>
-
-        {/* Summary Section */}
-        <div className="summary-section">
-          <div className="summary-header">
-            <span className="summary-icon">📈</span>
-            <div>
-              <h2>Analysis Summary</h2>
-              <p>Comprehensive overview of compliance analysis</p>
-            </div>
-          </div>
-
-          <div className="summary-grid">
-            <div className="summary-stat">
-              <div className="stat-icon">📋</div>
-              <div className="stat-value total">{stats.total}</div>
-              <div className="stat-label">TOTAL CLAUSES ANALYZED</div>
-            </div>
-            <div className="summary-stat">
-              <div className="stat-icon">✅</div>
-              <div className="stat-value compliant">{stats.compliant}</div>
-              <div className="stat-label">COMPLIANT CLAUSES</div>
-              <div className="stat-percent compliant">{stats.compliantPercent}%</div>
-            </div>
-            <div className="summary-stat">
-              <div className="stat-icon">❌</div>
-              <div className="stat-value non-compliant">{stats.nonCompliant}</div>
-              <div className="stat-label">NON-COMPLIANT</div>
-              <div className="stat-percent non-compliant">{stats.nonCompliantPercent}%</div>
-            </div>
-            <div className="summary-stat">
-              <div className="stat-icon">⚠️</div>
-              <div className="stat-value review">{stats.needsReview}</div>
-              <div className="stat-label">REQUIRES REVIEW</div>
-              <div className="stat-percent review">{stats.neutralPercent}%</div>
-            </div>
+        <div className="header-right">
+          <div className="export-dropdown">
+            <button 
+              className="export-btn"
+              onClick={() => setShowExportMenu(!showExportMenu)}
+            >
+              <span className="btn-icon">📥</span>
+              <span>Download Report</span>
+              <span className="dropdown-arrow">▼</span>
+            </button>
+            {showExportMenu && (
+              <div className="export-menu">
+                <button onClick={() => { generateTXTReport(); setShowExportMenu(false); }}>
+                  <span>📄</span> Download as TXT
+                </button>
+                <button onClick={() => { generatePDFReport(); setShowExportMenu(false); }}>
+                  <span>📕</span> Download as PDF
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Mandatory Clauses Checker */}
-      <div className="mandatory-checker-section">
-        <div className="mandatory-header">
-          <div className="mandatory-title">
-            <span className="mandatory-icon">{currentDocType.icon}</span>
-            <div>
-              <h2>Mandatory Clauses Checker</h2>
-              <p>Required clauses for {currentDocType.name} under Sri Lankan Law</p>
+      {/* Results Header Card */}
+      <div className="results-hero">
+        <div className="hero-content">
+          <div className="hero-left">
+            <div className="domain-badge-large">
+              <span className="domain-icon">{currentDocType.icon}</span>
+              <span>{currentDocType.name}</span>
             </div>
+            <h1 className="results-title">Compliance Analysis Complete</h1>
+            <p className="results-subtitle">
+              Your document has been analyzed against Sri Lankan legal requirements
+            </p>
           </div>
-          <div className="mandatory-progress">
-            <div className="progress-circle">
-              <span className="progress-value">
-                {mandatoryAnalysis.present.length}/{currentDocType.clauses.length}
-              </span>
-            </div>
-            <span className="progress-label">Present</span>
-          </div>
-        </div>
-
-        <div className="mandatory-grid">
-          {/* Required Clauses */}
-          <div className="mandatory-column required">
-            <div className="column-header">
-              <span className="column-icon">📜</span>
-              <h3>Required Clauses for {currentDocType.name}</h3>
-            </div>
-            <div className="clause-checklist">
-              {currentDocType.clauses.map((clause, index) => {
-                const isPresent = mandatoryAnalysis.present.some(p => p.id === clause.id);
-                return (
-                  <div 
-                    key={clause.id} 
-                    className={`checklist-item ${isPresent ? 'present' : 'missing'}`}
-                  >
-                    <span className="check-icon">{isPresent ? '✅' : '⬜'}</span>
-                    <div className="checklist-content">
-                      <span className="checklist-name">{clause.name}</span>
-                      <span className="checklist-desc">{clause.description}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Present & Missing Split */}
-          <div className="mandatory-column status-split">
-            {/* Present Clauses */}
-            <div className="status-box present">
-              <div className="status-box-header">
-                <span className="status-icon">✅</span>
-                <h4>Document Contains</h4>
-                <span className="count-badge present">{mandatoryAnalysis.present.length}</span>
-              </div>
-              <div className="status-items">
-                {mandatoryAnalysis.present.length > 0 ? (
-                  mandatoryAnalysis.present.map(clause => (
-                    <div key={clause.id} className="status-item present">
-                      <span className="item-check">✔</span>
-                      <span className="item-name">{clause.name}</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="no-items">No mandatory clauses found</div>
-                )}
-              </div>
-            </div>
-
-            {/* Missing Clauses */}
-            <div className="status-box missing">
-              <div className="status-box-header">
-                <span className="status-icon">❌</span>
-                <h4>Missing Clauses</h4>
-                <span className="count-badge missing">{mandatoryAnalysis.missing.length}</span>
-              </div>
-              <div className="status-items">
-                {mandatoryAnalysis.missing.length > 0 ? (
-                  mandatoryAnalysis.missing.map(clause => (
-                    <div key={clause.id} className="status-item missing">
-                      <span className="item-check">✕</span>
-                      <span className="item-name">{clause.name}</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="all-present">
-                    <span>🎉</span> All mandatory clauses present!
-                  </div>
-                )}
+          <div className="hero-right">
+            <div className="compliance-score success">
+              <div className="score-meter">
+                <svg viewBox="0 0 100 100">
+                  <circle className="meter-bg" cx="50" cy="50" r="40" />
+                  <circle 
+                    className="meter-fill"
+                    cx="50" cy="50" r="40"
+                    style={{
+                      strokeDasharray: `${stats.compliantPercent * 2.51} 251`,
+                      stroke: '#f59e0b'
+                    }}
+                  />
+                </svg>
+                <div className="meter-value">
+                  <span className="score-value">{stats.compliantPercent}%</span>
+                  <span className="score-label">Compliant</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Missing Recommendation */}
-        {mandatoryAnalysis.missing.length > 0 && (
-          <div className="missing-recommendation">
-            <div className="recommendation-icon">💡</div>
-            <div className="recommendation-content">
-              <h4>Recommendation</h4>
-              <p>
-                Your document is missing {mandatoryAnalysis.missing.length} mandatory clause(s) 
-                that are typically required for a {currentDocType.name}. Consider adding these 
-                clauses to ensure full legal compliance.
-              </p>
+      {/* Summary Statistics - Clickable Cards */}
+      <div className="summary-section">
+        <h2 className="section-heading">
+          <span className="heading-icon">📈</span>
+          Analysis Summary
+        </h2>
+        
+        <div className="summary-grid">
+          <div 
+            className={`summary-card total ${activeFilter === 'all' ? 'active' : ''}`}
+            onClick={() => handleStatClick('all')}
+          >
+            <div className="card-icon">📋</div>
+            <div className="card-content">
+              <span className="card-value">{stats.total}</span>
+              <span className="card-label">Total Clauses</span>
             </div>
+            <div className="card-action">View All →</div>
           </div>
-        )}
+
+          <div 
+            className={`summary-card compliant ${activeFilter === 'compliant' ? 'active' : ''}`}
+            onClick={() => handleStatClick('compliant')}
+          >
+            <div className="card-icon">✅</div>
+            <div className="card-content">
+              <span className="card-value">{stats.compliant}</span>
+              <span className="card-label">Compliant</span>
+              <span className="card-percent">{stats.compliantPercent}%</span>
+            </div>
+            <div className="card-action">View Details →</div>
+          </div>
+
+          <div 
+            className={`summary-card non-compliant ${activeFilter === 'non-compliant' ? 'active' : ''}`}
+            onClick={() => handleStatClick('non-compliant')}
+          >
+            <div className="card-icon">❌</div>
+            <div className="card-content">
+              <span className="card-value">{stats.nonCompliant}</span>
+              <span className="card-label">Non-Compliant</span>
+              <span className="card-percent">{stats.nonCompliantPercent}%</span>
+            </div>
+            <div className="card-action">View Issues →</div>
+          </div>
+
+          <div 
+            className="summary-card missing"
+            onClick={onViewMandatory}
+          >
+            <div className="card-icon">📝</div>
+            <div className="card-content">
+              <span className="card-value">{mandatoryAnalysis.missing.length}</span>
+              <span className="card-label">Missing Clauses</span>
+            </div>
+            <div className="card-action">View Missing →</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Navigation Cards */}
+      <div className="quick-nav-section">
+        <div className="quick-nav-card" onClick={onViewMandatory}>
+          <div className="nav-card-icon">📜</div>
+          <div className="nav-card-content">
+            <h3>Mandatory Clauses</h3>
+            <p>View required clauses and missing items</p>
+          </div>
+          <div className="nav-card-badge">
+            <span className="present">{mandatoryAnalysis.present.length} Present</span>
+            <span className="missing">{mandatoryAnalysis.missing.length} Missing</span>
+          </div>
+          <span className="nav-arrow">→</span>
+        </div>
+
+        <div className="quick-nav-card" onClick={onViewActs}>
+          <div className="nav-card-icon">📚</div>
+          <div className="nav-card-content">
+            <h3>Download Acts</h3>
+            <p>Access official Sri Lankan legislation PDFs</p>
+          </div>
+          <span className="nav-arrow">→</span>
+        </div>
       </div>
 
       {/* Clause Details Section */}
-      <div className="clause-details-section">
+      <div className="clause-details-section" ref={clauseDetailsRef}>
         <div className="section-header">
           <div className="section-title">
             <span className="section-icon">📝</span>
@@ -489,22 +667,27 @@ function ResultPage({ results, onBack }) {
               className={`filter-tab compliant ${activeFilter === 'compliant' ? 'active' : ''}`}
               onClick={() => setActiveFilter('compliant')}
             >
-              Compliant ({stats.compliant})
+              ✅ Entailment ({stats.compliant})
             </button>
             <button 
               className={`filter-tab non-compliant ${activeFilter === 'non-compliant' ? 'active' : ''}`}
               onClick={() => setActiveFilter('non-compliant')}
             >
-              Non-Compliant ({stats.nonCompliant})
-            </button>
-            <button 
-              className={`filter-tab review ${activeFilter === 'review' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('review')}
-            >
-              Needs Review ({stats.needsReview})
+              ❌ Contradiction ({stats.nonCompliant})
             </button>
           </div>
         </div>
+
+        {/* Active Filter Indicator */}
+        {activeFilter !== 'all' && activeFilter !== 'review' && (
+          <div className={`filter-indicator ${activeFilter}`}>
+            <span className="filter-icon">
+              {activeFilter === 'compliant' ? '✅' : '❌'}
+            </span>
+            <span>Showing {filteredClauses.length} {activeFilter === 'compliant' ? 'compliant (entailment)' : 'non-compliant (contradiction)'} clauses</span>
+            <button className="clear-filter" onClick={() => setActiveFilter('all')}>Clear Filter ✕</button>
+          </div>
+        )}
 
         {/* Clause Cards */}
         <div className="clause-cards">
@@ -516,37 +699,36 @@ function ResultPage({ results, onBack }) {
             return (
               <div 
                 key={index} 
-                className={`clause-card ${status.type}`}
+                className={`clause-card ${status.type} ${isExpanded ? 'expanded' : 'collapsed'}`}
               >
-                {/* Status Badge */}
-                <div className="card-status-row">
+                {/* Card Header - Always Visible */}
+                <div className="card-header clickable" onClick={() => toggleCardExpansion(index)}>
+                  <div className="card-number">#{index + 1}</div>
                   <div className={`status-badge ${status.type}`}>
                     <span className="status-dot"></span>
                     <span>{status.label}</span>
                   </div>
+                  <div className="expand-indicator">
+                    {isExpanded ? '▲' : '▼'}
+                  </div>
                 </div>
 
-                {/* Clause Text */}
+                {/* Clause Text - Always Visible */}
                 <div className="clause-content">
                   <div className="clause-label">
                     <span className="label-icon">📄</span>
-                    <span>Clause:</span>
+                    <span>Contract Clause</span>
                   </div>
-                  <p className={`clause-text ${isExpanded ? 'expanded' : ''}`}>
-                    {clause.clause}
+                  <p className="clause-text">
+                    "{clause.clause}"
                   </p>
-                  {clause.clause?.length > 200 && (
-                    <button 
-                      className="expand-btn"
-                      onClick={() => toggleCardExpansion(index)}
-                    >
-                      {isExpanded ? 'Show less' : 'Show more'}
-                    </button>
-                  )}
                 </div>
 
-                {/* Details Grid */}
-                <div className="clause-details-grid">
+                {/* Collapsible Details Section */}
+                {isExpanded && (
+                  <>
+                    {/* Details Grid */}
+                    <div className="clause-details-grid">
                   <div className="detail-item">
                     <div className="detail-label">
                       <span className="detail-icon">⚖️</span>
@@ -581,7 +763,6 @@ function ResultPage({ results, onBack }) {
                       CONFIDENCE SCORE
                     </div>
                     <div className="confidence-display">
-                      <span className="confidence-value">{confidence.toFixed(1)}%</span>
                       <div className="confidence-bar">
                         <div 
                           className="confidence-fill"
@@ -593,17 +774,6 @@ function ResultPage({ results, onBack }) {
                           <span className="confidence-label">{confidence.toFixed(1)}%</span>
                         </div>
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="detail-item">
-                    <div className="detail-label">
-                      <span className="detail-icon">🏷️</span>
-                      CATEGORY
-                    </div>
-                    <div className={`detail-value category ${status.type}`}>
-                      {status.type === 'entailment' ? 'Compliant' : 
-                       status.type === 'contradiction' ? 'Non-Compliant' : 'Under Review'}
                     </div>
                   </div>
                 </div>
@@ -643,6 +813,8 @@ function ResultPage({ results, onBack }) {
                     )}
                   </p>
                 </div>
+                  </>
+                )}
               </div>
             );
           })}
@@ -654,6 +826,9 @@ function ResultPage({ results, onBack }) {
             <span className="no-results-icon">📭</span>
             <h3>No clauses found</h3>
             <p>No clauses matching the selected filter were found in the document.</p>
+            <button className="reset-btn" onClick={() => setActiveFilter('all')}>
+              View All Clauses
+            </button>
           </div>
         )}
       </div>
@@ -664,9 +839,9 @@ function ResultPage({ results, onBack }) {
           <span className="btn-icon">📤</span>
           Analyze New Document
         </button>
-        <button className="action-btn primary" onClick={() => window.print()}>
-          <span className="btn-icon">🖨️</span>
-          Print Report
+        <button className="action-btn primary" onClick={generatePDFReport}>
+          <span className="btn-icon">📥</span>
+          Download Full Report
         </button>
       </div>
     </div>

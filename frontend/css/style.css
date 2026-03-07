@@ -73,6 +73,12 @@ body {
     color: white;
 }
 
+.ui-build {
+    font-weight: 800;
+    font-size: 0.86em;
+    opacity: 0.85;
+}
+
 /* Navigation Tabs */
 .tabs {
     display: flex;
@@ -566,6 +572,53 @@ body {
     border-left: 3px solid #b71c1c;
 }
 
+.cat-section-support {
+    background: rgba(21,101,192,0.07);
+    border-left: 3px solid #1565c0;
+}
+
+.cat-section-support .cat-section-heading { color: #1565c0; }
+
+.cat-support li::before {
+    content: "📌 ";
+    color: #1565c0;
+    font-weight: 700;
+}
+
+.support-ratio {
+    margin-top: 8px;
+    font-size: 0.88em;
+    color: #444;
+}
+
+/* Claim count line inside support section */
+.cat-claim-count {
+    font-size: 0.88em;
+    color: #1a237e;
+    margin: 0 0 6px;
+    font-weight: 500;
+}
+
+/* "Not referenced" sub-block */
+.cat-not-referenced {
+    margin-top: 8px;
+    padding: 6px 10px;
+    background: rgba(183,28,28,0.07);
+    border-left: 3px solid #b71c1c;
+    border-radius: 4px;
+}
+
+.cat-not-ref-heading {
+    font-size: 0.84em;
+    font-weight: 600;
+    color: #b71c1c;
+    margin: 0 0 4px;
+}
+
+.cat-not-ref-list li::before {
+    content: "⚠️ ";
+}
+
 .cat-section-strengths .cat-section-heading { color: #2e7d32; }
 .cat-section-gaps      .cat-section-heading { color: #b71c1c; }
 
@@ -684,6 +737,63 @@ body {
 
 .weaknesses-section strong {
     color: #d32f2f;
+}
+
+/* ── Document Support Detected ─────────────────────────────── */
+.doc-support-section {
+    background: #f0f4ff;
+    padding: 18px 22px;
+    border-radius: 12px;
+    border-left: 4px solid #1565c0;
+    margin-bottom: 18px;
+}
+
+.doc-support-section h3 {
+    color: #333;
+    margin: 0 0 12px;
+    font-size: 1.15em;
+}
+
+.doc-support-section ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.doc-support-section li {
+    color: #444;
+    line-height: 1.5;
+    font-size: 0.92em;
+}
+
+.doc-support-title {
+    font-weight: 700;
+    color: #1d3b73;
+}
+
+.doc-support-loc {
+    margin-left: 8px;
+    font-size: 0.82em;
+    font-weight: 800;
+    padding: 2px 10px;
+    border-radius: 20px;
+    background: #1565c0;
+    color: #fff;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+}
+
+.doc-support-arrow {
+    margin: 0 8px;
+    color: #1565c0;
+    font-weight: 900;
+}
+
+.doc-support-summary {
+    color: #333;
 }
 
 /* Error Message */

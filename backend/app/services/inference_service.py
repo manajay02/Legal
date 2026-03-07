@@ -279,6 +279,46 @@ overall_score = sum of all points (0-100).
 IMPORTANT: Respond with ONLY the JSON object, no additional text."""
 
 
+CLAIM_SUPPORT_SYSTEM_PROMPT = """You are a legal argument grounding assistant for Sri Lankan civil cases.
+
+You will receive:
+  (A) SOURCE_EXCERPTS — labelled excerpt tuples from a source judgment or evidence set.
+      Labels take the form "Para N:", "Excerpt N:", "E1:", "E2:", etc.
+  (B) ARGUMENT_CATEGORIES — the scored categories from a legal argument evaluation.
+
+Your task for EACH category:
+1. Identify 2–4 distinct atomic CLAIMS made or implied in that category's argument_quote and rationale.
+2. For each claim, find the best matching excerpt in SOURCE_EXCERPTS and write a single bullet:
+       "<label> → <one sentence from that excerpt that supports or contradicts the claim>"
+   Use the EXACT label as it appears in SOURCE_EXCERPTS (e.g. "Para 10", "Excerpt 3", "E2").
+   If NO excerpt matches a claim, record that claim in "not_referenced".
+3. Count total_claims and supported_claims (those that matched an excerpt).
+4. Compute support_ratio_percent = round(supported_claims / total_claims * 100) clamped to [0,100].
+5. Assign support_ratio_label: "High" (≥75%), "Moderate" (40–74%), "Low" (<40%).
+
+IMPORTANT RULES:
+- The label in each bullet MUST be one that actually appears in SOURCE_EXCERPTS — never invent labels.
+- Bullets must quote a real phrase from that excerpt; do not paraphrase beyond 15 words.
+- If SOURCE_EXCERPTS is empty or irrelevant to a category, all claims go to "not_referenced".
+- Output STRICTLY valid JSON, no markdown, no extra commentary.
+- Skip categories that are purely about formatting or document structure (e.g. "Structure & Professionalism") — omit them from the output or return empty bullets.
+
+OUTPUT FORMAT (repeat for each applicable category):
+{
+  "claim_support": [
+    {
+      "category": "<exact category name>",
+      "bullets": ["Para 10 → <phrase>", "Excerpt 3 → <phrase>"],
+      "total_claims": <int>,
+      "supported_claims": <int>,
+      "support_ratio_percent": <0-100>,
+      "support_ratio_label": "High|Moderate|Low",
+      "not_referenced": ["<unsupported claim text>"]
+    }
+  ]
+}"""
+
+
 class GeminiBackend:
     """Gemini 2.5 Pro backend for inference."""
     
@@ -298,13 +338,17 @@ class GeminiBackend:
         logger.info(f"✓ Gemini backend ready (model: {self.model})")
     
     def _rate_limit(self):
-        """Enforce rate limiting to avoid 429 errors."""
+        """Enforce rate limiting to avoid 429 errors.
+
+        IMPORTANT: We only advance last_request_time after a successful API
+        response (see _call_api). This avoids long sleeps when requests fail
+        and the app immediately falls back.
+        """
         elapsed = time.time() - self.last_request_time
         if elapsed < self.min_request_interval:
             wait_time = self.min_request_interval - elapsed
             logger.info(f"Rate limiting: waiting {wait_time:.1f}s...")
             time.sleep(wait_time)
-        self.last_request_time = time.time()
     
     def _call_api(self, system_instruction: str, user_text: str,
                    temperature: float = 0.7) -> str:
@@ -337,6 +381,8 @@ class GeminiBackend:
                     continue
                 response.raise_for_status()
                 data = response.json()
+                # Mark successful request for rate limiting.
+                self.last_request_time = time.time()
                 return (
                     data.get("candidates", [{}])[0]
                     .get("content", {})
@@ -607,6 +653,27 @@ class InferenceService:
         try:
             content = self.backend.generate(argument_text)
             critique = self._extract_json(content)
+
+            if isinstance(critique, dict):
+                _wt_dbg = str(critique.get("warning") or "")
+                _bd_dbg = critique.get("breakdown") if isinstance(critique.get("breakdown"), list) else []
+                _r0_dbg = str(((_bd_dbg[0] if _bd_dbg else {}) or {}).get("rationale") or "")
+                logger.info(f"[debug] parsed warning={_wt_dbg[:80]!r} r0={_r0_dbg[:60]!r}")
+
+            # Some upstream paths can return a fully-structured *template* JSON
+            # with generic rationales (same across inputs) along with a warning
+            # like "AI service unavailable...". Prefer our rule-based fallback
+            # which ties rationales to the user's text and avoids repetition.
+            if isinstance(critique, dict):
+                wt = str(critique.get("warning") or "")
+                breakdown = critique.get("breakdown") if isinstance(critique.get("breakdown"), list) else []
+                r0 = str((breakdown[0] if breakdown else {}).get("rationale") or "")
+                if (
+                    "ai service unavailable" in wt.lower()
+                    and "[rule_fallback_v2]" not in wt
+                    and not r0.lower().startswith("your text says:")
+                ):
+                    critique = self._get_fallback_critique(argument_text)
             
             if critique is None:
                 logger.warning(f"Failed to parse model response (len={len(content)}). First 500 chars: {content[:500]!r}")
@@ -623,6 +690,28 @@ class InferenceService:
             
         except Exception as e:
             logger.error(f"Error generating critique: {str(e)}")
+
+            # If the configured backend fails (common: Gemini quota / network),
+            # try OpenRouter as a secondary backend when it is configured.
+            if self.backend_name != "openrouter" and OPENROUTER_API_KEY:
+                try:
+                    logger.warning("Primary backend failed; attempting OpenRouter fallback backend...")
+                    alt_backend = OpenRouterBackend()
+                    alt_content = alt_backend.generate(argument_text)
+                    alt_critique = self._extract_json(alt_content)
+                    if alt_critique is not None and self._validate_critique(alt_critique):
+                        alt_critique = self._enrich_breakdown(alt_critique, argument_text)
+                        alt_critique["warning"] = (
+                            "Primary backend failed; used OpenRouter fallback backend for this response."
+                        )
+                        logger.info(
+                            f"✓ Critique generated via OpenRouter fallback (score: {alt_critique.get('overall_score', 'N/A')})"
+                        )
+                        return alt_critique
+                    logger.warning("OpenRouter fallback returned invalid structure; using template fallback.")
+                except Exception as alt_e:
+                    logger.warning(f"OpenRouter fallback backend failed: {alt_e}")
+
             return self._get_fallback_critique(argument_text)
 
     def generate_grounded_critique(self, argument_text: str, evidence_pack: str) -> Dict[str, Any]:
@@ -710,8 +799,29 @@ class InferenceService:
             logger.debug(f"[GROUNDED RAW RESPONSE snippet]: {content[:400]!r}")
 
             critique = self._extract_json(content)
+
+            # Same as non-grounded: if we got a template JSON with an
+            # AI-unavailable warning and generic rationales, replace it with
+            # the rule-based fallback so outputs vary by input.
+            if isinstance(critique, dict):
+                wt = str(critique.get("warning") or "")
+                breakdown = critique.get("breakdown") if isinstance(critique.get("breakdown"), list) else []
+                r0 = str((breakdown[0] if breakdown else {}).get("rationale") or "")
+                if (
+                    "ai service unavailable" in wt.lower()
+                    and "[rule_fallback_v2]" not in wt
+                    and not r0.lower().startswith("your text says:")
+                ):
+                    critique = self._get_fallback_critique(argument_text)
             if critique is None:
                 fallback = self._get_fallback_critique(argument_text)
+                # Even in fallback mode, keep the UX consistent: inject at least
+                # one [E#] citation per category when evidence_pack is present
+                # so the frontend can show the supporting excerpts.
+                try:
+                    fallback = self._inject_missing_citations(fallback, evidence_pack)
+                except Exception as _e:
+                    logger.debug(f"[citation-inject] Skipped for fallback critique: {_e}")
                 fallback["warning"] = (
                     "Failed to parse grounded model response; using fallback critique without evidence citations."
                 )
@@ -730,6 +840,63 @@ class InferenceService:
 
         except Exception as e:
             logger.error(f"Error generating grounded critique: {str(e)}")
+
+            # Secondary attempt: OpenRouter grounded path (if configured)
+            if self.backend_name != "openrouter" and OPENROUTER_API_KEY:
+                try:
+                    logger.warning("Primary grounded backend failed; attempting OpenRouter grounded fallback...")
+                    # Rebuild the same user prompt used in the main path.
+                    user_prompt = (
+                        "=== SOURCE_JUDGMENT ===\n"
+                        "The following numbered excerpts are the source judgment / supporting documents.\n"
+                        "For each category you MUST quote the exact sentence(s) from these excerpts\n"
+                        "that support or contradict the argument, citing [E#].\n"
+                        "If no relevant extract exists, write: 'No supporting extract found in the judgment for this claim.'\n\n"
+                        f"{evidence_pack}\n\n"
+                        "=== ARGUMENT_TEXT ===\n"
+                        f"{argument_text}\n\n"
+                        "SCORING REMINDER:\n"
+                        "- Every rationale MUST cite at least one [E#] from SOURCE_JUDGMENT above.\n"
+                        "- Every rationale MUST quote a specific phrase from ARGUMENT_TEXT in 'argument_quote'.\n"
+                        "- Every rationale MUST quote a specific phrase from SOURCE_JUDGMENT in 'judgment_quote'.\n"
+                        "- Do NOT repeat the same reasoning across different categories.\n"
+                        "- Do NOT use vague phrases without textual proof."
+                    )
+
+                    headers = {
+                        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                        "Content-Type": "application/json",
+                    }
+                    payload = {
+                        "model": OPENROUTER_MODEL,
+                        "messages": [
+                            {"role": "system", "content": SYSTEM_PROMPT_GROUNDED},
+                            {"role": "user", "content": user_prompt},
+                        ],
+                        "temperature": float(os.getenv("OPENROUTER_TEMPERATURE", "0.4")),
+                        "max_tokens": int(os.getenv("OPENROUTER_MAX_TOKENS", "2048")),
+                    }
+                    resp = requests.post(
+                        "https://openrouter.ai/api/v1/chat/completions",
+                        json=payload,
+                        headers=headers,
+                        timeout=120,
+                    )
+                    if resp.status_code != 200:
+                        raise RuntimeError(f"OpenRouter API error: {resp.status_code} - {resp.text}")
+                    content = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+                    alt_critique = self._extract_json(content)
+                    if alt_critique is not None and self._validate_critique(alt_critique):
+                        alt_critique = self._inject_missing_citations(alt_critique, evidence_pack)
+                        alt_critique = self._enrich_breakdown(alt_critique, argument_text)
+                        alt_critique["warning"] = (
+                            "Primary backend failed; used OpenRouter grounded fallback backend for this response."
+                        )
+                        return alt_critique
+                    logger.warning("OpenRouter grounded fallback returned invalid structure; using template fallback.")
+                except Exception as alt_e:
+                    logger.warning(f"OpenRouter grounded fallback failed: {alt_e}")
+
             fallback = self._get_fallback_critique(argument_text)
             fallback["warning"] = (
                 "AI service unavailable in grounded mode - using basic analysis without evidence citations."
@@ -746,6 +913,77 @@ class InferenceService:
         text and the argument text so the frontend always has content to show."""
         import re as _re
 
+        warning_text = str(critique.get("warning") or "")
+        # Some fallback paths still return a fully structured response with
+        # template rationales that look identical across different inputs.
+        # When we detect that mode, force argument-specific rationales tied to
+        # the extracted argument_quote.
+        force_argument_specific_rationales = "ai service unavailable" in warning_text.lower()
+        if force_argument_specific_rationales:
+            logger.info("[enrich] Detected AI-unavailable mode; forcing argument-specific rationales.")
+
+        def _norm_ws(s: str) -> str:
+            return _re.sub(r"\s+", " ", (s or "").strip())
+
+        def _norm_for_match(s: str) -> str:
+            # Aggressive normalization for substring checks.
+            s = _norm_ws(s).lower()
+            # Replace curly quotes etc.
+            s = s.replace("\u201c", '"').replace("\u201d", '"').replace("\u2018", "'").replace("\u2019", "'")
+            return s
+
+        normalized_argument = _norm_for_match(argument_text)
+
+        # Lightweight feature detection (mirrors the rule-based fallback)
+        tl = (argument_text or "").lower()
+        has_parties = any(k in tl for k in ("appellant", "respondent", "plaintiff", "defendant", "petitioner"))
+        has_relief = any(k in tl for k in ("prayer", "relief", "seek", "seeks", "request", "asks", "declare", "declaration", "injunction", "ejectment", "damages", "costs"))
+        has_dates = bool(_re.search(r"\b(19\d{2}|20\d{2})\b|\b\d{1,2}[./-]\d{1,2}[./-]\d{2,4}\b", argument_text or ""))
+        has_statute = bool(_re.search(r"\b(section|s\.|article|act|ordinance|law)\b", tl))
+        has_evidence = any(k in tl for k in ("evidence", "exhibit", "document", "deed", "agreement", "survey", "plan", "witness", "affidavit", "receipt", "letter"))
+        has_reasoning = any(k in tl for k in ("therefore", "thus", "because", "hence", "accordingly", "as a result"))
+        has_counter = any(k in tl for k in ("however", "but", "defence", "defense", "counter", "respondent may", "the defendant may", "anticipated"))
+        has_amounts = bool(_re.search(r"\b(lkr|rs\.?|rupees|usd|\d{1,3}(,\d{3})+)\b", tl))
+
+        def _missing_and_action(category_name: str) -> tuple[str, str]:
+            c = (category_name or "").lower()
+            if "issue" in c or "claim" in c:
+                missing = []
+                if not has_parties:
+                    missing.append("parties")
+                if not has_relief:
+                    missing.append("exact relief/prayer")
+                missing_txt = " and ".join(missing) if missing else "key details"
+                action = "State the parties and the exact relief sought in the first 1-2 lines."
+                return missing_txt, action
+            if "fact" in c or "chron" in c:
+                missing_txt = "specific dates or a clear timeline" if not has_dates else "a cleaner chronological order"
+                action = "List key events in date order (each sentence starts with a date/time)."
+                return missing_txt, action
+            if "legal" in c or "element" in c or "basis" in c:
+                missing_txt = "statute/section citations" if not has_statute else "element-by-element application"
+                action = "Cite the exact law (Act + Section) and apply each legal element to your facts."
+                return missing_txt, action
+            if "evidence" in c or "support" in c:
+                missing_txt = "named documents/exhibits" if not has_evidence else "specific exhibit details (title/date)"
+                action = "Name each document (e.g., deed number/date) and say what fact it proves."
+                return missing_txt, action
+            if "reason" in c or "logic" in c:
+                missing_txt = "clear fact→law→conclusion links" if not has_reasoning else "tighter step-by-step logic"
+                action = "Add explicit connectors: 'Because X, under Section Y, therefore Z follows.'"
+                return missing_txt, action
+            if "counter" in c or "rebut" in c:
+                missing_txt = "any anticipated defence and rebuttal" if not has_counter else "stronger rebuttal detail"
+                action = "Write 1 paragraph: 'Opponent may argue __; reply __' with a reason and citation."
+                return missing_txt, action
+            if "remed" in c or "quant" in c:
+                missing_txt = "a precise remedy (and amount/calculation if money)" if not has_amounts else "a clearer calculation basis"
+                action = "State the exact order you want (and exact amount + how calculated if damages)."
+                return missing_txt, action
+            missing_txt = "clear headings/numbered paragraphs"
+            action = "Use headings (Facts/Issues/Law/Relief) and numbered paragraphs for easy reference."
+            return missing_txt, action
+
         # ── Build sentence list — try punctuation split, then newline, then words ──
         raw_sentences = _re.split(r'(?<=[.!?])\s+|\n{1,}', argument_text.strip())
         arg_sentences = [s.strip() for s in raw_sentences if len(s.strip()) > 12]
@@ -756,9 +994,86 @@ class InferenceService:
         if not arg_sentences:
             arg_sentences = [argument_text[:200]] if argument_text.strip() else ["(no argument text provided)"]
 
+        # Precompute word sets for each sentence for faster matching.
+        sent_word_sets = [set(_re.findall(r"[a-z]{4,}", s.lower())) for s in arg_sentences]
+
+        # Category keyword hints to pick more relevant, distinct sentences.
+        category_hints = {
+            "issue": {"issue", "claim", "relief", "prayer", "appellant", "respondent", "plaintiff", "defendant", "seek", "asks"},
+            "facts": {"on", "in", "dated", "date", "year", "month", "timeline", "chronology", "when", "then", "after", "before"},
+            "legal": {"act", "section", "article", "law", "statute", "ordinance", "code", "case", "authority", "under"},
+            "evidence": {"evidence", "exhibit", "document", "deed", "agreement", "receipt", "letter", "witness", "affidavit", "plan", "survey"},
+            "reasoning": {"therefore", "thus", "because", "hence", "so", "means", "shows", "proves", "conclude"},
+            "counter": {"however", "but", "defence", "defense", "counter", "respondent may", "likely", "anticipate", "rebut"},
+            "remedy": {"damages", "injunction", "ejectment", "declaration", "costs", "interest", "relief", "order", "remove"},
+            "structure": {"heading", "paragraph", "numbered", "section", "format", "tone", "clarity"},
+        }
+
+        def _hint_key(category_name: str) -> str:
+            c = (category_name or "").lower()
+            if "issue" in c or "claim" in c:
+                return "issue"
+            if "fact" in c or "chron" in c:
+                return "facts"
+            if "legal" in c or "element" in c or "basis" in c:
+                return "legal"
+            if "evidence" in c or "support" in c:
+                return "evidence"
+            if "reason" in c or "logic" in c:
+                return "reasoning"
+            if "counter" in c or "rebut" in c:
+                return "counter"
+            if "remed" in c or "quant" in c:
+                return "remedy"
+            return "structure"
+
+        def _is_placeholder_quote(q: str) -> bool:
+            ql = (q or "").strip().lower()
+            if not ql:
+                return True
+            # Common placeholder patterns when the model echoes the instructions.
+            return any(tok in ql for tok in (
+                "<required",
+                "verbatim sentence",
+                "argument_text",
+                "copy-paste",
+                "most relevant sentence",
+            ))
+
+        def _quote_looks_sourced_from_argument(q: str) -> bool:
+            qn = _norm_for_match(q)
+            if len(qn) < 12:
+                return False
+            if qn in normalized_argument:
+                return True
+            # Allow truncated quotes: match the first ~60 chars.
+            head = qn[:60].strip()
+            return len(head) >= 20 and head in normalized_argument
+
+        def best_arg_sentence_for(query_text: str, category_name: str, used: set[int]) -> str:
+            """Pick the best sentence from the user's argument for this category.
+
+            Prefers unused sentences to avoid showing the same quote across categories.
+            """
+            query_words = set(_re.findall(r"[a-z]{4,}", (query_text or "").lower()))
+            hint = category_hints.get(_hint_key(category_name), set())
+            best_idx = 0
+            best_score = -1
+            for idx, words in enumerate(sent_word_sets):
+                overlap = len(query_words & words)
+                hint_overlap = len(hint & words)
+                # Prefer unused sentences.
+                reuse_penalty = 0 if idx not in used else 2
+                score = overlap + (2 * hint_overlap) - reuse_penalty
+                if score > best_score:
+                    best_score = score
+                    best_idx = idx
+            used.add(best_idx)
+            return arg_sentences[best_idx][:250]
+
         def best_arg_sentence(rationale: str) -> str:
             """Return the argument sentence with highest word overlap to the rationale."""
-            words = set(_re.findall(r'[a-z]{4,}', rationale.lower()))
+            words = set(_re.findall(r'[a-z]{4,}', (rationale or "").lower()))
             if not words:
                 return arg_sentences[0]
             best, best_score = arg_sentences[0], -1
@@ -811,14 +1126,51 @@ class InferenceService:
             return gaps_out[:2]
 
         enriched = 0
+
+        # Track duplicates so we can re-pick quotes per category.
+        existing_quotes = [str((it or {}).get("argument_quote", "") or "").strip() for it in critique.get("breakdown", []) or []]
+        quote_counts: Dict[str, int] = {}
+        for q in existing_quotes:
+            if q:
+                quote_counts[q] = quote_counts.get(q, 0) + 1
+
+        used_sentence_indexes: set[int] = set()
         for item in critique.get("breakdown", []):
             rationale = item.get("rationale", "") or ""
             cat = item.get("category", "this category")
 
+            current_quote = str(item.get("argument_quote", "") or "").strip()
+            needs_requote = (
+                _is_placeholder_quote(current_quote)
+                or not _quote_looks_sourced_from_argument(current_quote)
+                or (len(arg_sentences) >= 2 and current_quote and quote_counts.get(current_quote, 0) >= 2)
+            )
+
             # argument_quote — always fill if empty
-            if not str(item.get("argument_quote", "")).strip():
-                item["argument_quote"] = best_arg_sentence(rationale)
+            if not current_quote or needs_requote:
+                query_text = f"{cat} {rationale} "
+                # Include strengths/gaps if present for more signal.
+                strengths = item.get("strengths") or []
+                gaps = item.get("gaps") or []
+                if isinstance(strengths, list):
+                    query_text += " ".join(str(s) for s in strengths if str(s).strip()) + " "
+                if isinstance(gaps, list):
+                    query_text += " ".join(str(g) for g in gaps if str(g).strip()) + " "
+                item["argument_quote"] = best_arg_sentence_for(query_text, cat, used_sentence_indexes)
                 enriched += 1
+
+            # rationale — in fallback/template mode, rewrite to be argument-specific
+            if force_argument_specific_rationales:
+                existing_rationale = str(item.get("rationale") or "").strip()
+                if not existing_rationale.lower().startswith("your text says:"):
+                    quote = str(item.get("argument_quote") or "").strip() or best_arg_sentence_for(cat, cat, used_sentence_indexes)
+                    missing_txt, action = _missing_and_action(cat)
+                    item["rationale"] = (
+                        f"Your text says: \"{quote}\". This is the part most relevant to {cat} and it affected your score here. "
+                        f"You lost points because the argument is missing {missing_txt} in this category. "
+                        f"To score higher, do this: {action}"
+                    )
+                    enriched += 1
 
             # strengths
             existing_strengths = item.get("strengths", [])
@@ -909,87 +1261,337 @@ class InferenceService:
 
         return critique
 
-    def _get_fallback_critique(self, argument_text: str) -> Dict[str, Any]:
-        """Generate a basic fallback critique when API fails.
-        Runs _enrich_breakdown so the frontend always has argument_quote/strengths/gaps."""
-        word_count = len(argument_text.split())
-        has_citations = bool(re.search(r'\d{4}|Act|Section|Article', argument_text))
-        has_facts = bool(re.search(r'fact|evidence|witness|document', argument_text, re.IGNORECASE))
+    # ------------------------------------------------------------------
+    # Claim-support mapping — second LLM call per grounded analysis
+    # ------------------------------------------------------------------
 
-        base_score = 50
-        if word_count > 100: base_score += 10
-        if has_citations: base_score += 10
-        if has_facts: base_score += 5
+    def compute_claim_support(
+        self,
+        breakdown: list,
+        para_index_text: str,
+        source_title: str = "Source Judgment",
+    ) -> Dict[str, Any]:
+        """Map each category's claims to numbered paragraphs via an LLM call.
+
+        Args:
+            breakdown: The ``breakdown`` list from the critique dict (8 items).
+            para_index_text: Pre-formatted string of "Para N: <excerpt>\\n" lines.
+            source_title: Label for the source document shown in the prompt.
+
+        Returns:
+            A dict keyed by category name, each value a dict with keys:
+            ``bullets``, ``total_claims``, ``supported_claims``,
+            ``support_ratio_percent``, ``support_ratio_label``, ``not_referenced``.
+        """
+        if not breakdown or not para_index_text.strip():
+            return {}
+
+        # Build compact category summaries (avoid sending huge text to the LLM)
+        cat_summaries = []
+        for item in breakdown:
+            cat = item.get("category", "Unknown")
+            score = item.get("rubric_score", "?")
+            weight = item.get("weight", "?")
+            aq = (item.get("argument_quote") or "")[:300]
+            rat = (item.get("rationale") or "")[:400]
+            cat_summaries.append(
+                f"Category: {cat} [Score {score}/5, Weight {weight}]\n"
+                f"  argument_quote: {aq}\n"
+                f"  rationale: {rat}"
+            )
+
+        user_prompt = (
+            f"=== SOURCE_EXCERPTS FROM: {source_title} ===\n"
+            f"{para_index_text}\n\n"
+            "=== ARGUMENT CATEGORIES ===\n"
+            + "\n\n".join(cat_summaries)
+            + "\n\nNow produce the claim_support JSON for the applicable categories listed above."
+        )
+
+        try:
+            if self.backend_name == "gemini":
+                raw = self.backend._call_api(
+                    CLAIM_SUPPORT_SYSTEM_PROMPT, user_prompt, temperature=0.1
+                )
+            elif self.backend_name == "openrouter":
+                import requests as _req
+                headers = {
+                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                    "Content-Type": "application/json",
+                }
+                payload = {
+                    "model": OPENROUTER_MODEL,
+                    "messages": [
+                        {"role": "system", "content": CLAIM_SUPPORT_SYSTEM_PROMPT},
+                        {"role": "user",   "content": user_prompt},
+                    ],
+                    "temperature": 0.1,
+                    "max_tokens": 2048,
+                }
+                resp = _req.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    json=payload, headers=headers, timeout=120,
+                )
+                if resp.status_code != 200:
+                    raise RuntimeError(f"OpenRouter claim-support error: {resp.status_code}")
+                raw = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+            elif self.backend_name == "ollama":
+                import requests as _req
+                payload = {
+                    "model": OLLAMA_MODEL,
+                    "messages": [
+                        {"role": "system", "content": CLAIM_SUPPORT_SYSTEM_PROMPT},
+                        {"role": "user",   "content": user_prompt},
+                    ],
+                    "stream": False,
+                    "options": {"temperature": 0.1, "num_predict": 2048},
+                }
+                resp = _req.post(f"{OLLAMA_BASE_URL}/api/chat", json=payload, timeout=600)
+                resp.raise_for_status()
+                raw = resp.json().get("message", {}).get("content", "")
+            else:
+                logger.warning(f"[claim-support] Unknown backend {self.backend_name}")
+                return {}
+
+            parsed = self._extract_json(raw)
+            if not isinstance(parsed, dict):
+                logger.warning("[claim-support] LLM returned non-dict JSON; skipping claim map.")
+                return {}
+
+            items = parsed.get("claim_support", [])
+            if not isinstance(items, list):
+                return {}
+
+            result: Dict[str, Any] = {}
+            for entry in items:
+                cat_name = entry.get("category", "")
+                if not cat_name:
+                    continue
+                result[cat_name] = {
+                    "bullets":               entry.get("bullets") or [],
+                    "total_claims":          int(entry.get("total_claims") or 0),
+                    "supported_claims":      int(entry.get("supported_claims") or 0),
+                    "support_ratio_percent": int(entry.get("support_ratio_percent") or 0),
+                    "support_ratio_label":   entry.get("support_ratio_label") or "Low",
+                    "not_referenced":        entry.get("not_referenced") or [],
+                }
+            logger.info(f"[claim-support] Mapped {len(result)} categories via LLM.")
+            return result
+
+        except Exception as exc:
+            logger.warning(f"[claim-support] Failed ({exc}); returning empty map.")
+            return {}
+
+    def _get_fallback_critique(self, argument_text: str) -> Dict[str, Any]:
+        """Generate a fallback critique when AI inference fails.
+
+        IMPORTANT: This path must still generate *argument-specific* rationales.
+        The previous version used fixed template rationales that appeared the
+        same for all inputs, which confused users.
+        """
+        import re as _re
+
+        text = (argument_text or "").strip()
+        word_count = len(text.split())
+
+        # ── Sentence extraction (for argument_quote) ─────────────────────────
+        raw_sentences = _re.split(r'(?<=[.!?])\s+|\n{1,}', text)
+        sentences = [s.strip() for s in raw_sentences if len(s.strip()) > 12]
+        if not sentences:
+            words = text.split()
+            sentences = [" ".join(words[i:i+15]) for i in range(0, len(words), 15) if words[i:i+15]]
+        if not sentences:
+            sentences = [text[:200]] if text else ["(no argument text provided)"]
+
+        def _pick_sentence(hints: set[str]) -> str:
+            best = sentences[0]
+            best_score = -1
+            for s in sentences:
+                w = set(_re.findall(r"[a-z]{4,}", s.lower()))
+                score = len(w & hints)
+                if score > best_score:
+                    best_score = score
+                    best = s
+            return best[:250]
+
+        # ── Feature detection (varies by input) ─────────────────────────────
+        tl = text.lower()
+        has_parties = any(k in tl for k in ("appellant", "respondent", "plaintiff", "defendant", "petitioner"))
+        has_relief = any(k in tl for k in ("prayer", "relief", "seek", "seeks", "request", "asks", "declare", "declaration", "injunction", "ejectment", "damages", "costs"))
+        has_dates = bool(_re.search(r"\b(19\d{2}|20\d{2})\b|\b\d{1,2}[./-]\d{1,2}[./-]\d{2,4}\b", text))
+        has_statute = bool(_re.search(r"\b(section|s\.|article|act|ordinance|law)\b", tl))
+        has_case_cites = bool(_re.search(r"\bv\.?\b|\bvs\.?\b|\bsc\b|\bca\b|\b[12]\d{3}\b", tl))
+        has_evidence = any(k in tl for k in ("evidence", "exhibit", "document", "deed", "agreement", "survey", "plan", "witness", "affidavit", "receipt", "letter"))
+        has_reasoning = any(k in tl for k in ("therefore", "thus", "because", "hence", "accordingly", "as a result"))
+        has_counter = any(k in tl for k in ("however", "but", "defence", "defense", "counter", "respondent may", "the defendant may", "anticipated"))
+        has_amounts = bool(_re.search(r"\b(lkr|rs\.?|rupees|usd|\d{1,3}(,\d{3})+)\b", tl))
+        has_numbered_structure = bool(_re.search(r"^\s*\d+\.|\n\s*\d+\.", text))
+
+        # ── Category config ─────────────────────────────────────────────────
+        categories = [
+            ("Issue & Claim Clarity", 10, {"issue", "claim", "relief", "prayer", "seek", "appellant", "respondent", "plaintiff", "defendant"}),
+            ("Facts & Chronology", 15, {"dated", "on", "in", "after", "before", "then", "timeline", "chronology"}),
+            ("Legal Basis / Elements", 20, {"section", "act", "article", "law", "elements", "under"}),
+            ("Evidence & Support", 15, {"evidence", "exhibit", "document", "deed", "survey", "plan", "witness"}),
+            ("Reasoning & Logic", 15, {"therefore", "because", "thus", "hence", "so"}),
+            ("Counterarguments & Rebuttal", 10, {"however", "but", "defence", "defense", "counter", "rebut"}),
+            ("Remedies & Quantification", 10, {"damages", "injunction", "ejectment", "declaration", "costs", "interest"}),
+            ("Structure, Style & Professionalism", 5, {"facts", "issues", "submissions", "prayer", "heading", "paragraph"}),
+        ]
+
+        def _clamp(n: int, lo: int = 0, hi: int = 5) -> int:
+            return max(lo, min(hi, int(n)))
+
+        breakdown = []
+        for cat_name, weight, hints in categories:
+            quote = _pick_sentence(hints)
+
+            # Heuristic rubric score per category (0-5) derived from features.
+            if "Issue" in cat_name:
+                score = 2 + int(has_parties) + int(has_relief)
+                missing = []
+                if not has_parties:
+                    missing.append("parties")
+                if not has_relief:
+                    missing.append("exact relief/prayer")
+                missing_txt = " and ".join(missing) if missing else "key details"
+                action = "State the parties and the exact relief sought in the first 1-2 lines."
+            elif "Facts" in cat_name:
+                score = 2 + int(has_dates) + int(word_count >= 80)
+                missing_txt = "specific dates or a clear timeline" if not has_dates else "a cleaner chronological order"
+                action = "List key events in date order (each sentence starts with a date/time)."
+            elif "Legal Basis" in cat_name:
+                score = 1 + int(has_statute) + int(has_case_cites) + int(word_count >= 80)
+                missing_txt = "statute/section citations" if not has_statute else "element-by-element application"
+                action = "Cite the exact law (Act + Section) and apply each legal element to your facts."
+            elif "Evidence" in cat_name:
+                score = 1 + int(has_evidence) + int(word_count >= 80) + int(has_dates)
+                missing_txt = "named documents/exhibits" if not has_evidence else "specific exhibit details (title/date)"
+                action = "Name each document (e.g., deed number/date) and say what fact it proves."
+            elif "Reasoning" in cat_name:
+                score = 2 + int(has_reasoning) + int(word_count >= 80)
+                missing_txt = "clear fact→law→conclusion links" if not has_reasoning else "tighter step-by-step logic"
+                action = "Add explicit connectors: 'Because X, under Section Y, therefore Z follows.'"
+            elif "Counter" in cat_name:
+                score = 1 + int(has_counter) + int(word_count >= 80)
+                missing_txt = "any anticipated defence and rebuttal" if not has_counter else "stronger rebuttal detail"
+                action = "Write 1 paragraph: 'Opponent may argue __; reply __' with a reason and citation."
+            elif "Remedies" in cat_name:
+                score = 2 + int(has_relief) + int(has_amounts)
+                missing_txt = "a precise remedy (and amount/calculation if money)" if not has_amounts else "a clearer calculation basis"
+                action = "State the exact order you want (and exact amount + how calculated if damages)."
+            else:  # Structure/style
+                score = 2 + int(has_numbered_structure) + int(word_count >= 80)
+                missing_txt = "clear headings/numbered paragraphs" if not has_numbered_structure else "cleaner sectioning"
+                action = "Use headings (Facts/Issues/Law/Relief) and numbered paragraphs for easy reference."
+
+            rubric_score = _clamp(score)
+            points = round((rubric_score / 5.0) * weight, 1)
+
+            # Build strengths/gaps from detected features so they vary by input.
+            strengths = []
+            gaps = []
+
+            if "Issue" in cat_name:
+                if has_parties:
+                    strengths.append("Parties are identified.")
+                if has_relief:
+                    strengths.append("Relief requested is indicated.")
+                if not has_parties:
+                    gaps.append("Missing: who the parties are (appellant/respondent or plaintiff/defendant).")
+                if not has_relief:
+                    gaps.append("Missing: the exact relief/prayer (e.g., declaration, injunction, damages).")
+            elif "Facts" in cat_name:
+                if has_dates:
+                    strengths.append("At least one date/time marker is included.")
+                if word_count >= 80:
+                    strengths.append("There is enough factual detail to follow the dispute.")
+                if not has_dates:
+                    gaps.append("Missing: specific dates for the key events.")
+                gaps.append("Improve: present facts strictly in chronological order.")
+            elif "Legal Basis" in cat_name:
+                if has_statute:
+                    strengths.append("Legal terminology suggests an attempt to ground the claim in law.")
+                if has_case_cites:
+                    strengths.append("Some citation-style markers appear.")
+                if not has_statute:
+                    gaps.append("Missing: statute name + section/article number for each legal proposition.")
+                gaps.append("Missing: apply each legal element to a specific fact.")
+            elif "Evidence" in cat_name:
+                if has_evidence:
+                    strengths.append("Mentions evidence/documents to support facts.")
+                if not has_evidence:
+                    gaps.append("Missing: specific documents/exhibits/witness references.")
+                gaps.append("Improve: link each document to the fact it proves.")
+            elif "Reasoning" in cat_name:
+                if has_reasoning:
+                    strengths.append("Uses reasoning connectors (e.g., therefore/because).")
+                if not has_reasoning:
+                    gaps.append("Missing: explicit reasoning steps (facts → rule → conclusion).")
+                gaps.append("Improve: avoid jumping from facts directly to conclusions.")
+            elif "Counter" in cat_name:
+                if has_counter:
+                    strengths.append("Acknowledges a possible opposing point.")
+                else:
+                    gaps.append("Missing: anticipate the opponent's strongest defence.")
+                gaps.append("Missing: a clear rebuttal explaining why that defence fails.")
+            elif "Remedies" in cat_name:
+                if has_relief:
+                    strengths.append("Mentions a form of relief/remedy.")
+                if has_amounts:
+                    strengths.append("Includes (or hints at) quantification.")
+                if not has_amounts:
+                    gaps.append("Missing: exact amount and how it is calculated (if claiming money).")
+                gaps.append("Improve: list each remedy separately in a Prayer/Relief section.")
+            else:
+                if has_numbered_structure:
+                    strengths.append("Uses numbered structure in parts of the text.")
+                gaps.append("Improve: add headings (Facts / Issues / Law / Relief) for readability.")
+                if not has_numbered_structure:
+                    gaps.append("Missing: numbered paragraphs for court-friendly referencing.")
+
+            # Ensure 1-3 items each
+            strengths = [s for s in strengths if s][:3] or ["Some relevant content is present."]
+            gaps = [g for g in gaps if g][:3]
+            if rubric_score == 5:
+                gaps = []
+            elif not gaps:
+                gaps = [f"Add more specific detail for {cat_name}."]
+
+            # 3-sentence rationale tied to the actual quote + detected gaps.
+            rationale = (
+                f"Your text says: \"{quote}\". This is the part most relevant to {cat_name} and it helped your score here. "
+                f"You lost points because the argument is missing {missing_txt} in this category. "
+                f"To score higher, do this: {action}"
+            )
+
+            breakdown.append({
+                "category": cat_name,
+                "weight": weight,
+                "rubric_score": rubric_score,
+                "points": points,
+                "argument_quote": quote,
+                "judgment_quote": "",
+                "rationale": rationale,
+                "strengths": strengths,
+                "gaps": gaps,
+            })
+
+        overall_score = int(round(sum(float(it.get("points") or 0.0) for it in breakdown)))
+        feedback = [
+            "Add a clear opening sentence stating parties, claim, and relief.",
+            "Add dates and list facts in chronological order.",
+            "Cite the specific law/section and link evidence to each key fact.",
+        ]
 
         critique = {
-            "overall_score": min(base_score, 75),
-            "breakdown": [
-                {
-                    "category": "Issue & Claim Clarity", "weight": 10, "rubric_score": 3, "points": 6.0,
-                    "argument_quote": "", "judgment_quote": "",
-                    "rationale": "The legal issue is introduced but the specific claim is not stated with enough precision for a court to act on it. The argument does not name the exact legal right being asserted or the specific relief being sought, which costs points under this criterion. To reach 4/5 the argument must open with a single sentence that names the cause of action, the parties, and the specific legal right violated.",
-                    "strengths": ["A legal topic is identified and the general subject matter is clear."],
-                    "gaps": ["The specific cause of action (e.g. breach of contract, negligence) is not named explicitly.", "The prayer or relief sought is not stated in the opening section."]
-                },
-                {
-                    "category": "Facts & Chronology", "weight": 15, "rubric_score": 3, "points": 9.0,
-                    "argument_quote": "", "judgment_quote": "",
-                    "rationale": "Some factual background is present but the events are not arranged in a clear dated sequence. The absence of a numbered chronology makes it difficult for the reader to follow the timeline of events, which reduces the score. To reach 4/5 each factual paragraph must begin with a date or period (e.g. 'On 12 March 2019…') and facts must be listed in chronological order.",
-                    "strengths": ["Key facts relevant to the dispute are mentioned."],
-                    "gaps": ["Events are not presented in dated chronological order.", "Missing: specific dates for each key event."]
-                },
-                {
-                    "category": "Legal Basis", "weight": 20, "rubric_score": 3, "points": 12.0,
-                    "argument_quote": "", "judgment_quote": "",
-                    "rationale": "Legal principles are referenced in general terms but no statute is cited by its short title, year, and section number. Without a specific statutory or case-law citation the court cannot verify the legal basis, which keeps the score at 3/5. To reach 4/5 each legal proposition must be followed by a citation in the form 'Section X of Act No. Y of YYYY' or 'Name v Name [YEAR] X SC Y'.",
-                    "strengths": ["The argument attempts to ground the claim in law rather than mere assertion."],
-                    "gaps": ["No statute cited by name, year, and section number.", "No case law cited to support the legal propositions."]
-                },
-                {
-                    "category": "Evidence & Support", "weight": 15, "rubric_score": 3, "points": 9.0,
-                    "argument_quote": "", "judgment_quote": "",
-                    "rationale": "The argument refers to evidence but does not exhibit or describe specific documents by name. Saying 'there is evidence' without naming the document, document number, or date gives the reader no way to locate or verify it. To reach 4/5 each piece of evidence must be referred to as a named exhibit (e.g. 'P1 — Survey Plan No. 123 dated 2018') with its relevance explained.",
-                    "strengths": ["The argument acknowledges that evidence exists to support the claim."],
-                    "gaps": ["No documents are referred to by exhibit number or document description.", "The probative value of each piece of evidence is not explained."]
-                },
-                {
-                    "category": "Reasoning & Logic", "weight": 15, "rubric_score": 3, "points": 9.0,
-                    "argument_quote": "", "judgment_quote": "",
-                    "rationale": "A logical sequence is attempted but the argument jumps between facts and conclusions without showing the inferential steps. The reader must infer the connection between the facts and the legal consequence, which should be made explicit. To reach 4/5 each factual paragraph must be followed by a sentence that states 'Therefore, under Section X, the [party] is entitled to…'.",
-                    "strengths": ["The overall argument moves from facts toward a conclusion."],
-                    "gaps": ["Inferential steps between facts and legal conclusions are not spelled out.", "The argument does not apply legal elements to specific facts one by one."]
-                },
-                {
-                    "category": "Counterarguments", "weight": 10, "rubric_score": 2, "points": 4.0,
-                    "argument_quote": "", "judgment_quote": "",
-                    "rationale": "The argument does not address any opposing argument the defendant is likely to raise. In adversarial proceedings, failing to anticipate the other side's strongest point leaves the argument vulnerable to being dismissed. To reach 4/5 the argument must identify at least one likely defence (e.g. 'The defendant may argue that the limitation period has expired') and rebut it.",
-                    "strengths": ["The argument presents a clear petitioner's position."],
-                    "gaps": ["No anticipated defence or counter-argument is identified.", "No rebuttal section is present."]
-                },
-                {
-                    "category": "Remedies & Quantification", "weight": 10, "rubric_score": 3, "points": 6.0,
-                    "argument_quote": "", "judgment_quote": "",
-                    "rationale": "A remedy is mentioned but it is not quantified with a specific amount or calculation. Courts require a precise sum or a defined act to grant relief, so an unquantified remedy weakens the prayer. To reach 4/5 the prayer must state the exact sum sought (e.g. 'LKR 2,500,000 as general damages') or the specific act required (e.g. 'delivery of vacant possession within 30 days').",
-                    "strengths": ["The type of remedy sought (damages / declaration / injunction) is indicated."],
-                    "gaps": ["The monetary amount is not specified or calculated.", "The basis of calculation (e.g. market value, loss of income) is not stated."]
-                },
-                {
-                    "category": "Structure & Professionalism", "weight": 5, "rubric_score": 3, "points": 3.0,
-                    "argument_quote": "", "judgment_quote": "",
-                    "rationale": "The submission is written in prose but lacks the numbered-paragraph format expected in Sri Lankan civil pleadings. Without numbered paragraphs opposing counsel and the court cannot refer to specific passages precisely, which reduces the professionalism score. To reach 4/5 the entire submission must use numbered paragraphs, a bold heading for each section, and a separate signed prayer at the end.",
-                    "strengths": ["The language is generally professional and avoids colloquial expressions."],
-                    "gaps": ["Paragraphs are not numbered, making cross-reference difficult.", "No separate 'Prayer for Relief' section appears at the end of the submission."]
-                }
-            ],
-            "feedback": [
-                "Open each legal claim with the exact statute and section number that creates the right (e.g. 'Under Section 5 of the Partition Law No. 21 of 1977…').",
-                "Number every paragraph and add a bold heading for each section (Facts, Legal Basis, Reliefs Sought).",
-                "Add a final 'Prayer' section listing each remedy with a precise monetary amount or defined act."
-            ],
-            "warning": "AI service unavailable — using structured template analysis. Configure valid API keys in .env for full AI critique."
+            "overall_score": _clamp(overall_score, 0, 100),
+            "breakdown": breakdown,
+            "feedback": feedback,
+            "warning": "AI service unavailable - using rule-based fallback analysis (rationales are generated from your typed text). [rule_fallback_v2]",
         }
-        # Enrich argument_quotes from the actual argument text
-        return self._enrich_breakdown(critique, argument_text)
+
+        return critique
 
 
 # Singleton instance

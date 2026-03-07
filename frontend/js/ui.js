@@ -1,4 +1,6 @@
 // UI Module - Handles all UI updates and rendering
+const UI_BUILD = '20260302';
+
 const UI = {
     /**
      * Update API status indicator
@@ -6,10 +8,10 @@ const UI = {
     updateAPIStatus(isOnline) {
         const statusEl = document.getElementById('apiStatus');
         if (isOnline) {
-            statusEl.innerHTML = '✓ API Online';
+            statusEl.innerHTML = `✓ API Online <span class="ui-build">(UI ${UI_BUILD})</span>`;
             statusEl.className = 'api-status online';
         } else {
-            statusEl.innerHTML = '✗ API Offline - Start server with: python -m uvicorn app.main:app --reload';
+            statusEl.innerHTML = `✗ API Offline <span class="ui-build">(UI ${UI_BUILD})</span> - Start server with: python -m uvicorn app.main:app --reload`;
             statusEl.className = 'api-status offline';
         }
     },
@@ -97,6 +99,94 @@ const UI = {
         );
     },
 
+    /** Best-effort: summarize an excerpt into a short, UI-friendly sentence */
+    summarizeExcerpt(excerpt, maxLen = 120) {
+        const raw = (excerpt || '').trim();
+        if (!raw) return '';
+
+        // Remove leading paragraph numbering like "25." or "(25)".
+        let t = raw.replace(/^\s*\(?\s*\d{1,4}\s*\)?\s*[\.)]\s+/, '');
+
+        // Prefer first sentence-ish chunk.
+        const m = t.match(/^(.+?)(\.|\?|!)(\s|$)/);
+        let first = m ? (m[1] + m[2]) : t;
+
+        first = first.replace(/\s+/g, ' ').trim();
+        if (first.length > maxLen) first = first.slice(0, maxLen).trimEnd() + '\u2026';
+        return first;
+    },
+
+    /** Format a location label for an evidence item (prefer para over page) */
+    formatEvidenceLocation(item) {
+        if (!item) return '';
+        if (item.para_estimate) return `Para ${item.para_estimate}`;
+        if (item.page_estimate) return `Page ${item.page_estimate}`;
+        return '';
+    },
+
+    /** Build ordered list of cited evidence items (uploaded docs only) */
+    buildDocumentSupportItems(data) {
+        const evidenceMap = UI.buildEvidenceMap(data);
+
+        // Pull citations in order of appearance across category rationales.
+        const orderedIds = [];
+        const seen = new Set();
+        (data.breakdown || []).forEach(cat => {
+            const ids = UI.extractCitationIds((cat && cat.rationale) || '');
+            ids.forEach(id => {
+                if (!seen.has(id)) {
+                    seen.add(id);
+                    orderedIds.push(id);
+                }
+            });
+        });
+
+        const items = orderedIds
+            .map(id => evidenceMap[id])
+            .filter(Boolean);
+
+        // De-dup by (source_id + para/page) to avoid repeats
+        const uniq = [];
+        const keySeen = new Set();
+        items.forEach(it => {
+            const loc = UI.formatEvidenceLocation(it);
+            const key = `${it.source_id || ''}|${loc}|${(it.excerpt || '').slice(0, 60)}`;
+            if (!keySeen.has(key)) {
+                keySeen.add(key);
+                uniq.push(it);
+            }
+        });
+        return uniq.slice(0, 6);
+    },
+
+    /** Fallback: show top retrieved items when no [E#] citations were detected */
+    buildFallbackSupportItems(data) {
+        const all = [...(data.evidence || []), ...(data.similar_cases || [])].filter(Boolean);
+        if (!all.length) return [];
+
+        // Prefer uploaded docs first, then higher similarity score.
+        all.sort((a, b) => {
+            const ap = a.source === 'uploaded_doc' ? 0 : 1;
+            const bp = b.source === 'uploaded_doc' ? 0 : 1;
+            if (ap !== bp) return ap - bp;
+            const as = Number(a.score ?? 0);
+            const bs = Number(b.score ?? 0);
+            return bs - as;
+        });
+
+        const out = [];
+        const seen = new Set();
+        for (const it of all) {
+            const loc = UI.formatEvidenceLocation(it);
+            const key = `${it.source || ''}|${it.source_id || ''}|${loc}|${(it.excerpt || '').slice(0, 80)}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            out.push(it);
+            if (out.length >= 6) break;
+        }
+        return out;
+    },
+
     /** Map a 0-5 rubric score to a CSS level class */
     scoreLevel(rubricScore) {
         if (rubricScore >= 4) return 'strong';
@@ -174,6 +264,15 @@ const UI = {
             </div>
         `;
 
+        // ── Backend warning (e.g. fallback/template mode) ───────────
+        if (data.warning) {
+            html += `
+                <div class="error" style="margin-top:12px;">
+                    ⚠️ ${UI.escapeHtml(data.warning)}
+                </div>
+            `;
+        }
+
         // ── File info ───────────────────────────────────────────────
         if (fileInfo) {
             html += `
@@ -241,6 +340,47 @@ const UI = {
                    </div>`
                 : '';
 
+            // Per-category document support (computed by backend in grounded mode)
+            const support = Array.isArray(category.support_detected) ? category.support_detected : [];
+            const ratioPct = (category.support_ratio_percent === 0 || category.support_ratio_percent)
+                ? Number(category.support_ratio_percent)
+                : null;
+            const ratioLabel = (category.support_ratio_label || '').trim();
+            const ratioText = (ratioPct !== null && ratioLabel)
+                ? `Support Ratio: <strong>${UI.escapeHtml(ratioLabel)} (${ratioPct}%)</strong>`
+                : (ratioPct !== null
+                    ? `Support Ratio: <strong>${ratioPct}%</strong>`
+                    : '');
+
+            // Claim counts (present only when LLM path succeeded)
+            const totalClaims     = (category.total_claims != null)     ? Number(category.total_claims)     : null;
+            const supportedClaims = (category.supported_claims != null) ? Number(category.supported_claims) : null;
+            const claimCountText  = (totalClaims !== null && supportedClaims !== null)
+                ? `Detected <strong>${totalClaims}</strong> claim${totalClaims !== 1 ? 's' : ''}: `
+                  + `<strong>${supportedClaims}</strong> supported`
+                : '';
+
+            // "Not referenced" list
+            const notRef = Array.isArray(category.not_referenced) ? category.not_referenced.filter(Boolean) : [];
+            const notRefHtml = notRef.length
+                ? `<div class="cat-not-referenced">
+                       <p class="cat-not-ref-heading">⚠️ Not referenced in judgment:</p>
+                       <ul class="cat-bullets cat-not-ref-list">${notRef.map(n => `<li>${UI.escapeHtml(n)}</li>`).join('')}</ul>
+                   </div>`
+                : '';
+
+            const supportHtml = (support.length > 0 || ratioText || claimCountText)
+                ? `<div class="cat-section-block cat-section-support">
+                        <p class="ev-section-label cat-section-heading">📄 Document Support Detected</p>
+                        ${claimCountText ? `<p class="cat-claim-count">${claimCountText}</p>` : ''}
+                        ${support.length > 0
+                            ? `<ul class="cat-bullets cat-support">${support.map(s => `<li>${UI.escapeHtml(s)}</li>`).join('')}</ul>`
+                            : `<p class="no-evidence-note">ℹ️ No mapped support detected for this category.</p>`}
+                        ${notRefHtml}
+                        ${ratioText ? `<div class="support-ratio">${ratioText}</div>` : ''}
+                   </div>`
+                : '';
+
             // Supporting evidence — ONLY show excerpts the model explicitly cited [E#]
             // Never guess/fallback: irrelevant excerpts mislead more than help.
             let evidenceHtml = '';
@@ -283,6 +423,7 @@ const UI = {
                     </div>
                     ${strengthsHtml}
                     ${gapsHtml}
+                    ${supportHtml}
                     ${evidenceHtml}
                 </div>
             `;

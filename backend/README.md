@@ -149,6 +149,12 @@ cat .env
 # 2. You're in D:\LegalScoreModel directory
 # 3. .env file has your API key
 
+# If you see errors like: "No module named 'sklearn'"
+# it usually means you're NOT running inside the virtual environment.
+# Quick checks:
+#   python -c "import sys; print(sys.executable)"
+#   python -c "import sklearn; print(sklearn.__version__)"
+
 # Start server
 python -m uvicorn app.main:app --reload --port 8000
 

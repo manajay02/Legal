@@ -109,3 +109,50 @@ def top_k_tfidf(query: str, chunks: Sequence[str], k: int = 5) -> List[Tuple[int
     ranked = sorted(enumerate(sims.tolist()), key=lambda x: x[1], reverse=True)
     ranked = [(i, float(s)) for i, s in ranked if not math.isnan(s)]
     return ranked[:k]
+
+
+def extract_numbered_paragraphs(text: str, max_paras: int = 40) -> List[Tuple[str, str]]:
+    """Extract numbered-paragraph tuples ``(label, excerpt)`` from legal text.
+
+    Recognises the following para numbering styles commonly found in Sri Lankan
+    appellate judgments:
+
+    * ``10.``  ``10)``  ``(10)``   – plain numeric at line start
+    * ``Para 10``  ``Para. 10``  ``Paragraph 10``  – explicit "Para" prefix
+
+    Each entry is ``("Para N", "<first 200 chars of paragraph text>")``.
+    Results are sorted by paragraph number and capped at *max_paras*.
+    """
+    text = _normalize_whitespace(text)
+
+    # Pattern 1: lines that START with a number marker
+    # Matches: (10) text   /   10. text   /   10) text
+    line_num_re = re.compile(
+        r'(?m)^(?:\((\d{1,3})\)|(\d{1,3})[.)]\s+)(.+)'
+    )
+
+    # Pattern 2: "Para N" / "Para. N" / "Paragraph N" anywhere
+    para_label_re = re.compile(
+        r'(?i)\b(?:para(?:graph)?\.?\s*)(\d{1,3})\b[:\-\u2013\u2014]?\s*([^\n]{10,})'
+    )
+
+    collected: dict = {}  # num -> (label, excerpt)
+
+    # Scan line-start numbers
+    for m in line_num_re.finditer(text):
+        num_grp = m.group(1) or m.group(2)
+        body = m.group(3).strip()[:200]
+        n = int(num_grp)
+        if n not in collected and 1 <= n <= 999:
+            collected[n] = (f"Para {n}", body)
+
+    # Scan explicit Para N labels (these take priority when both match same N)
+    for m in para_label_re.finditer(text):
+        n = int(m.group(1))
+        body = m.group(2).strip()[:200]
+        if 1 <= n <= 999:
+            collected[n] = (f"Para {n}", body)   # overwrite — explicit label wins
+
+    # Sort and cap
+    sorted_paras = sorted(collected.items(), key=lambda x: x[0])[:max_paras]
+    return [(label, excerpt) for _, (label, excerpt) in sorted_paras]

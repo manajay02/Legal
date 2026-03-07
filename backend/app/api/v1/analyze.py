@@ -14,6 +14,7 @@ Date: January 2026
 """
 
 import io
+import logging
 import os
 import re
 from fastapi import APIRouter, HTTPException, status, UploadFile, File
@@ -22,8 +23,10 @@ from typing import List, Dict, Any, Optional
 
 from app.services.inference_service import get_inference_service
 from app.services.document_store import get_document_store
-from app.services.retrieval_service import chunk_text, top_k_tfidf
+from app.services.retrieval_service import chunk_text, top_k_tfidf, extract_numbered_paragraphs
 from app.services.case_corpus import get_case_corpus_index
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter()
@@ -74,6 +77,36 @@ class CategoryBreakdown(BaseModel):
     judgment_quote: Optional[str] = Field(None, description="Verbatim sentence from the source judgment/document")
     strengths: Optional[List[str]] = Field(default_factory=list, description="What the argument does well in this category")
     gaps: Optional[List[str]] = Field(default_factory=list, description="What is missing or weak in this category")
+
+    # Grounding UX fields (computed server-side in grounded mode)
+    support_detected: Optional[List[str]] = Field(
+        default_factory=list,
+        description="List of short support bullets like 'Para 25 → Court held High Court erred.'",
+    )
+    support_ratio_percent: Optional[int] = Field(
+        None,
+        ge=0,
+        le=100,
+        description="Estimated support ratio for this category (0-100)",
+    )
+    support_ratio_label: Optional[str] = Field(
+        None,
+        description="Support ratio label like High/Moderate/Low",
+    )
+    total_claims: Optional[int] = Field(
+        None,
+        ge=0,
+        description="Total atomic claims detected in this category",
+    )
+    supported_claims: Optional[int] = Field(
+        None,
+        ge=0,
+        description="Number of claims mapped to a numbered paragraph",
+    )
+    not_referenced: Optional[List[str]] = Field(
+        default_factory=list,
+        description="Claims that could not be mapped to any paragraph",
+    )
 
 
 class AnalyzeResponse(BaseModel):
@@ -176,6 +209,26 @@ async def analyze_argument(request: AnalyzeRequest) -> AnalyzeResponse:
         
         # Generate critique
         critique = inference_service.generate_critique(request.text)
+
+        # If the backend returns a structured/template critique in AI-unavailable
+        # mode, rationales can become identical across different inputs.
+        # Replace with the rule-based fallback critique which ties rationales to
+        # the user's typed text.
+        try:
+            wt = str((critique or {}).get("warning") or "")
+            breakdown = (critique or {}).get("breakdown") if isinstance((critique or {}).get("breakdown"), list) else []
+            any_rule_rationale = any(
+                str((it or {}).get("rationale") or "").strip().lower().startswith("your text says:")
+                for it in breakdown
+            )
+            if "ai service unavailable" in wt.lower() and not any_rule_rationale:
+                fb = inference_service._get_fallback_critique(request.text)
+                critique["overall_score"] = fb.get("overall_score", critique.get("overall_score", 0))
+                critique["breakdown"] = fb.get("breakdown", critique.get("breakdown", []))
+                critique["feedback"] = fb.get("feedback", critique.get("feedback", []))
+        except Exception:
+            # Never fail the endpoint due to fallback rewriting.
+            pass
         
         # Check if there was an error in the critique
         if "error" in critique:
@@ -281,6 +334,50 @@ class DocumentUploadResponse(BaseModel):
 _CHARS_PER_PAGE = 3000
 
 
+def estimate_paragraph_number(excerpt: str) -> Optional[int]:
+    """Best-effort paragraph number detection from an excerpt.
+
+    Many judgments number paragraphs like:
+      "25. ..." or "(25) ..." or "Para 25 ..."
+
+    We keep this heuristic intentionally conservative; if no clear
+    paragraph number is present, return None.
+    """
+    if not excerpt:
+        return None
+
+    # Prefer paragraph number at the start of a paragraph/line.
+    # Examples: "25. ...", "25) ...", "(25) ..."
+    start_patterns = [
+        r"^\s*\(?\s*(\d{1,4})\s*\)?\s*[\.)]\s+[A-Za-z]",
+        r"^\s*para(?:graph)?\s*(\d{1,4})\b",
+    ]
+
+    # Check first few non-empty paragraphs/lines only.
+    head = excerpt.replace("\r\n", "\n").replace("\r", "\n")
+    for chunk in [p.strip() for p in re.split(r"\n\n+", head) if p.strip()][:6]:
+        for pat in start_patterns:
+            m = re.search(pat, chunk, flags=re.IGNORECASE)
+            if m:
+                try:
+                    n = int(m.group(1))
+                except Exception:
+                    continue
+                if 1 <= n <= 9999:
+                    return n
+
+    # Fallback: look for "para 25" anywhere near the start.
+    m2 = re.search(r"\bpara(?:graph)?\s*(\d{1,4})\b", head[:600], flags=re.IGNORECASE)
+    if m2:
+        try:
+            n = int(m2.group(1))
+        except Exception:
+            return None
+        if 1 <= n <= 9999:
+            return n
+    return None
+
+
 class EvidenceItem(BaseModel):
     evidence_id: str = Field(..., description="Evidence id like E1 used for citations")
     source: str = Field(..., description="uploaded_doc or case_corpus")
@@ -289,6 +386,7 @@ class EvidenceItem(BaseModel):
     excerpt: str = Field(..., description="Excerpt shown to the model and user")
     score: float = Field(..., description="Retriever similarity score")
     page_estimate: Optional[int] = Field(None, description="Estimated page number (1-based) within the source document")
+    para_estimate: Optional[int] = Field(None, description="Estimated paragraph number if detected in the excerpt")
 
 
 class GroundedAnalyzeRequest(AnalyzeRequest):
@@ -377,6 +475,46 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
         store = get_document_store()
         evidence_items: List[EvidenceItem] = []
 
+        def _words(s: str) -> set[str]:
+            return set(re.findall(r"[a-z]{4,}", (s or "").lower()))
+
+        def _summarize_excerpt(excerpt: str, max_len: int = 120) -> str:
+            t = (excerpt or "").strip()
+            if not t:
+                return ""
+            # Strip leading paragraph numbering like '25.' / '(25)'
+            t = re.sub(r"^\s*\(?\s*\d{1,4}\s*\)?\s*[\.)]\s+", "", t)
+            # First sentence-ish
+            m = re.match(r"^(.+?)([.!?])(\s|$)", t)
+            first = (m.group(1) + m.group(2)) if m else t
+            first = re.sub(r"\s+", " ", first).strip()
+            if len(first) > max_len:
+                first = first[:max_len].rstrip() + "\u2026"
+            return first
+
+        def _format_loc(e: EvidenceItem) -> str:
+            if getattr(e, "para_estimate", None):
+                return f"Para {e.para_estimate}"
+            if getattr(e, "page_estimate", None):
+                return f"Page {e.page_estimate}"
+            return ""
+
+        def _support_label(pct: int) -> str:
+            if pct >= 75:
+                return "High"
+            if pct >= 45:
+                return "Moderate"
+            if pct >= 15:
+                return "Low"
+            return "None"
+
+        def _overlap_ratio(query: str, excerpt: str) -> float:
+            qw = _words(query)
+            if not qw:
+                return 0.0
+            ew = _words(excerpt)
+            return len(qw & ew) / max(1, len(qw))
+
         # Retrieve top excerpts from each uploaded doc
         evidence_counter = 1
         for doc_id in request.doc_ids[:10]:
@@ -401,6 +539,7 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                 else:
                     # Fallback: estimate from chunk index
                     page_est = max(1, idx * 1200 // _CHARS_PER_PAGE + 1)
+                para_est = estimate_paragraph_number(excerpt)
                 evidence_items.append(
                     EvidenceItem(
                         evidence_id=f"E{evidence_counter}",
@@ -410,6 +549,7 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                         excerpt=excerpt,
                         score=float(score),
                         page_estimate=page_est,
+                        para_estimate=para_est,
                     )
                 )
                 evidence_counter += 1
@@ -419,6 +559,7 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
             case_index = get_case_corpus_index()
             similar = case_index.query(request.text, k=3)
             for case in similar:
+                para_est = estimate_paragraph_number(case.excerpt)
                 similar_case_items.append(
                     EvidenceItem(
                         evidence_id=f"E{evidence_counter}",
@@ -427,6 +568,7 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                         title=case.case_id,
                         excerpt=case.excerpt,
                         score=float(case.score),
+                        para_estimate=para_est,
                     )
                 )
                 evidence_counter += 1
@@ -434,8 +576,10 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
         # Build evidence pack for the model
         evidence_pack_lines: List[str] = []
         for e in evidence_items + similar_case_items:
+            page_s = f" page={e.page_estimate}" if e.page_estimate is not None else ""
+            para_s = f" para={e.para_estimate}" if e.para_estimate is not None else ""
             evidence_pack_lines.append(
-                f"[{e.evidence_id}] source={e.source} title={e.title} score={e.score:.3f}\n{e.excerpt}\n"
+                f"[{e.evidence_id}] source={e.source} title={e.title} score={e.score:.3f}{page_s}{para_s}\n{e.excerpt}\n"
             )
         evidence_pack = "\n".join(evidence_pack_lines).strip()
         if not evidence_pack:
@@ -443,6 +587,24 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
 
         inference_service = get_inference_service()
         critique = inference_service.generate_grounded_critique(request.text, evidence_pack=evidence_pack)
+
+        # Same safeguard as /analyze: if AI is unavailable and we got a
+        # template-style critique, replace with rule-based fallback so rationales
+        # vary by input even without evidence citations.
+        try:
+            wt = str((critique or {}).get("warning") or "")
+            breakdown = (critique or {}).get("breakdown") if isinstance((critique or {}).get("breakdown"), list) else []
+            any_rule_rationale = any(
+                str((it or {}).get("rationale") or "").strip().lower().startswith("your text says:")
+                for it in breakdown
+            )
+            if "ai service unavailable" in wt.lower() and not any_rule_rationale:
+                fb = inference_service._get_fallback_critique(request.text)
+                critique["overall_score"] = fb.get("overall_score", critique.get("overall_score", 0))
+                critique["breakdown"] = fb.get("breakdown", critique.get("breakdown", []))
+                critique["feedback"] = fb.get("feedback", critique.get("feedback", []))
+        except Exception:
+            pass
 
         if "error" in critique:
             raise HTTPException(
@@ -468,6 +630,145 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
             "evidence": evidence_items,
             "similar_cases": similar_case_items,
         }
+
+        # ── Build numbered-paragraph index from uploaded docs ───────────────
+        para_index_lines: List[str] = []
+        para_source_title = "Source Document"
+        for doc_id in request.doc_ids[:3]:          # cap at 3 docs to keep prompt size sane
+            doc = store.get(doc_id)
+            if doc is None:
+                continue
+            if not para_source_title or para_source_title == "Source Document":
+                para_source_title = doc.filename
+            paras = extract_numbered_paragraphs(doc.text, max_paras=40)
+            for label, excerpt in paras:
+                para_index_lines.append(f"{label}: {excerpt}")
+
+        para_index_text = "\n".join(para_index_lines)
+
+        # ── When the document has no explicit para numbering, build a pseudo-index
+        # from the retrieved evidence chunks so the LLM path can still run and
+        # produce category-specific output (instead of every category getting the
+        # same word-overlap fallback bullets).
+        # Use "Excerpt N" labels (not "E1") so the LLM system prompt can reference them.
+        all_evidence = evidence_items + similar_case_items
+        if not para_index_text.strip() and all_evidence:
+            pseudo_lines = []
+            for i, ev in enumerate(all_evidence[:12], start=1):
+                loc = _format_loc(ev)
+                label = f"Excerpt {i}" + (f" ({loc})" if loc else "")
+                pseudo_lines.append(f"{label}: {ev.excerpt[:400]}")
+            para_index_text = "\n".join(pseudo_lines)
+            para_source_title = "Supporting Evidence Excerpts"
+            logger.info("[claim-support] No numbered paras found; built pseudo-index from %d evidence chunks.", len(pseudo_lines))
+
+        # ── Per-category support mapping ─────────────────────────────────────
+        # Try LLM-based claim→paragraph mapping first; fall back to word-overlap.
+        ev_by_id: Dict[str, EvidenceItem] = {e.evidence_id: e for e in all_evidence}
+
+        claim_map: Dict[str, Any] = {}
+        if para_index_text.strip():
+            try:
+                claim_map = inference_service.compute_claim_support(
+                    breakdown=response_data.get("breakdown", []),
+                    para_index_text=para_index_text,
+                    source_title=para_source_title,
+                )
+            except Exception as _cm_err:
+                logger.warning(f"[claim-support] Skipped: {_cm_err}")
+
+        # Categories whose score is about formatting/structure of the argument itself,
+        # not about whether legal claims are backed by document content.
+        # Document citations are not meaningful for these — skip the support section.
+        _NO_DOC_SUPPORT = {
+            "structure & professionalism",
+            "structure",
+            "professionalism",
+        }
+
+        # Track which evidence items have already been assigned to a category so the
+        # heuristic fallback gives each category its own best-matching unique excerpt.
+        _used_ev_ids: set = set()
+
+        for item in response_data.get("breakdown", []) or []:
+            cat_name = str(item.get("category", "") or "")
+            llm_entry = claim_map.get(cat_name)
+
+            # ── Skip document support for purely structural/formatting categories ──
+            if cat_name.lower().strip() in _NO_DOC_SUPPORT or \
+               any(kw in cat_name.lower() for kw in ("structure", "professionalism", "formatting")):
+                item["support_detected"]      = []
+                item["support_ratio_percent"] = None
+                item["support_ratio_label"]   = None
+                item["total_claims"]          = None
+                item["supported_claims"]      = None
+                item["not_referenced"]        = []
+                continue
+
+            if llm_entry and llm_entry.get("bullets"):
+                # ── LLM path: use mapped bullets + counts ────────────────
+                item["support_detected"]      = llm_entry["bullets"]
+                item["support_ratio_percent"] = llm_entry["support_ratio_percent"]
+                item["support_ratio_label"]   = llm_entry["support_ratio_label"]
+                item["total_claims"]          = llm_entry["total_claims"]
+                item["supported_claims"]      = llm_entry["supported_claims"]
+                item["not_referenced"]        = llm_entry.get("not_referenced") or []
+            else:
+                # ── Heuristic fallback: per-category word-overlap against evidence items ─
+                # NOTE: We intentionally do NOT use [E#] tags here — _inject_missing_citations
+                # often appends the same E1 to every rationale (highest global overlap),
+                # which would make all categories show identical bullets.
+                # Instead, always re-rank for each category using its name + rationale + arg_quote
+                # so the evidence selected is specific to that category.
+                rationale = str(item.get("rationale", "") or "")
+                arg_quote = str(item.get("argument_quote", "") or "")
+                cat_label = str(item.get("category", "") or "")
+                # Use category name as extra signal so legal-vocabulary overlap is weighted
+                # towards the topic of this specific category
+                query = (cat_label + " " + rationale + " " + arg_quote).strip()
+
+                ranked_ev = sorted(
+                    ((ev, _overlap_ratio(query, ev.excerpt)) for ev in all_evidence),
+                    key=lambda x: x[1], reverse=True,
+                )
+                # Prefer evidence items not already claimed by another category so
+                # each card shows a distinct excerpt, not the same top-ranked chunk.
+                chosen: List[EvidenceItem] = []
+                for ev, s in ranked_ev:
+                    if s < 0.01:
+                        break
+                    if ev.evidence_id not in _used_ev_ids:
+                        chosen.append(ev)
+                    if len(chosen) >= 3:
+                        break
+                # If dedup left us empty, allow reuse of already-used items.
+                if not chosen:
+                    chosen = [ev for ev, s in ranked_ev[:3] if s > 0]
+                if not chosen and ranked_ev:
+                    chosen = [ranked_ev[0][0]]
+
+                bullets: List[str] = []
+                ratios: List[float] = []
+                for ev in chosen[:3]:
+                    loc = _format_loc(ev)
+                    summary = _summarize_excerpt(ev.excerpt)
+                    if not summary:
+                        continue
+                    title = (ev.title or "Supporting document").strip()
+                    prefix = f"{title} {loc}".strip()
+                    bullets.append(f"{prefix} \u2192 {summary}" if prefix else f"\u2192 {summary}")
+                    ratios.append(_overlap_ratio(query, ev.excerpt))
+
+                pct = int(round((max(ratios) if ratios else 0.0) * 100))
+                item["support_detected"]      = bullets
+                item["support_ratio_percent"] = pct
+                item["support_ratio_label"]   = _support_label(pct)
+                # No claim counts in heuristic mode
+                item["total_claims"]          = None
+                item["supported_claims"]      = None
+                item["not_referenced"]        = []
+                # Mark chosen items as used so the next category gets different excerpts
+                _used_ev_ids.update(ev.evidence_id for ev in chosen)
 
         if "warning" in critique:
             response_data["warning"] = critique["warning"]

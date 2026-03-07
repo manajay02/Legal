@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sri Lanka Legal AI System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+  <!-- ── Sidebar ──────────────────────────────────────────────────────────── -->
+  <nav id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 21V7"/><path d="M3 7h2c2 0 4-2 7-2s5 2 7 2h2"/></svg>
+      </div>
+      <div class="sidebar-logo-text">
+        <div class="sidebar-logo-title">Legal AI</div>
+        <div class="sidebar-logo-sub">Sri Lanka Court System</div>
+      </div>
+    </div>
+
+    <ul class="nav-list">
+      <li class="nav-item active" data-component="similarity">
+        <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
+        <span class="nav-label">Similarity Search</span>
+      </li>
+      <li class="nav-item" data-component="extractor">
+        <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>
+        <span class="nav-label">Case Extractor</span>
+      </li>
+      <li class="nav-item" data-component="summarizer">
+        <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg></span>
+        <span class="nav-label">Case Summarizer</span>
+      </li>
+      <li class="nav-item" data-component="component3">
+        <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+        <span class="nav-label">Component 3</span>
+      </li>
+      <li class="nav-item" data-component="component4">
+        <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></span>
+        <span class="nav-label">Component 4</span>
+      </li>
+    </ul>
+
+    <div class="sidebar-footer">Sri Lanka Legal AI &copy; 2026</div>
+  </nav>
+
+  <!-- ── Main content area ──────────────────────────────────────────────── -->
+  <div id="app-content">
+
+    <!-- ── Top bar ───────────────────────────────────────────────────────── -->
+    <div id="topbar">
+      <div class="topbar-left">
+        <span class="topbar-breadcrumb">Legal AI System</span>
+        <span class="topbar-sep">/</span>
+        <span class="topbar-current" id="topbar-current">Similarity Search</span>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-badge">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Supreme Court of Sri Lanka
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════ COMPONENT 1: Similarity Search ══ -->
+    <div class="component-panel active" id="panel-similarity">
+      <div class="comp-header">
+        <div class="comp-header-icon similarity-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </div>
+        <div>
+          <h1 class="comp-title">Case Similarity Search</h1>
+          <p class="comp-subtitle">Find similar Sri Lankan legal cases using AI-powered TF-IDF text matching</p>
+        </div>
+      </div>
+
+      <div class="card" id="search-panel">
+        <h2>Search &amp; Classify</h2>
+        <div class="tabs">
+          <button class="tab active" data-tab="by-file">By Filename</button>
+          <button class="tab" data-tab="by-text">By Text</button>
+          <button class="tab classify-tab" data-tab="classify">Classify / Add Case</button>
+        </div>
+
+        <!-- By Filename -->
+        <div class="tab-content active" id="by-file">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="sel-category">Category</label>
+              <select id="sel-category"><option value="">-- Select category --</option></select>
+            </div>
+            <div class="form-group">
+              <label for="sel-subcategory">Subcategory</label>
+              <select id="sel-subcategory" disabled><option value="">-- Select subcategory --</option></select>
+            </div>
+            <div class="form-group">
+              <label for="sel-filename">Case File</label>
+              <select id="sel-filename" disabled><option value="">-- Select file --</option></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- By Text -->
+        <div class="tab-content" id="by-text">
+          <div class="form-group">
+            <label for="txt-query">Enter case description or keywords</label>
+            <textarea id="txt-query" rows="5" placeholder="e.g. murder conviction appeal sentence reduction..."></textarea>
+          </div>
+        </div>
+
+        <!-- Classify / Add -->
+        <div class="tab-content" id="classify">
+          <div class="classify-box">
+            <p class="classify-hint">Upload a PDF or paste text — the AI will predict its <strong>category</strong> and <strong>subcategory</strong>, then optionally save it to the database.</p>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="clf-file">Upload PDF Document</label>
+                <input type="file" id="clf-file" accept=".pdf"/>
+              </div>
+            </div>
+            <div class="divider-or"><span>or</span></div>
+            <div class="form-group">
+              <label for="clf-text">Paste document text</label>
+              <textarea id="clf-text" rows="6" placeholder="Paste the content of the legal document here..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Options row -->
+        <div class="form-row options-row" id="search-options">
+          <div class="form-group">
+            <label for="sel-topn">Results to show</label>
+            <select id="sel-topn">
+              <option value="3">3</option>
+              <option value="5" selected>5</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
+            </select>
+          </div>
+          <div class="form-group checkbox-group">
+            <label><input type="checkbox" id="chk-global"/> Search across all categories (global)</label>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button id="btn-search" class="btn-primary">Find Similar Cases</button>
+          <button id="btn-classify" class="btn-primary btn-classify" style="display:none;">Classify Document</button>
+          <button id="btn-add-case" class="btn-secondary" style="display:none;">Add Case to Database</button>
+        </div>
+      </div>
+
+      <section class="card" id="results-panel" style="display:none;">
+        <h2>Results <span id="results-count" class="badge"></span></h2>
+        <div id="results-list"></div>
+      </section>
+
+      <section class="card" id="classify-panel" style="display:none;">
+        <h2>Classification Result</h2>
+        <div id="classify-result"></div>
+      </section>
+
+      <section class="card" id="stats-panel">
+        <h2>Dataset Overview</h2>
+        <div id="stats-grid" class="stats-grid"></div>
+      </section>
+    </div>
+
+    <!-- ═════════════════════════════════ COMPONENT 2: Civil Case Extractor ══ -->
+    <div class="component-panel" id="panel-extractor">
+      <div class="comp-header">
+        <div class="comp-header-icon extractor-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+        <div>
+          <h1 class="comp-title">Civil Case Extractor</h1>
+          <p class="comp-subtitle">Upload civil case PDFs — AI extracts structured metadata, sections, citations, and legal insights</p>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="card" id="extractor-card">
+        <div class="tabs" id="ext-tabs">
+          <button class="tab active" data-etab="ext-upload">Upload &amp; Process</button>
+          <button class="tab" data-etab="ext-documents">Documents</button>
+          <button class="tab" data-etab="ext-search">Search Cases</button>
+        </div>
+
+        <!-- Upload & Process -->
+        <div class="tab-content active" id="ext-upload">
+          <div class="form-group" style="margin-bottom:1rem">
+            <label for="ext-file">Select Civil Case PDF (max 50 MB)</label>
+            <input type="file" id="ext-file" accept=".pdf"/>
+          </div>
+          <div class="btn-row">
+            <button id="btn-ext-upload" class="btn-primary">Upload &amp; Extract</button>
+          </div>
+          <div id="ext-upload-status" style="margin-top:1rem"></div>
+        </div>
+
+        <!-- Documents list -->
+        <div class="tab-content" id="ext-documents">
+          <div class="btn-row" style="margin-bottom:1rem">
+            <button id="btn-ext-refresh" class="btn-secondary">Refresh List</button>
+          </div>
+          <div id="ext-doc-list"></div>
+
+          <!-- Document detail -->
+          <div id="ext-doc-detail" style="display:none; margin-top:1.5rem">
+            <h3 style="margin-bottom:.75rem; color:var(--primary)">Case Details <span id="ext-detail-id" style="font-size:.8rem; color:var(--muted)"></span></h3>
+            <div id="ext-detail-content"></div>
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div class="tab-content" id="ext-search">
+          <div class="form-group" style="margin-bottom:.75rem">
+            <label for="ext-search-input">Natural language or keyword query</label>
+            <input type="text" id="ext-search-input" placeholder="e.g. land dispute partition family property rights..." style="width:100%;padding:.6rem .85rem;border:1px solid var(--border);border-radius:var(--radius);font-size:.95rem;"/>
+          </div>
+          <div class="form-row" style="gap:1rem; margin-bottom:.75rem">
+            <div class="form-group">
+              <label for="ext-search-outcome">Outcome</label>
+              <select id="ext-search-outcome" style="width:100%;padding:.5rem;border:1px solid var(--border);border-radius:var(--radius);">
+                <option value="">Any</option>
+                <option value="Allowed">Allowed</option>
+                <option value="Dismissed">Dismissed</option>
+                <option value="Partially Allowed">Partially Allowed</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="ext-search-year-from">Year from</label>
+              <input type="number" id="ext-search-year-from" placeholder="e.g. 2010" style="width:100%;padding:.5rem;border:1px solid var(--border);border-radius:var(--radius);"/>
+            </div>
+            <div class="form-group">
+              <label for="ext-search-year-to">Year to</label>
+              <input type="number" id="ext-search-year-to" placeholder="e.g. 2024" style="width:100%;padding:.5rem;border:1px solid var(--border);border-radius:var(--radius);"/>
+            </div>
+            <div class="form-group">
+              <label for="ext-search-k">Results</label>
+              <select id="ext-search-k" style="width:100%;padding:.5rem;border:1px solid var(--border);border-radius:var(--radius);">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button id="btn-ext-search" class="btn-primary">Search</button>
+          </div>
+          <div id="ext-search-results" style="margin-top:1rem"></div>
+        </div>
+      </div>
+
+      <!-- Status bar -->
+      <div id="ext-spinner" style="display:none; text-align:center; padding:1.5rem;">
+        <div class="spinner" style="margin:0 auto;"></div>
+        <p id="ext-spinner-msg" style="margin-top:.75rem; color:var(--muted);">Processing…</p>
+      </div>
+    </div>
+
+    <!-- ═════════════════════════════════════ COMPONENT 2b: Case Summarizer ══ -->
+    <div class="component-panel" id="panel-summarizer">
+      <div class="comp-header">
+        <div class="comp-header-icon summarizer-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+        </div>
+        <div>
+          <h1 class="comp-title">Case Summarizer</h1>
+          <p class="comp-subtitle">Automatically summarize legal case documents using AI</p>
+        </div>
+      </div>
+      <div class="card coming-soon-card">
+        <div class="coming-soon-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg></div>
+        <h2>Case Summarizer</h2>
+        <p>This component is ready to connect to your summarizer backend.</p>
+        <div class="port-badge">Backend port: <strong>5001</strong></div>
+        <p class="coming-soon-hint">Drop your <code>summarizer backend</code> files into this project and connect them here.</p>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ COMPONENT 3: Placeholder ══ -->
+    <div class="component-panel" id="panel-component3">
+      <div class="comp-header">
+        <div class="comp-header-icon component3-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <div>
+          <h1 class="comp-title">Component 3</h1>
+          <p class="comp-subtitle">Future legal AI component</p>
+        </div>
+      </div>
+      <div class="card coming-soon-card">
+        <div class="coming-soon-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <h2>Component 3</h2>
+        <p>This slot is reserved for your third backend component.</p>
+        <div class="port-badge">Backend port: <strong>5002</strong></div>
+        <p class="coming-soon-hint">Import your backend files and update <code>APIS.component3</code> in <code>js/app.js</code>.</p>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ COMPONENT 4: Placeholder ══ -->
+    <div class="component-panel" id="panel-component4">
+      <div class="comp-header">
+        <div class="comp-header-icon component4-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+        </div>
+        <div>
+          <h1 class="comp-title">Component 4</h1>
+          <p class="comp-subtitle">Future legal AI component</p>
+        </div>
+      </div>
+      <div class="card coming-soon-card">
+        <div class="coming-soon-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></div>
+        <h2>Component 4</h2>
+        <p>This slot is reserved for your fourth backend component.</p>
+        <div class="port-badge">Backend port: <strong>5003</strong></div>
+        <p class="coming-soon-hint">Import your backend files and update <code>APIS.component4</code> in <code>js/app.js</code>.</p>
+      </div>
+    </div>
+
+  </div><!-- /app-content -->
+
+  <div id="spinner" class="spinner-overlay" style="display:none;">
+    <div class="spinner"></div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

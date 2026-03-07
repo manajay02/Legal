@@ -6,6 +6,8 @@ ENV/
 .venv2/
 venv2/
 
+# Byte-compiled / optimized / DLL files
+
 # Python
 __pycache__/
 *.py[cod]

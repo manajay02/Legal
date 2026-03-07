@@ -100,4 +100,5 @@ coverage.xml
 *.bin
 *.pt
 *.pth
+*.txt
 

@@ -75,7 +75,7 @@ function UploadPage({ onResults }) {
     formData.append('file', file);
 
     try {
-      const response = await axios.post('http://localhost:8000/upload-pdf', formData, {
+      const response = await axios.post('http://localhost:8002/upload-pdf', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -98,7 +98,7 @@ function UploadPage({ onResults }) {
     setError(null);
 
     try {
-      const response = await axios.post('http://localhost:8000/check', {
+      const response = await axios.post('http://localhost:8002/check', {
         contract_text: contractText,
       });
       onResults(response.data);

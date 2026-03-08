@@ -34,7 +34,7 @@ function HistoryPage({ onViewAnalysis, onBack }) {
     setError(null);
     try {
       const skip = (currentPage - 1) * itemsPerPage;
-      const response = await axios.get(`http://localhost:8000/history?limit=${itemsPerPage}&skip=${skip}`);
+      const response = await axios.get(`http://localhost:8002/history?limit=${itemsPerPage}&skip=${skip}`);
       setAnalyses(response.data.analyses);
       setTotalAnalyses(response.data.total);
     } catch (err) {
@@ -53,7 +53,7 @@ function HistoryPage({ onViewAnalysis, onBack }) {
     
     setDeletingId(analysisId);
     try {
-      await axios.delete(`http://localhost:8000/history/${analysisId}`);
+      await axios.delete(`http://localhost:8002/history/${analysisId}`);
       // Refresh the list
       fetchHistory();
     } catch (err) {
@@ -66,7 +66,7 @@ function HistoryPage({ onViewAnalysis, onBack }) {
 
   const handleViewDetails = async (analysisId) => {
     try {
-      const response = await axios.get(`http://localhost:8000/history/${analysisId}`);
+      const response = await axios.get(`http://localhost:8002/history/${analysisId}`);
       onViewAnalysis(response.data);
     } catch (err) {
       alert('Failed to load analysis details');

@@ -39,7 +39,7 @@ class SimilarityEngine:
     def __init__(self):
         self._cache: dict = {}
         self._client = MongoClient(MONGO_URI)
-        self._col    = self._client[DB_NAME][COLLECTION]
+        self._col = self._client[DB_NAME][COLLECTION]
 
     # ── Model loading ─────────────────────────────────────────────────────────
     def _load_model(self, key: str) -> dict | None:
@@ -124,7 +124,7 @@ class SimilarityEngine:
                 raise ValueError("Provide either 'filename' or 'text'.")
             doc = self._col.find_one({"filename": filename})
             if doc is None:
-                raise ValueError(f"File '{filename}' not found in MongoDB.")
+                raise ValueError(f"File '{filename}' not found in collection '{COLLECTION}'.")
             query_text = doc.get("text", "")
 
         query_vec = model["vectorizer"].transform([query_text])

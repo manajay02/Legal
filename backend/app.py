@@ -99,6 +99,8 @@ def index():
 @app.route("/login.html")
 def login_page():
     return send_from_directory(FRONTEND_DIR, "login.html")
+
+
 # ── GET /api/pdf/<filename> ────────────────────────────────────────────────
 @app.route("/api/pdf/<path:filename>")
 def get_pdf(filename):
@@ -188,11 +190,13 @@ def static_files(path):
     return send_from_directory(FRONTEND_DIR, path)
 
 # ── Shared resources ──────────────────────────────────────────────────────────
-_client = MongoClient("mongodb+srv://maneth:pathana123@cluster0.thqkj39.mongodb.net/?appName=Cluster0")
+MONGO_URI = "mongodb+srv://maneth:pathana123@cluster0.thqkj39.mongodb.net/?appName=Cluster0"
+_client = MongoClient(MONGO_URI)
 _db     = _client["legal_cases_db"]
 _col    = _db["cases"]
 _users  = _db["users"]
 _users.create_index("email", unique=True)
+
 _engine = SimilarityEngine()
 
 
@@ -217,10 +221,10 @@ def signup():
         return jsonify({"error": "An account with this email already exists."}), 409
 
     _users.insert_one({
-        "name": name,
-        "email": email,
+        "name": name, "email": email,
         "password": generate_password_hash(password),
     })
+
     session["user"] = {"name": name, "email": email}
     return jsonify({"success": True, "user": {"name": name, "email": email}})
 
@@ -257,15 +261,12 @@ def auth_me():
 @app.route("/api/categories")
 def get_categories():
     pipeline = [
-        {"$group": {
-            "_id": {"category": "$category", "subcategory": "$subcategory"},
-            "count": {"$sum": 1}
-        }},
+        {"$group": {"_id": {"category": "$category", "subcategory": "$subcategory"}, "count": {"$sum": 1}}},
         {"$sort": {"_id.category": 1, "_id.subcategory": 1}}
     ]
-    result: dict = {}
+    result = {}
     for doc in _col.aggregate(pipeline):
-        cat    = doc["_id"]["category"]
+        cat = doc["_id"]["category"]
         subcat = doc["_id"]["subcategory"]
         result.setdefault(cat, []).append({"subcategory": subcat, "count": doc["count"]})
     return jsonify(result)
@@ -274,11 +275,13 @@ def get_categories():
 # ── GET /api/filenames ────────────────────────────────────────────────────────
 @app.route("/api/filenames")
 def get_filenames():
+    category = request.args.get("category")
+    subcategory = request.args.get("subcategory")
     filt = {}
-    if cat := request.args.get("category"):
-        filt["category"] = cat
-    if sub := request.args.get("subcategory"):
-        filt["subcategory"] = sub
+    if category:
+        filt["category"] = category
+    if subcategory:
+        filt["subcategory"] = subcategory
     return jsonify(sorted(_col.distinct("filename", filt)))
 
 

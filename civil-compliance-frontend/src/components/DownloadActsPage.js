@@ -44,7 +44,7 @@ function DownloadActsPage({ onBack, onReAnalyze }) {
   useEffect(() => {
     const fetchActs = async () => {
       try {
-        const response = await fetch('http://localhost:8000/acts/list');
+        const response = await fetch('http://localhost:8002/acts/list');
         const data = await response.json();
         const actsWithCategories = (data.acts || []).map(act => ({
           filename: act,
@@ -64,7 +64,7 @@ function DownloadActsPage({ onBack, onReAnalyze }) {
 
   // Function to download an act PDF
   const handleDownloadAct = (filename) => {
-    const downloadUrl = `http://localhost:8000/acts/download/${encodeURIComponent(filename)}`;
+    const downloadUrl = `http://localhost:8002/acts/download/${encodeURIComponent(filename)}`;
     window.open(downloadUrl, '_blank');
   };
 

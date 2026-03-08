@@ -50,11 +50,24 @@ const UI = {
      */
     showError(containerId, message) {
         const container = document.getElementById(containerId);
+
+        const msg = String(message || 'An unexpected error occurred.');
+        const ml = msg.toLowerCase();
+        const showApiHint = (
+            ml.includes('failed to reach api') ||
+            ml.includes('failed to fetch') ||
+            ml.includes('cors') ||
+            ml.includes('connection') ||
+            ml.includes('connection refused') ||
+            ml.includes('http error') ||
+            ml.includes('status: 5') ||
+            ml.includes('status: 4')
+        );
+
         container.innerHTML = `
             <div class="error">
-                ❌ ${message}
-                <br><br>
-                Make sure the API server is running on port 8000.
+                ❌ ${UI.escapeHtml(msg)}
+                ${showApiHint ? '<br><br>Make sure the API server is running on port 8000.' : ''}
             </div>
         `;
     },

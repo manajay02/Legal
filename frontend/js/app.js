@@ -98,14 +98,26 @@ class LegalCriticApp {
             return;
         }
 
+        // Single-document mode safety: if a new file is selected but not uploaded,
+        // do NOT run analysis using an older uploaded doc_id.
+        if (this.pendingSupportFiles && this.pendingSupportFiles.length > 0) {
+            UI.showError('textResults', 'Click “Upload Supporting Document” first (wait until it shows 1 uploaded), then click “Analyze Argument”.');
+            return;
+        }
+
         // Show loading state
         analyzeBtn.disabled = true;
         analyzeBtn.textContent = 'Analyzing...';
         UI.showLoading('textResults');
 
         try {
-            const docIds = this.uploadedSupportDocs.map(d => d.doc_id);
-            const data = await API.analyzeTextGrounded(text, docIds, true);
+            // Use ONLY the currently uploaded supporting documents.
+            // (This app intentionally does not accumulate evidence across the browser session.)
+            const lastUploaded = (this.uploadedSupportDocs && this.uploadedSupportDocs.length > 0)
+                ? this.uploadedSupportDocs[this.uploadedSupportDocs.length - 1]
+                : null;
+            const docIds = lastUploaded ? [lastUploaded.doc_id] : [];
+            const data = await API.analyzeTextGrounded(text, docIds, false);
             UI.displayResults(data, 'textResults');
         } catch (error) {
             console.error('Analysis error:', error);
@@ -123,11 +135,9 @@ class LegalCriticApp {
             const ext = '.' + f.name.split('.').pop().toLowerCase();
             return validTypes.includes(ext) && f.size <= CONFIG.MAX_FILE_SIZE;
         });
-        // Merge, avoid duplicates by name
-        accepted.forEach(f => {
-            if (!this.pendingSupportFiles.find(p => p.name === f.name))
-                this.pendingSupportFiles.push(f);
-        });
+        // Single-document mode: keep only ONE pending file (the most recently selected one).
+        const chosen = accepted.length > 0 ? accepted[accepted.length - 1] : null;
+        this.pendingSupportFiles = chosen ? [chosen] : [];
         document.getElementById('supportUploadBtn').disabled = (this.pendingSupportFiles.length === 0);
         this.renderSupportDocsList();
     }
@@ -158,21 +168,22 @@ class LegalCriticApp {
         btn.textContent = 'Uploading...';
 
         const failed = [];
-        for (const file of [...this.pendingSupportFiles]) {
-            try {
-                const res = await API.uploadSupportingDocument(file);
-                this.uploadedSupportDocs.push(res);
-                // remove from pending on success
-                this.pendingSupportFiles = this.pendingSupportFiles.filter(f => f !== file);
-            } catch (error) {
-                console.error('Upload error:', error);
-                failed.push(`${file.name}: ${error.message}`);
-            }
+        const file = this.pendingSupportFiles[0];
+        if (!file) return;
+        try {
+            const res = await API.uploadSupportingDocument(file);
+            // Replace (do not accumulate) uploaded docs so analysis uses only ONE current doc.
+            this.uploadedSupportDocs = [res];
+            // Clear pending on success
+            this.pendingSupportFiles = [];
+        } catch (error) {
+            console.error('Upload error:', error);
+            failed.push(`${file.name}: ${error.message}`);
         }
 
         this.renderSupportDocsList();
         btn.disabled = (this.pendingSupportFiles.length === 0);
-        btn.textContent = 'Upload Supporting Documents';
+        btn.textContent = 'Upload Supporting Document';
 
         if (failed.length > 0) {
             alert('Some files failed to upload:\n' + failed.join('\n'));

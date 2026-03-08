@@ -91,23 +91,93 @@ def top_k_tfidf(query: str, chunks: Sequence[str], k: int = 5) -> List[Tuple[int
     if not query or not chunks:
         return []
 
-    # Local import to keep startup light if unused
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.metrics.pairwise import cosine_similarity
+    # Local import to keep startup light if unused.
+    # IMPORTANT: scikit-learn is optional in this repo; fall back to a pure-Python
+    # TF-IDF cosine scorer when it's not installed.
+    try:
+        from sklearn.feature_extraction.text import TfidfVectorizer  # type: ignore
+        from sklearn.metrics.pairwise import cosine_similarity  # type: ignore
 
-    vectorizer = TfidfVectorizer(
-        lowercase=True,
-        stop_words="english",
-        max_features=50000,
-        ngram_range=(1, 2),
-    )
+        vectorizer = TfidfVectorizer(
+            lowercase=True,
+            stop_words="english",
+            max_features=50000,
+            ngram_range=(1, 2),
+        )
 
-    doc_matrix = vectorizer.fit_transform(list(chunks))
-    q_vec = vectorizer.transform([query])
-    sims = cosine_similarity(q_vec, doc_matrix).flatten()
+        doc_matrix = vectorizer.fit_transform(list(chunks))
+        q_vec = vectorizer.transform([query])
+        sims = cosine_similarity(q_vec, doc_matrix).flatten()
 
-    ranked = sorted(enumerate(sims.tolist()), key=lambda x: x[1], reverse=True)
-    ranked = [(i, float(s)) for i, s in ranked if not math.isnan(s)]
+        ranked = sorted(enumerate(sims.tolist()), key=lambda x: x[1], reverse=True)
+        ranked = [(i, float(s)) for i, s in ranked if not math.isnan(s)]
+        return ranked[:k]
+    except Exception:
+        pass
+
+    # ── Pure-Python fallback (unigrams only) ───────────────────────────────
+    # Tokenization and weighting are intentionally simple; this is a retrieval
+    # helper, not a full IR system.
+    stop = {
+        "the","and","for","that","with","this","from","were","was","are","but","not","have","has","had",
+        "they","them","their","there","here","into","onto","over","under","upon","than","then","when",
+        "what","which","while","where","who","whom","why","how","a","an","of","to","in","on","at","by",
+        "as","is","it","be","or","if","we","you","i","he","she","his","her","its","our","us",
+    }
+
+    def tok(s: str) -> List[str]:
+        return [t for t in re.findall(r"[a-z]{2,}", (s or "").lower()) if t not in stop]
+
+    docs = [tok(c) for c in chunks]
+    q = tok(query)
+    if not q:
+        return []
+
+    # Document frequency
+    df: dict[str, int] = {}
+    for d in docs:
+        for t in set(d):
+            df[t] = df.get(t, 0) + 1
+    n_docs = max(1, len(docs))
+
+    def idf(term: str) -> float:
+        # Smoothed IDF
+        return math.log(1.0 + (n_docs / (1.0 + df.get(term, 0)))) + 1.0
+
+    # Query vector (tf-idf)
+    q_tf: dict[str, int] = {}
+    for t in q:
+        q_tf[t] = q_tf.get(t, 0) + 1
+    q_vec: dict[str, float] = {t: (1.0 + math.log(v)) * idf(t) for t, v in q_tf.items()}
+    q_norm = math.sqrt(sum(v * v for v in q_vec.values())) or 1.0
+
+    ranked: List[Tuple[int, float]] = []
+    for i, d in enumerate(docs):
+        if not d:
+            continue
+        d_tf: dict[str, int] = {}
+        for t in d:
+            d_tf[t] = d_tf.get(t, 0) + 1
+        # Only compute weights for terms that appear in the query to keep this fast.
+        dot = 0.0
+        d_norm_sq = 0.0
+        for t, q_w in q_vec.items():
+            if t not in d_tf:
+                continue
+            d_w = (1.0 + math.log(d_tf[t])) * idf(t)
+            dot += q_w * d_w
+        # Approximate doc norm using only query terms.
+        for t in q_vec.keys():
+            if t in d_tf:
+                d_w = (1.0 + math.log(d_tf[t])) * idf(t)
+                d_norm_sq += d_w * d_w
+        d_norm = math.sqrt(d_norm_sq) or 1.0
+
+        sim = dot / (q_norm * d_norm)
+        if not math.isnan(sim):
+            ranked.append((i, float(sim)))
+
+    ranked.sort(key=lambda x: x[1], reverse=True)
     return ranked[:k]
 
 

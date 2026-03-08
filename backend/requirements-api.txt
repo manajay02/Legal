@@ -21,6 +21,14 @@ alembic==1.13.1
 # File Upload Support
 python-multipart==0.0.6
 
+# PDF Processing for Upload Endpoint
+pypdf>=3.17.0
+
+# OCR fallback for scanned PDFs (requires the Tesseract OCR engine installed on the system)
+pymupdf>=1.24.0
+pytesseract>=0.3.10
+Pillow>=10.1.0
+
 # CORS & Security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4

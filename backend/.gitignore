@@ -28,6 +28,7 @@ env/
 # Data & Models (Large Files)
 data/processed_text/*.txt
 data/training_data/*.jsonl
+data/uploaded_docs/
 models/base/*
 models/fine_tuned/*
 !models/base/.gitkeep

@@ -64,11 +64,18 @@ const API = {
 
         const url = `${CONFIG.API_URL}${CONFIG.ENDPOINTS.DOCUMENT_UPLOAD}`;
 
+        // Avoid indefinite "Uploading..." when PDF extraction takes too long.
+        const controller = new AbortController();
+        const timeoutMs = 180000; // 3 minutes
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
         try {
             const response = await fetch(url, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                signal: controller.signal,
             });
+            clearTimeout(timeoutId);
 
             if (!response.ok) {
                 const message = await response.text();
@@ -77,6 +84,10 @@ const API = {
 
             return await response.json();
         } catch (error) {
+            clearTimeout(timeoutId);
+            if (error && (error.name === 'AbortError')) {
+                throw new Error('Upload timed out while extracting PDF text. Try a smaller PDF, or set UPLOADED_DOC_MAX_PAGES on the backend to limit pages.');
+            }
             // Browser network/CORS failures often surface as TypeError: Failed to fetch
             if (error instanceof TypeError) {
                 throw new Error(`Failed to reach API at ${url}. Is the backend running on port 8000?`);

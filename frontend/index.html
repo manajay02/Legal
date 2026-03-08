@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sri Lanka Legal AI System</title>
+  <title>LegDoc — Sri Lanka Court System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -15,38 +15,40 @@
   <nav id="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 21V7"/><path d="M3 7h2c2 0 4-2 7-2s5 2 7 2h2"/></svg>
+        <img src="img/logo.svg" alt="LegDoc" width="36" height="36"/>
       </div>
       <div class="sidebar-logo-text">
-        <div class="sidebar-logo-title">Legal AI</div>
+        <div class="sidebar-logo-title">LegDoc</div>
         <div class="sidebar-logo-sub">Sri Lanka Court System</div>
       </div>
     </div>
 
     <ul class="nav-list">
+      <li class="nav-section-label" style="list-style:none;">Navigation</li>
       <li class="nav-item active" data-component="similarity">
         <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
         <span class="nav-label">Similarity Search</span>
       </li>
-      <li class="nav-item" data-component="extractor">
-        <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>
-        <span class="nav-label">Case Extractor</span>
+      <li class="nav-item" data-component="compliance">
+        <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+        <span class="nav-label">Civil Compliance</span>
       </li>
-      <li class="nav-item" data-component="summarizer">
-        <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg></span>
-        <span class="nav-label">Case Summarizer</span>
+
+      <li class="nav-section-label" style="list-style:none; margin-top:1rem;">Info</li>
+      <li class="nav-item" data-component="about">
+        <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
+        <span class="nav-label">About Us</span>
       </li>
-      <li class="nav-item" data-component="component3">
-        <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
-        <span class="nav-label">Component 3</span>
-      </li>
-      <li class="nav-item" data-component="component4">
-        <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></span>
-        <span class="nav-label">Component 4</span>
+      <li class="nav-item" data-component="help">
+        <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+        <span class="nav-label">Help</span>
       </li>
     </ul>
 
-    <div class="sidebar-footer">Sri Lanka Legal AI &copy; 2026</div>
+    <div class="sidebar-footer">
+      <div style="font-size:.72rem; font-weight:600; color:rgba(255,255,255,.25); margin-bottom:.15rem;">LegDoc</div>
+      <div style="font-size:.6rem; color:rgba(255,255,255,.12);">&copy; 2026 All rights reserved</div>
+    </div>
   </nav>
 
   <!-- ── Main content area ──────────────────────────────────────────────── -->
@@ -55,7 +57,7 @@
     <!-- ── Top bar ───────────────────────────────────────────────────────── -->
     <div id="topbar">
       <div class="topbar-left">
-        <span class="topbar-breadcrumb">Legal AI System</span>
+        <span class="topbar-breadcrumb">LegDoc</span>
         <span class="topbar-sep">/</span>
         <span class="topbar-current" id="topbar-current">Similarity Search</span>
       </div>
@@ -63,6 +65,13 @@
         <div class="topbar-badge">
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           Supreme Court of Sri Lanka
+        </div>
+        <div class="topbar-user" id="topbar-user">
+          <span class="user-avatar" id="user-avatar"></span>
+          <span class="user-name" id="user-name"></span>
+          <button class="btn-logout" id="btn-logout" title="Sign out">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
         </div>
       </div>
     </div>
@@ -82,13 +91,13 @@
       <div class="card" id="search-panel">
         <h2>Search &amp; Classify</h2>
         <div class="tabs">
-          <button class="tab active" data-tab="by-file">By Filename</button>
+          <button class="tab classify-tab active" data-tab="classify">Classify / Add Case</button>
+          <button class="tab" data-tab="by-file">By Filename</button>
           <button class="tab" data-tab="by-text">By Text</button>
-          <button class="tab classify-tab" data-tab="classify">Classify / Add Case</button>
         </div>
 
         <!-- By Filename -->
-        <div class="tab-content active" id="by-file">
+        <div class="tab-content" id="by-file">
           <div class="form-row">
             <div class="form-group">
               <label for="sel-category">Category</label>
@@ -98,10 +107,17 @@
               <label for="sel-subcategory">Subcategory</label>
               <select id="sel-subcategory" disabled><option value="">-- Select subcategory --</option></select>
             </div>
-            <div class="form-group">
-              <label for="sel-filename">Case File</label>
-              <select id="sel-filename" disabled><option value="">-- Select file --</option></select>
-            </div>
+          </div>
+          <!-- Cases list shown after selecting category & subcategory -->
+          <div id="filtered-cases-list" style="display:none; margin-top:1rem;">
+            <label style="font-weight:600; margin-bottom:.5rem; display:block;">Select a Case</label>
+            <div id="filtered-cases-container" class="filtered-cases-container"></div>
+          </div>
+
+          <!-- Category subcategory cards shown after selecting a category -->
+          <div id="category-cards-panel" style="display:none; margin-top:1.5rem;">
+            <label style="font-weight:600; margin-bottom:.75rem; display:block;">Subcategories</label>
+            <div id="category-cards-grid" class="stats-grid"></div>
           </div>
         </div>
 
@@ -114,7 +130,7 @@
         </div>
 
         <!-- Classify / Add -->
-        <div class="tab-content" id="classify">
+        <div class="tab-content active" id="classify">
           <div class="classify-box">
             <p class="classify-hint">Upload a PDF or paste text — the AI will predict its <strong>category</strong> and <strong>subcategory</strong>, then optionally save it to the database.</p>
             <div class="form-row">
@@ -132,7 +148,7 @@
         </div>
 
         <!-- Options row -->
-        <div class="form-row options-row" id="search-options">
+        <div class="form-row options-row" id="search-options" style="display:none;">
           <div class="form-group">
             <label for="sel-topn">Results to show</label>
             <select id="sel-topn">
@@ -148,9 +164,9 @@
         </div>
 
         <div class="btn-row">
-          <button id="btn-search" class="btn-primary">Find Similar Cases</button>
-          <button id="btn-classify" class="btn-primary btn-classify" style="display:none;">Classify Document</button>
-          <button id="btn-add-case" class="btn-secondary" style="display:none;">Add Case to Database</button>
+          <button id="btn-search" class="btn-primary" style="display:none;">Find Similar Cases</button>
+          <button id="btn-classify" class="btn-primary btn-classify">Classify Document</button>
+          <button id="btn-add-case" class="btn-secondary">Add Case to Database</button>
         </div>
       </div>
 
@@ -163,171 +179,154 @@
         <h2>Classification Result</h2>
         <div id="classify-result"></div>
       </section>
-
-      <section class="card" id="stats-panel">
-        <h2>Dataset Overview</h2>
-        <div id="stats-grid" class="stats-grid"></div>
-      </section>
     </div>
 
-    <!-- ═════════════════════════════════ COMPONENT 2: Civil Case Extractor ══ -->
-    <div class="component-panel" id="panel-extractor">
+    <!-- ═════════════════════════════════ COMPONENT 2: Civil Compliance Auditor ══ -->
+    <div class="component-panel" id="panel-compliance">
+      <iframe id="compliance-iframe" src="http://localhost:3000" style="width:100%;height:calc(100vh - 20px);border:none;border-radius:12px;"></iframe>
+    </div>
+
+    <!-- ══════════════════════════════════════════ ABOUT US ═══════════════ -->
+    <div class="component-panel" id="panel-about">
       <div class="comp-header">
-        <div class="comp-header-icon extractor-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <div class="comp-header-icon about-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
         </div>
         <div>
-          <h1 class="comp-title">Civil Case Extractor</h1>
-          <p class="comp-subtitle">Upload civil case PDFs — AI extracts structured metadata, sections, citations, and legal insights</p>
+          <h1 class="comp-title">About Us</h1>
+          <p class="comp-subtitle">Learn more about the LegDoc platform</p>
         </div>
       </div>
 
-      <!-- Tabs -->
-      <div class="card" id="extractor-card">
-        <div class="tabs" id="ext-tabs">
-          <button class="tab active" data-etab="ext-upload">Upload &amp; Process</button>
-          <button class="tab" data-etab="ext-documents">Documents</button>
-          <button class="tab" data-etab="ext-search">Search Cases</button>
+      <div class="card about-card">
+        <div class="about-logo-area">
+          <img src="img/logo.svg" alt="LegDoc" class="about-logo"/>
+          <h2>LegDoc</h2>
+          <p class="about-tagline">Sri Lanka Court System &mdash; AI-Powered Legal Intelligence</p>
         </div>
 
-        <!-- Upload & Process -->
-        <div class="tab-content active" id="ext-upload">
-          <div class="form-group" style="margin-bottom:1rem">
-            <label for="ext-file">Select Civil Case PDF (max 50 MB)</label>
-            <input type="file" id="ext-file" accept=".pdf"/>
-          </div>
-          <div class="btn-row">
-            <button id="btn-ext-upload" class="btn-primary">Upload &amp; Extract</button>
-          </div>
-          <div id="ext-upload-status" style="margin-top:1rem"></div>
+        <div class="about-section">
+          <h3>Our Mission</h3>
+          <p>LegDoc is an AI-powered legal document analysis platform designed to support Sri Lanka's court system. We aim to make legal information more accessible, searchable, and understandable through cutting-edge natural language processing and machine learning technologies.</p>
         </div>
 
-        <!-- Documents list -->
-        <div class="tab-content" id="ext-documents">
-          <div class="btn-row" style="margin-bottom:1rem">
-            <button id="btn-ext-refresh" class="btn-secondary">Refresh List</button>
-          </div>
-          <div id="ext-doc-list"></div>
-
-          <!-- Document detail -->
-          <div id="ext-doc-detail" style="display:none; margin-top:1.5rem">
-            <h3 style="margin-bottom:.75rem; color:var(--primary)">Case Details <span id="ext-detail-id" style="font-size:.8rem; color:var(--muted)"></span></h3>
-            <div id="ext-detail-content"></div>
+        <div class="about-section">
+          <h3>What We Do</h3>
+          <div class="about-features">
+            <div class="about-feature">
+              <div class="about-feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
+              <h4>Similarity Search</h4>
+              <p>Find related legal cases using AI-powered TF-IDF text matching across the Sri Lankan court case database.</p>
+            </div>
+            <div class="about-feature">
+              <div class="about-feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+              <h4>Case Classification</h4>
+              <p>Automatically classify legal documents into categories and subcategories using machine learning models.</p>
+            </div>
+            <div class="about-feature">
+              <div class="about-feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+              <h4>Case Extraction</h4>
+              <p>Extract key information from legal documents including parties, dates, verdicts, and legal references.</p>
+            </div>
+            <div class="about-feature">
+              <div class="about-feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg></div>
+              <h4>Case Summarization</h4>
+              <p>Generate concise, accurate summaries of lengthy legal documents to save time and improve comprehension.</p>
+            </div>
           </div>
         </div>
 
-        <!-- Search -->
-        <div class="tab-content" id="ext-search">
-          <div class="form-group" style="margin-bottom:.75rem">
-            <label for="ext-search-input">Natural language or keyword query</label>
-            <input type="text" id="ext-search-input" placeholder="e.g. land dispute partition family property rights..." style="width:100%;padding:.6rem .85rem;border:1px solid var(--border);border-radius:var(--radius);font-size:.95rem;"/>
-          </div>
-          <div class="form-row" style="gap:1rem; margin-bottom:.75rem">
-            <div class="form-group">
-              <label for="ext-search-outcome">Outcome</label>
-              <select id="ext-search-outcome" style="width:100%;padding:.5rem;border:1px solid var(--border);border-radius:var(--radius);">
-                <option value="">Any</option>
-                <option value="Allowed">Allowed</option>
-                <option value="Dismissed">Dismissed</option>
-                <option value="Partially Allowed">Partially Allowed</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="ext-search-year-from">Year from</label>
-              <input type="number" id="ext-search-year-from" placeholder="e.g. 2010" style="width:100%;padding:.5rem;border:1px solid var(--border);border-radius:var(--radius);"/>
-            </div>
-            <div class="form-group">
-              <label for="ext-search-year-to">Year to</label>
-              <input type="number" id="ext-search-year-to" placeholder="e.g. 2024" style="width:100%;padding:.5rem;border:1px solid var(--border);border-radius:var(--radius);"/>
-            </div>
-            <div class="form-group">
-              <label for="ext-search-k">Results</label>
-              <select id="ext-search-k" style="width:100%;padding:.5rem;border:1px solid var(--border);border-radius:var(--radius);">
-                <option value="5">5</option>
-                <option value="10" selected>10</option>
-                <option value="20">20</option>
-              </select>
-            </div>
-          </div>
-          <div class="btn-row">
-            <button id="btn-ext-search" class="btn-primary">Search</button>
-          </div>
-          <div id="ext-search-results" style="margin-top:1rem"></div>
+        <div class="about-section">
+          <h3>Technology</h3>
+          <p>Built with Flask, MongoDB, and modern machine learning (SVM classifiers, TF-IDF vectorization, and sentence transformers) to deliver fast, accurate legal document intelligence.</p>
         </div>
-      </div>
 
-      <!-- Status bar -->
-      <div id="ext-spinner" style="display:none; text-align:center; padding:1.5rem;">
-        <div class="spinner" style="margin:0 auto;"></div>
-        <p id="ext-spinner-msg" style="margin-top:.75rem; color:var(--muted);">Processing…</p>
+        <div class="about-footer">
+          <p>&copy; 2026 LegDoc &mdash; Supreme Court of Sri Lanka. All rights reserved.</p>
+        </div>
       </div>
     </div>
 
-    <!-- ═════════════════════════════════════ COMPONENT 2b: Case Summarizer ══ -->
-    <div class="component-panel" id="panel-summarizer">
+    <!-- ══════════════════════════════════════════ HELP ══════════════════ -->
+    <div class="component-panel" id="panel-help">
       <div class="comp-header">
-        <div class="comp-header-icon summarizer-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+        <div class="comp-header-icon help-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </div>
         <div>
-          <h1 class="comp-title">Case Summarizer</h1>
-          <p class="comp-subtitle">Automatically summarize legal case documents using AI</p>
+          <h1 class="comp-title">Help &amp; User Guide</h1>
+          <p class="comp-subtitle">Learn how to use LegDoc effectively</p>
         </div>
       </div>
-      <div class="card coming-soon-card">
-        <div class="coming-soon-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg></div>
-        <h2>Case Summarizer</h2>
-        <p>This component is ready to connect to your summarizer backend.</p>
-        <div class="port-badge">Backend port: <strong>5001</strong></div>
-        <p class="coming-soon-hint">Drop your <code>summarizer backend</code> files into this project and connect them here.</p>
-      </div>
-    </div>
 
-    <!-- ══════════════════════════════════════════ COMPONENT 3: Placeholder ══ -->
-    <div class="component-panel" id="panel-component3">
-      <div class="comp-header">
-        <div class="comp-header-icon component3-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <div class="card help-card">
+        <div class="help-section">
+          <h3><span class="help-step">1</span> Getting Started</h3>
+          <p>After logging in, you will land on the <strong>Similarity Search</strong> page. Use the <strong>sidebar</strong> on the left to navigate between different tools. Your session stays active until you log out using the button in the top-right corner.</p>
         </div>
-        <div>
-          <h1 class="comp-title">Component 3</h1>
-          <p class="comp-subtitle">Future legal AI component</p>
-        </div>
-      </div>
-      <div class="card coming-soon-card">
-        <div class="coming-soon-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
-        <h2>Component 3</h2>
-        <p>This slot is reserved for your third backend component.</p>
-        <div class="port-badge">Backend port: <strong>5002</strong></div>
-        <p class="coming-soon-hint">Import your backend files and update <code>APIS.component3</code> in <code>js/app.js</code>.</p>
-      </div>
-    </div>
 
-    <!-- ══════════════════════════════════════════ COMPONENT 4: Placeholder ══ -->
-    <div class="component-panel" id="panel-component4">
-      <div class="comp-header">
-        <div class="comp-header-icon component4-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+        <div class="help-section">
+          <h3><span class="help-step">2</span> Classify &amp; Add a Case</h3>
+          <p>Under the <strong>Classify / Add Case</strong> tab you can:</p>
+          <ul class="help-list">
+            <li><strong>Upload a PDF</strong> &mdash; Click &ldquo;Choose File&rdquo; and select a legal case PDF document.</li>
+            <li><strong>Paste text</strong> &mdash; Copy the full text of a legal document into the text area.</li>
+            <li>Click <strong>&ldquo;Classify Document&rdquo;</strong> to let the AI predict its <em>category</em> (Civil / Criminal) and <em>subcategory</em> (e.g. Land Dispute, Murder).</li>
+            <li>Click <strong>&ldquo;Add Case to Database&rdquo;</strong> to save the document permanently. Duplicate detection will prevent re-adding the same file.</li>
+          </ul>
         </div>
-        <div>
-          <h1 class="comp-title">Component 4</h1>
-          <p class="comp-subtitle">Future legal AI component</p>
+
+        <div class="help-section">
+          <h3><span class="help-step">3</span> Search by Filename</h3>
+          <p>Switch to the <strong>By Filename</strong> tab. Select a <em>Category</em> and <em>Subcategory</em> from the dropdowns. A list of matching cases will appear &mdash; click any case to select it, then configure the similarity options and click <strong>&ldquo;Find Similar Cases&rdquo;</strong>.</p>
         </div>
-      </div>
-      <div class="card coming-soon-card">
-        <div class="coming-soon-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></div>
-        <h2>Component 4</h2>
-        <p>This slot is reserved for your fourth backend component.</p>
-        <div class="port-badge">Backend port: <strong>5003</strong></div>
-        <p class="coming-soon-hint">Import your backend files and update <code>APIS.component4</code> in <code>js/app.js</code>.</p>
+
+        <div class="help-section">
+          <h3><span class="help-step">4</span> Search by Text</h3>
+          <p>Switch to the <strong>By Text</strong> tab. Paste or type the text of a legal document and click <strong>&ldquo;Find Similar Cases&rdquo;</strong>. The AI will compare it against the entire database and return the most similar cases ranked by score.</p>
+        </div>
+
+        <div class="help-section">
+          <h3><span class="help-step">5</span> Viewing Results</h3>
+          <p>Search results appear as cards showing the <em>case filename</em>, <em>category</em>, <em>subcategory</em>, and a <em>similarity score</em>. Click <strong>&ldquo;View&rdquo;</strong> to open the full case text in a modal overlay.</p>
+        </div>
+
+        <div class="help-section">
+          <h3><span class="help-step">6</span> Case Extractor</h3>
+          <p>Navigate to <strong>Case Extractor</strong> in the sidebar. Upload a PDF or paste text to extract structured information such as parties involved, court details, dates, and legal references from a case.</p>
+        </div>
+
+        <div class="help-section">
+          <h3><span class="help-step">7</span> Case Summarizer</h3>
+          <p>Navigate to <strong>Case Summarizer</strong> in the sidebar. Upload or paste a legal document and the AI will generate a concise summary highlighting the key facts, arguments, and judgment of the case.</p>
+        </div>
+
+        <div class="help-section help-tips">
+          <h3>Tips &amp; Troubleshooting</h3>
+          <ul class="help-list">
+            <li>For best results, use <strong>complete case documents</strong> rather than excerpts.</li>
+            <li>PDF files should be <strong>text-based</strong> (not scanned images) for accurate extraction.</li>
+            <li>If the &ldquo;Add Case&rdquo; button shows a duplicate warning, the document already exists in the database.</li>
+            <li>Use the <strong>&ldquo;Top N&rdquo;</strong> dropdown to control how many similar results are returned.</li>
+            <li>Enable <strong>&ldquo;Global Search&rdquo;</strong> to search across all categories, or leave it off to search within the selected category only.</li>
+          </ul>
+        </div>
       </div>
     </div>
 
   </div><!-- /app-content -->
 
+  <!-- Watermark -->
+  <div class="watermark">
+    <img src="img/logo.svg" alt="" class="watermark-img"/>
+  </div>
+
   <div id="spinner" class="spinner-overlay" style="display:none;">
     <div class="spinner"></div>
   </div>
+
+  <!-- Toast notification container -->
+  <div id="toast-container"></div>
 
   <script src="js/app.js"></script>
 </body>

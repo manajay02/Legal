@@ -1,9 +1,45 @@
 /* ── Config ───────────────────────────────────────────────────────────────── */
 const API = "http://localhost:5000/api";
 
+/* ── Auth check & user display ───────────────────────────────────────────── */
+(async function checkAuth() {
+  try {
+    const res = await fetch(`${API}/auth/me`, { credentials: "include" });
+    const data = await res.json();
+    if (!data.authenticated) { window.location.href = "/login.html"; return; }
+    const nameEl   = document.getElementById("user-name");
+    const avatarEl = document.getElementById("user-avatar");
+    if (nameEl) nameEl.textContent = data.user.name;
+    if (avatarEl) avatarEl.textContent = data.user.name.charAt(0);
+  } catch {
+    window.location.href = "/login.html";
+  }
+})();
+
+/* Logout */
+document.getElementById("btn-logout")?.addEventListener("click", async () => {
+  await fetch(`${API}/auth/logout`, { method: "POST", credentials: "include" });
+  window.location.href = "/login.html";
+});
+
+/* ── Toast notifications ──────────────────────────────────────────────────── */
+function showToast(message, type = "info", duration = 4000) {
+  const container = document.getElementById("toast-container");
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${type}`;
+  const icons = { success: "✔", error: "✘", warning: "⚠", info: "ℹ" };
+  toast.innerHTML = `<span class="toast-icon">${icons[type] || icons.info}</span><span class="toast-msg">${message}</span>`;
+  container.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add("toast-show"));
+  setTimeout(() => {
+    toast.classList.remove("toast-show");
+    toast.addEventListener("transitionend", () => toast.remove());
+  }, duration);
+}
+
 /* ── Sidebar navigation ───────────────────────────────────────────────────── */
 const topbarCurrent = document.getElementById("topbar-current");
-const navLabels = { similarity: "Similarity Search", extractor: "Case Extractor", summarizer: "Case Summarizer", component3: "Component 3", component4: "Component 4" };
+const navLabels = { similarity: "Similarity Search", compliance: "Civil Compliance", about: "About Us", help: "Help & User Guide" };
 
 document.querySelectorAll(".nav-item").forEach(item => {
   item.addEventListener("click", () => {
@@ -19,7 +55,8 @@ document.querySelectorAll(".nav-item").forEach(item => {
 /* ── DOM refs ─────────────────────────────────────────────────────────────── */
 const selCategory   = document.getElementById("sel-category");
 const selSubcategory= document.getElementById("sel-subcategory");
-const selFilename   = document.getElementById("sel-filename");
+const filteredCasesList = document.getElementById("filtered-cases-list");
+const filteredCasesContainer = document.getElementById("filtered-cases-container");
 const selTopN       = document.getElementById("sel-topn");
 const chkGlobal     = document.getElementById("chk-global");
 const txtQuery      = document.getElementById("txt-query");
@@ -33,13 +70,16 @@ const classifyPanel = document.getElementById("classify-panel");
 const classifyResult= document.getElementById("classify-result");
 const clfFile       = document.getElementById("clf-file");
 const clfText       = document.getElementById("clf-text");
-const statsGrid     = document.getElementById("stats-grid");
+const statsGrid     = document.getElementById("category-cards-grid");
+const categoryCardsPanel = document.getElementById("category-cards-panel");
 const spinner       = document.getElementById("spinner");
 const btnAddCase = document.getElementById("btn-add-case");
 
 /* ── Utility ──────────────────────────────────────────────────────────────── */
 function showSpinner(v) { spinner.style.display = v ? "flex" : "none"; }
 function currentTab() { return document.querySelector(".tab.active").dataset.tab; }
+
+let selectedFilename = null;  // tracks clicked case in the filtered list
 
 /* ── Tabs ─────────────────────────────────────────────────────────────────── */
 document.querySelectorAll(".tab").forEach(tab => {
@@ -50,12 +90,19 @@ document.querySelectorAll(".tab").forEach(tab => {
     document.getElementById(tab.dataset.tab).classList.add("active");
 
     const isClassify = tab.dataset.tab === "classify";
+    const isByFile    = tab.dataset.tab === "by-file";
     btnSearch.style.display    = isClassify ? "none"         : "inline-block";
     btnClassify.style.display  = isClassify ? "inline-block" : "none";
     btnAddCase.style.display   = isClassify ? "inline-block" : "none";
     searchOptions.style.display = isClassify ? "none"        : "flex";
   });
 });
+
+/* Set initial button state for Classify tab (which is now the default) */
+btnSearch.style.display    = "none";
+btnClassify.style.display  = "inline-block";
+btnAddCase.style.display   = "inline-block";
+searchOptions.style.display = "none";
 
 /* ── Load categories on page load ─────────────────────────────────────────── */
 let categoriesData = {};
@@ -80,34 +127,55 @@ async function loadCategories() {
 selCategory.addEventListener("change", () => {
   const cat = selCategory.value;
   selSubcategory.innerHTML = '<option value="">-- Select subcategory --</option>';
-  selFilename.innerHTML    = '<option value="">-- Select file --</option>';
   selSubcategory.disabled  = !cat;
-  selFilename.disabled     = true;
-  if (!cat) return;
+  filteredCasesList.style.display = "none";
+  filteredCasesContainer.innerHTML = "";
+  selectedFilename = null;
+  if (!cat) {
+    categoryCardsPanel.style.display = "none";
+    return;
+  }
   (categoriesData[cat] || []).forEach(({ subcategory, count }) => {
     const opt = document.createElement("option");
     opt.value = subcategory;
     opt.textContent = `${subcategory} (${count})`;
     selSubcategory.appendChild(opt);
   });
+  // Show subcategory cards for this category
+  renderCategoryCards(cat);
 });
 
-/* ── Subcategory → Filename cascade ──────────────────────────────────────── */
+/* ── Subcategory → Show cases list ───────────────────────────────────────── */
 selSubcategory.addEventListener("change", async () => {
   const cat = selCategory.value;
   const sub = selSubcategory.value;
-  selFilename.innerHTML = '<option value="">-- Select file --</option>';
-  selFilename.disabled  = !sub;
+  filteredCasesList.style.display = "none";
+  filteredCasesContainer.innerHTML = "";
+  selectedFilename = null;
   if (!sub) return;
   showSpinner(true);
   try {
     const res   = await fetch(`${API}/filenames?category=${encodeURIComponent(cat)}&subcategory=${encodeURIComponent(sub)}`);
     const files = await res.json();
-    files.forEach(f => {
-      const opt = document.createElement("option");
-      opt.value = f; opt.textContent = f;
-      selFilename.appendChild(opt);
-    });
+    if (files.length) {
+      filteredCasesContainer.innerHTML = files.map((f, i) => `
+        <div class="filtered-case-row" data-filename="${f}">
+          <span class="filtered-case-num">${i + 1}</span>
+          <span class="filtered-case-name">📄 ${f}</span>
+        </div>`).join("");
+      filteredCasesList.style.display = "block";
+      // Click to select a case
+      filteredCasesContainer.querySelectorAll(".filtered-case-row").forEach(row => {
+        row.addEventListener("click", () => {
+          filteredCasesContainer.querySelectorAll(".filtered-case-row").forEach(r => r.classList.remove("selected"));
+          row.classList.add("selected");
+          selectedFilename = row.dataset.filename;
+        });
+      });
+    } else {
+      filteredCasesContainer.innerHTML = '<p style="color:var(--muted)">No cases found.</p>';
+      filteredCasesList.style.display = "block";
+    }
   } finally { showSpinner(false); }
 });
 
@@ -119,9 +187,8 @@ btnSearch.addEventListener("click", async () => {
   const body        = { top_n: topN, global_search: globalSearch };
 
   if (tab === "by-file") {
-    const filename = selFilename.value;
-    if (!filename) { alert("Please select a case file."); return; }
-    body.filename = filename;
+    if (!selectedFilename) { alert("Please select a case from the list."); return; }
+    body.filename = selectedFilename;
     if (!globalSearch) {
       body.category    = selCategory.value;
       body.subcategory = selSubcategory.value;
@@ -274,27 +341,32 @@ const DESCRIPTIONS = {
 
 /* ── Render stats ─────────────────────────────────────────────────────────── */
 function renderStats(data) {
-  statsGrid.innerHTML = "";
-  Object.entries(data).sort().forEach(([cat, subcats]) => {
-    subcats.forEach(({ subcategory, count }) => {
-      const desc = DESCRIPTIONS[subcategory] || "Legal cases under this subcategory.";
-      const card = document.createElement("div");
-      card.className = "stat-card";
-      card.innerHTML = `
-        <div class="stat-cat">${cat}</div>
-        <div class="stat-subcat">${subcategory}</div>
-        <div class="stat-count">${count} case${count !== 1 ? "s" : ""}</div>
-        <button class="btn-view-cases" data-cat="${cat}" data-sub="${subcategory}">View Cases</button>`;
-      statsGrid.appendChild(card);
-    });
-  });
-
-  // Event delegation for "View Cases" buttons
-  statsGrid.addEventListener("click", e => {
-    const btn = e.target.closest(".btn-view-cases");
-    if (btn) openCaseModal(btn.dataset.cat, btn.dataset.sub);
-  });
+  // No longer renders the full overview — kept for initial data load
 }
+
+/* ── Render subcategory cards for a selected category ─────────────────────── */
+function renderCategoryCards(cat) {
+  const subcats = categoriesData[cat] || [];
+  statsGrid.innerHTML = "";
+  subcats.forEach(({ subcategory, count }) => {
+    const desc = DESCRIPTIONS[subcategory] || "Legal cases under this subcategory.";
+    const card = document.createElement("div");
+    card.className = "stat-card";
+    card.innerHTML = `
+      <div class="stat-cat">${cat}</div>
+      <div class="stat-subcat">${subcategory}</div>
+      <div class="stat-count">${count} case${count !== 1 ? "s" : ""}</div>
+      <button class="btn-view-cases" data-cat="${cat}" data-sub="${subcategory}">View Cases</button>`;
+    statsGrid.appendChild(card);
+  });
+  categoryCardsPanel.style.display = subcats.length ? "block" : "none";
+}
+
+// Event delegation for "View Cases" buttons
+statsGrid.addEventListener("click", e => {
+  const btn = e.target.closest(".btn-view-cases");
+  if (btn) openCaseModal(btn.dataset.cat, btn.dataset.sub);
+});
 
 /* ── Modal ────────────────────────────────────────────────────────────────── */
 async function openCaseModal(category, subcategory) {
@@ -378,7 +450,8 @@ if (btnAddCase) {
       const data = await res.json();
       if (data.success) {
         btnAddCase.textContent = "✔ Added!";
-        btnAddCase.style.background = "#2e7d32";
+        btnAddCase.style.background = "#16a34a";
+        showToast(`Case added successfully as '${data.case?.filename || "new case"}'.`, "success", 4000);
         if (clfFile) clfFile.value = "";
         if (clfText) clfText.value = "";
         loadCategories();
@@ -388,13 +461,15 @@ if (btnAddCase) {
           btnAddCase.disabled = false;
         }, 2000);
       } else {
+        const msg = data.error || "Failed to add case.";
         btnAddCase.textContent = "✘ Failed";
-        btnAddCase.style.background = "#b71c1c";
+        btnAddCase.style.background = "#dc2626";
+        showToast(msg, "error", 6000);
         setTimeout(() => {
           btnAddCase.textContent = "Add Case to Database";
           btnAddCase.style.background = "";
           btnAddCase.disabled = false;
-        }, 2000);
+        }, 3000);
       }
     } catch {
       btnAddCase.textContent = "✘ Error";
@@ -412,268 +487,3 @@ if (btnAddCase) {
 
 /* ── Init ─────────────────────────────────────────────────────────────────── */
 loadCategories();
-
-/* ══════════════════════════════════════════════════════════════════════════
-   COMPONENT 2 – Civil Case Extractor  (FastAPI on port 8000)
-   ══════════════════════════════════════════════════════════════════════════ */
-
-const EXT_API = "http://localhost:8000/api/v1";
-
-/* ── Tab switching for extractor ─────────────────────────────────────────── */
-document.querySelectorAll("#ext-tabs .tab").forEach(tab => {
-  tab.addEventListener("click", () => {
-    document.querySelectorAll("#ext-tabs .tab").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll("#panel-extractor .tab-content").forEach(c => c.classList.remove("active"));
-    tab.classList.add("active");
-    const target = document.getElementById(tab.dataset.etab);
-    if (target) target.classList.add("active");
-    if (tab.dataset.etab === "ext-documents") extLoadDocuments();
-  });
-});
-
-/* ── Spinner helpers ─────────────────────────────────────────────────────── */
-function extShowSpinner(msg = "Processing…") {
-  document.getElementById("ext-spinner").style.display = "block";
-  document.getElementById("ext-spinner-msg").textContent = msg;
-}
-function extHideSpinner() {
-  document.getElementById("ext-spinner").style.display = "none";
-}
-
-/* ── Status message helper ───────────────────────────────────────────────── */
-function extStatus(el, html, type = "info") {
-  const colors = { info: "#1a3a5c", success: "#2e7d32", error: "#b71c1c", warn: "#795900" };
-  el.innerHTML = `<div style="padding:.75rem 1rem;border-radius:8px;background:${type==='error'?'#fdecea':type==='success'?'#e8f5e9':'#e3f2fd'};color:${colors[type]};font-size:.9rem;">${html}</div>`;
-}
-
-/* ── Upload & Process ────────────────────────────────────────────────────── */
-document.getElementById("btn-ext-upload")?.addEventListener("click", async () => {
-  const fileInput = document.getElementById("ext-file");
-  const statusEl  = document.getElementById("ext-upload-status");
-  statusEl.innerHTML = "";
-
-  if (!fileInput.files.length) {
-    extStatus(statusEl, "⚠️ Please select a PDF file first.", "warn");
-    return;
-  }
-  const file = fileInput.files[0];
-  if (!file.name.toLowerCase().endsWith(".pdf")) {
-    extStatus(statusEl, "⚠️ Only PDF files are supported.", "warn");
-    return;
-  }
-
-  extShowSpinner("Uploading PDF…");
-  extStatus(statusEl, "⏳ Uploading…", "info");
-
-  try {
-    // Step 1: Upload
-    const formData = new FormData();
-    formData.append("file", file);
-    const upRes  = await fetch(`${EXT_API}/upload`, { method: "POST", body: formData });
-    if (!upRes.ok) {
-      const err = await upRes.json().catch(() => ({}));
-      throw new Error(err.detail || `Upload failed (${upRes.status})`);
-    }
-    const upData = await upRes.json();
-    const docId  = upData.document_id;
-    extStatus(statusEl, `✅ Uploaded — ID: <code>${docId}</code><br>⏳ Sending to AI for extraction…`, "success");
-    extShowSpinner("AI is extracting metadata, sections, citations…");
-
-    // Step 2: Process
-    const procRes  = await fetch(`${EXT_API}/process/${docId}`, { method: "POST" });
-    if (!procRes.ok) {
-      const err = await procRes.json().catch(() => ({}));
-      throw new Error(err.detail || `Processing failed (${procRes.status})`);
-    }
-    const procData = await procRes.json();
-
-    extStatus(statusEl,
-      `✅ <strong>Extraction complete!</strong><br>` +
-      `📄 Document ID: <code>${docId}</code><br>` +
-      `📋 Status: <strong>${procData.status || "processing"}</strong><br>` +
-      `<em>Switch to the <strong>Documents</strong> tab to view full results.</em>`,
-      "success");
-  } catch (e) {
-    extStatus(statusEl, `❌ Error: ${e.message}`, "error");
-  } finally {
-    extHideSpinner();
-  }
-});
-
-/* ── Load document list ──────────────────────────────────────────────────── */
-async function extLoadDocuments() {
-  const listEl = document.getElementById("ext-doc-list");
-  document.getElementById("ext-doc-detail").style.display = "none";
-  listEl.innerHTML = "<p style='color:var(--muted)'>Loading…</p>";
-  extShowSpinner("Fetching documents…");
-  try {
-    const res  = await fetch(`${EXT_API}/documents`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const docs = data.documents || data;
-    if (!docs.length) {
-      listEl.innerHTML = "<p style='color:var(--muted)'>No documents yet. Upload a PDF first.</p>";
-      return;
-    }
-    listEl.innerHTML = docs.map(d => `
-      <div class="result-card" data-doc-id="${d.document_id}" style="cursor:pointer;padding:1rem;margin-bottom:.75rem;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <strong>${d.filename || d.document_id}</strong>
-            ${d.case_number ? `<span style="margin-left:.5rem;font-size:.8rem;color:var(--muted)">${d.case_number}</span>` : ""}
-          </div>
-          <span class="badge" style="background:${d.status==='completed'?'#2e7d32':d.status==='processing'?'#795900':'#1a3a5c'};color:#fff;padding:.2rem .65rem;border-radius:99px;font-size:.75rem">${d.status}</span>
-        </div>
-        ${d.court  ? `<div style="font-size:.82rem;color:var(--muted);margin-top:.25rem">🏛 ${d.court}</div>` : ""}
-        ${d.date   ? `<div style="font-size:.82rem;color:var(--muted);">📅 ${d.date}</div>` : ""}
-        ${d.parties_count  ? `<div style="font-size:.82rem;color:var(--muted);">👥 ${d.parties_count} parties</div>` : ""}
-        ${d.sections_count ? `<div style="font-size:.82rem;color:var(--muted);">📑 ${d.sections_count} sections</div>` : ""}
-      </div>
-    `).join("");
-
-    // Click to expand
-    listEl.querySelectorAll(".result-card[data-doc-id]").forEach(card => {
-      card.addEventListener("click", () => extViewDocument(card.dataset.docId));
-    });
-  } catch (e) {
-    listEl.innerHTML = `<p style='color:#b71c1c'>Error loading documents: ${e.message}</p>`;
-  } finally {
-    extHideSpinner();
-  }
-}
-
-document.getElementById("btn-ext-refresh")?.addEventListener("click", extLoadDocuments);
-
-/* ── View document detail ────────────────────────────────────────────────── */
-async function extViewDocument(docId) {
-  extShowSpinner("Loading case details…");
-  const detailEl  = document.getElementById("ext-doc-detail");
-  const contentEl = document.getElementById("ext-detail-content");
-  document.getElementById("ext-detail-id").textContent = docId;
-  contentEl.innerHTML = "";
-  detailEl.style.display = "block";
-  detailEl.scrollIntoView({ behavior: "smooth" });
-
-  try {
-    const res  = await fetch(`${EXT_API}/documents/${docId}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const doc  = await res.json();
-
-    const meta = doc.metadata || {};
-    const secs = doc.sections || [];
-    const out  = doc.outcome  || {};
-    const ins  = doc.insights || [];
-    const cits = doc.citations|| [];
-
-    contentEl.innerHTML = `
-      <!-- Metadata card -->
-      <div style="background:#f4f6f9;border-radius:8px;padding:1rem;margin-bottom:1rem;">
-        <h4 style="margin-bottom:.5rem;color:var(--primary)">📋 Case Metadata</h4>
-        ${meta.case_number ? `<p><strong>Case No.:</strong> ${meta.case_number}</p>` : ""}
-        ${meta.court       ? `<p><strong>Court:</strong> ${meta.court}</p>` : ""}
-        ${meta.date        ? `<p><strong>Date:</strong> ${meta.date}</p>` : ""}
-        ${meta.case_type   ? `<p><strong>Type:</strong> ${meta.case_type}</p>` : ""}
-        ${meta.judges?.length ? `<p><strong>Judges:</strong> ${meta.judges.join(", ")}</p>` : ""}
-        ${meta.parties?.length ? `<p><strong>Parties:</strong> ${meta.parties.join(" v. ")}</p>` : ""}
-      </div>
-
-      <!-- Outcome -->
-      ${out.decision ? `
-      <div style="background:#e8f5e9;border-radius:8px;padding:1rem;margin-bottom:1rem;">
-        <h4 style="margin-bottom:.5rem;color:#2e7d32">⚖️ Outcome</h4>
-        <p><strong>Decision:</strong> ${out.decision}</p>
-        ${out.risk_level ? `<p><strong>Risk Level:</strong> ${out.risk_level}</p>` : ""}
-        ${out.explanation ? `<p style="font-size:.88rem;margin-top:.35rem">${out.explanation}</p>` : ""}
-      </div>` : ""}
-
-      <!-- Sections -->
-      ${secs.length ? `
-      <div style="margin-bottom:1rem;">
-        <h4 style="margin-bottom:.5rem;color:var(--primary)">📑 Sections (${secs.length})</h4>
-        ${secs.map(s => `
-          <details style="border:1px solid var(--border);border-radius:8px;padding:.6rem .85rem;margin-bottom:.4rem;">
-            <summary style="cursor:pointer;font-weight:600">${s.title || "Section"}</summary>
-            <p style="font-size:.85rem;margin-top:.5rem;white-space:pre-wrap">${(s.content || s.text || "").slice(0,500)}${(s.content || s.text||"").length>500?"…":""}</p>
-          </details>
-        `).join("")}
-      </div>` : ""}
-
-      <!-- Citations -->
-      ${cits.length ? `
-      <div style="margin-bottom:1rem;">
-        <h4 style="margin-bottom:.5rem;color:var(--primary)">📚 Citations (${cits.length})</h4>
-        <ul style="font-size:.85rem;padding-left:1.2rem">${cits.map(c => `<li>${typeof c==="string"?c:c.text||JSON.stringify(c)}</li>`).join("")}</ul>
-      </div>` : ""}
-
-      <!-- Insights -->
-      ${ins.length ? `
-      <div>
-        <h4 style="margin-bottom:.5rem;color:var(--primary)">💡 Legal Insights</h4>
-        <ul style="font-size:.85rem;padding-left:1.2rem">${ins.map(i => `<li>${typeof i==="string"?i:i.insight||i.text||JSON.stringify(i)}</li>`).join("")}</ul>
-      </div>` : ""}
-    `;
-  } catch (e) {
-    contentEl.innerHTML = `<p style='color:#b71c1c'>❌ ${e.message}</p>`;
-  } finally {
-    extHideSpinner();
-  }
-}
-
-/* ── Search ──────────────────────────────────────────────────────────────── */
-document.getElementById("btn-ext-search")?.addEventListener("click", async () => {
-  const query   = document.getElementById("ext-search-input").value.trim();
-  const outcome = document.getElementById("ext-search-outcome").value;
-  const yrFrom  = document.getElementById("ext-search-year-from").value;
-  const yrTo    = document.getElementById("ext-search-year-to").value;
-  const k       = parseInt(document.getElementById("ext-search-k").value);
-  const resultsEl = document.getElementById("ext-search-results");
-
-  if (!query) { extStatus(resultsEl, "⚠️ Please enter a search query.", "warn"); return; }
-
-  extShowSpinner("Searching…");
-  resultsEl.innerHTML = "";
-
-  try {
-    const body = {
-      query,
-      k,
-      filters: {
-        ...(outcome  ? { outcome }              : {}),
-        ...(yrFrom   ? { year_from: +yrFrom }   : {}),
-        ...(yrTo     ? { year_to:   +yrTo }     : {}),
-      }
-    };
-    const res  = await fetch(`${EXT_API}/search`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const hits = data.results || [];
-
-    if (!hits.length) {
-      extStatus(resultsEl, "No matching cases found.", "info");
-      return;
-    }
-
-    resultsEl.innerHTML = hits.map((h, i) => `
-      <div class="result-card" style="padding:1rem;margin-bottom:.75rem;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem">
-          <strong>${i+1}. ${h.filename || h.document_id}</strong>
-          <span style="font-size:.8rem;white-space:nowrap;color:var(--muted)">Score: ${(h.final_score||0).toFixed(1)}%</span>
-        </div>
-        ${h.case_number ? `<div style="font-size:.82rem;color:var(--muted)">${h.case_number}</div>` : ""}
-        ${h.court ? `<div style="font-size:.82rem;color:var(--muted)">🏛 ${h.court} ${h.year?`(${h.year})`:""}</div>` : ""}
-        ${h.outcome ? `<div style="font-size:.82rem"><strong>Outcome:</strong> ${h.outcome}</div>` : ""}
-        ${h.risk_level ? `<div style="font-size:.82rem"><strong>Risk:</strong> ${h.risk_level}</div>` : ""}
-        ${h.key_legal_issues?.length ? `<div style="font-size:.82rem;margin-top:.3rem"><strong>Issues:</strong> ${h.key_legal_issues.join(", ")}</div>` : ""}
-        ${h.reasoning_summary ? `<div style="font-size:.82rem;margin-top:.3rem;color:var(--muted)">${h.reasoning_summary.slice(0,200)}…</div>` : ""}
-      </div>
-    `).join("");
-  } catch (e) {
-    extStatus(resultsEl, `❌ Search error: ${e.message}`, "error");
-  } finally {
-    extHideSpinner();
-  }
-});

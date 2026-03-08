@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <clipPath id="circle-clip"><circle cx="200" cy="200" r="190"/></clipPath>
+  </defs>
+  <circle cx="200" cy="200" r="190" fill="#1b3a5c"/>
+  <g clip-path="url(#circle-clip)">
+    <!-- Laurel wreath -->
+    <g fill="#b8972e" opacity="0.95">
+      <ellipse cx="88" cy="310" rx="16" ry="7" transform="rotate(-15 88 310)"/>
+      <ellipse cx="75" cy="285" rx="16" ry="7" transform="rotate(-25 75 285)"/>
+      <ellipse cx="65" cy="258" rx="16" ry="7" transform="rotate(-35 65 258)"/>
+      <ellipse cx="60" cy="230" rx="16" ry="7" transform="rotate(-50 60 230)"/>
+      <ellipse cx="58" cy="200" rx="16" ry="7" transform="rotate(-65 58 200)"/>
+      <ellipse cx="62" cy="172" rx="16" ry="7" transform="rotate(-80 62 172)"/>
+      <ellipse cx="72" cy="145" rx="16" ry="7" transform="rotate(85 72 145)"/>
+      <ellipse cx="86" cy="120" rx="16" ry="7" transform="rotate(70 86 120)"/>
+      <ellipse cx="105" cy="98" rx="16" ry="7" transform="rotate(55 105 98)"/>
+      <ellipse cx="128" cy="80" rx="16" ry="7" transform="rotate(40 128 80)"/>
+      <ellipse cx="154" cy="68" rx="16" ry="7" transform="rotate(25 154 68)"/>
+      <ellipse cx="180" cy="62" rx="16" ry="7" transform="rotate(10 180 62)"/>
+      <ellipse cx="312" cy="310" rx="16" ry="7" transform="rotate(15 312 310)"/>
+      <ellipse cx="325" cy="285" rx="16" ry="7" transform="rotate(25 325 285)"/>
+      <ellipse cx="335" cy="258" rx="16" ry="7" transform="rotate(35 335 258)"/>
+      <ellipse cx="340" cy="230" rx="16" ry="7" transform="rotate(50 340 230)"/>
+      <ellipse cx="342" cy="200" rx="16" ry="7" transform="rotate(65 342 200)"/>
+      <ellipse cx="338" cy="172" rx="16" ry="7" transform="rotate(80 338 172)"/>
+      <ellipse cx="328" cy="145" rx="16" ry="7" transform="rotate(-85 328 145)"/>
+      <ellipse cx="314" cy="120" rx="16" ry="7" transform="rotate(-70 314 120)"/>
+      <ellipse cx="295" cy="98" rx="16" ry="7" transform="rotate(-55 295 98)"/>
+      <ellipse cx="272" cy="80" rx="16" ry="7" transform="rotate(-40 272 80)"/>
+      <ellipse cx="246" cy="68" rx="16" ry="7" transform="rotate(-25 246 68)"/>
+      <ellipse cx="220" cy="62" rx="16" ry="7" transform="rotate(-10 220 62)"/>
+      <path d="M115,340 Q55,230 180,62" fill="none" stroke="#b8972e" stroke-width="4"/>
+      <path d="M285,340 Q345,230 220,62" fill="none" stroke="#b8972e" stroke-width="4"/>
+    </g>
+    <!-- Scale of justice -->
+    <g fill="#b8972e" stroke="#b8972e">
+      <rect x="195" y="110" width="10" height="180" rx="3" stroke="none"/>
+      <polygon points="155,295 245,295 235,285 165,285" stroke="none"/>
+      <rect x="165" y="285" width="70" height="8" rx="2" stroke="none"/>
+      <polygon points="185,285 215,285 200,270" stroke="none"/>
+      <rect x="105" y="112" width="190" height="7" rx="3" stroke="none"/>
+      <circle cx="200" cy="105" r="12" stroke="none"/>
+      <circle cx="200" cy="105" r="7" fill="#1b3a5c" stroke="none"/>
+      <line x1="115" y1="119" x2="95" y2="195" stroke-width="3" fill="none"/>
+      <line x1="115" y1="119" x2="135" y2="195" stroke-width="3" fill="none"/>
+      <path d="M85,195 L90,210 Q115,235 140,210 L145,195 Z" stroke="none"/>
+      <line x1="285" y1="119" x2="265" y2="195" stroke-width="3" fill="none"/>
+      <line x1="285" y1="119" x2="305" y2="195" stroke-width="3" fill="none"/>
+      <path d="M255,195 L260,210 Q285,235 310,210 L315,195 Z" stroke="none"/>
+    </g>
+  </g>
+</svg>

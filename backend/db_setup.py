@@ -6,16 +6,17 @@ Reads legal_cases.csv and loads all case documents into MongoDB.
 MongoDB structure:
   Database   : legal_cases_db
   Collection : cases
-  Document   : { filename, category, subcategory, text }
+  Document   : { filename, category, subcategory, text, text_hash }
 """
 
 import os
+import hashlib
 import pandas as pd
 from pymongo import MongoClient, ASCENDING
 from tqdm import tqdm
 
 # ── Configuration ────────────────────────────────────────────────────────────
-MONGO_URI  = "mongodb://localhost:27017/"
+MONGO_URI  = "mongodb+srv://maneth:pathana123@cluster0.thqkj39.mongodb.net/?appName=Cluster0"
 DB_NAME    = "legal_cases_db"
 COLLECTION = "cases"
 CSV_PATH   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "legal_cases.csv")
@@ -38,17 +39,24 @@ def setup_database():
     print(f"  Collection '{COLLECTION}' cleared.")
 
     # Create indexes
-    col.create_index([("category",    ASCENDING)])
-    col.create_index([("subcategory", ASCENDING)])
-    col.create_index([("filename",    ASCENDING)], unique=True)
-    print("  Indexes created.")
+    col.create_index([('category',    ASCENDING)])
+    col.create_index([('subcategory', ASCENDING)])
+    col.create_index([('filename',    ASCENDING)], unique=True)
+    col.create_index([('text_hash',   ASCENDING)], unique=True)
+    print('  Indexes created.')
 
     # Load CSV
     print(f"\nLoading CSV: {CSV_PATH}")
     df = pd.read_csv(CSV_PATH, dtype=str)
     df["text"] = df["text"].fillna("")
+    df["text_hash"] = df["text"].apply(lambda t: hashlib.sha256(t.encode("utf-8")).hexdigest())
     total = len(df)
     print(f"  {total} records found.")
+
+    # Deduplicate by text_hash (keep first occurrence)
+    df = df.drop_duplicates(subset="text_hash", keep="first")
+    total = len(df)
+    print(f"  {total} unique records after deduplication.")
 
     # Bulk insert in batches of 500
     BATCH = 500

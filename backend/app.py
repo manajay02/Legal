@@ -12,12 +12,15 @@ Endpoints:
 
 import os
 import io
+import hashlib
+import re
 import numpy as np
 import joblib
 import pdfplumber
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, session
 from flask_cors import CORS
 from pymongo import MongoClient
+from werkzeug.security import generate_password_hash, check_password_hash
 from similarity_search import SimilarityEngine
 
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend")
@@ -82,13 +85,20 @@ def classify_text(text: str) -> dict:
     }
 
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="")
-CORS(app)
+app.secret_key = os.environ.get("FLASK_SECRET", "legal-ai-secret-key-change-in-prod")
+CORS(app, supports_credentials=True)
 
 
 # ── Serve frontend ─────────────────────────────────────────────────────────────
 @app.route("/")
 def index():
+    if "user" not in session:
+        return send_from_directory(FRONTEND_DIR, "login.html")
     return send_from_directory(FRONTEND_DIR, "index.html")
+
+@app.route("/login.html")
+def login_page():
+    return send_from_directory(FRONTEND_DIR, "login.html")
 # ── GET /api/pdf/<filename> ────────────────────────────────────────────────
 @app.route("/api/pdf/<path:filename>")
 def get_pdf(filename):
@@ -178,9 +188,69 @@ def static_files(path):
     return send_from_directory(FRONTEND_DIR, path)
 
 # ── Shared resources ──────────────────────────────────────────────────────────
-_client = MongoClient("mongodb://localhost:27017/")
-_col    = _client["legal_cases_db"]["cases"]
+_client = MongoClient("mongodb+srv://maneth:pathana123@cluster0.thqkj39.mongodb.net/?appName=Cluster0")
+_db     = _client["legal_cases_db"]
+_col    = _db["cases"]
+_users  = _db["users"]
+_users.create_index("email", unique=True)
 _engine = SimilarityEngine()
+
+
+# ── Auth endpoints ────────────────────────────────────────────────────────────
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+@app.route("/api/auth/signup", methods=["POST"])
+def signup():
+    data = request.get_json(force=True, silent=True) or {}
+    name     = (data.get("name") or "").strip()
+    email    = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
+
+    if not name or len(name) < 2:
+        return jsonify({"error": "Name must be at least 2 characters."}), 400
+    if not _EMAIL_RE.match(email):
+        return jsonify({"error": "Please enter a valid email address."}), 400
+    if len(password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters."}), 400
+
+    if _users.find_one({"email": email}):
+        return jsonify({"error": "An account with this email already exists."}), 409
+
+    _users.insert_one({
+        "name": name,
+        "email": email,
+        "password": generate_password_hash(password),
+    })
+    session["user"] = {"name": name, "email": email}
+    return jsonify({"success": True, "user": {"name": name, "email": email}})
+
+
+@app.route("/api/auth/login", methods=["POST"])
+def login():
+    data = request.get_json(force=True, silent=True) or {}
+    email    = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
+
+    user = _users.find_one({"email": email})
+    if not user or not check_password_hash(user["password"], password):
+        return jsonify({"error": "Invalid email or password."}), 401
+
+    session["user"] = {"name": user["name"], "email": user["email"]}
+    return jsonify({"success": True, "user": {"name": user["name"], "email": user["email"]}})
+
+
+@app.route("/api/auth/logout", methods=["POST"])
+def logout():
+    session.pop("user", None)
+    return jsonify({"success": True})
+
+
+@app.route("/api/auth/me")
+def auth_me():
+    u = session.get("user")
+    if not u:
+        return jsonify({"authenticated": False}), 401
+    return jsonify({"authenticated": True, "user": u})
 
 
 # ── GET /api/categories ───────────────────────────────────────────────────────
@@ -314,10 +384,34 @@ def add_case():
 
     if not text:
         return jsonify({"error": "No readable text found."}), 400
+
+    # ── Duplicate detection ───────────────────────────────────────────────
+    text_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+    # 1. Exact duplicate — same content hash
+    if _col.find_one({"text_hash": text_hash}):
+        return jsonify({"error": "This document already exists in the database (exact duplicate)."}), 409
+
+    # 2. Exact filename match
+    if filename and _col.find_one({"filename": filename}):
+        return jsonify({"error": f"A case with filename '{filename}' already exists."}), 409
+
+    # 3. Near-duplicate — compare first 2000 chars against existing docs
+    text_preview = text[:2000]
+    from difflib import SequenceMatcher
+    pipeline = [{"$project": {"filename": 1, "text": {"$substrCP": ["$text", 0, 2000]}}}]
+    for existing in _col.aggregate(pipeline):
+        ratio = SequenceMatcher(None, text_preview, existing.get("text", "")).ratio()
+        if ratio > 0.95:
+            return jsonify({
+                "error": f"This document is very similar ({ratio*100:.0f}% match) to existing case '{existing.get('filename', 'unknown')}'. Not added."
+            }), 409
+
     try:
         result = classify_text(text)
         doc = {
             "text": text,
+            "text_hash": text_hash,
             "category": result["category"],
             "subcategory": result["subcategory"],
             "filename": filename or f"case_{_col.count_documents({})+1}.txt"

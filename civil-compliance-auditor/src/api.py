@@ -10,10 +10,157 @@ from datetime import datetime
 from bson import ObjectId
 from typing import Optional
 import os
+import re
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
+
+
+# ----------------------------
+# Document Type Validation
+# ----------------------------
+def validate_document_is_contract(text: str):
+    """
+    Validates that the uploaded text is a contract/agreement, not a court judgment,
+    legislation, academic paper, or other irrelevant document type.
+    Returns (is_valid, rejection_reason) tuple.
+    """
+    text_lower = text.lower()
+
+    # --- Judgment / Case Law keywords ---
+    judgment_keywords = [
+        "plaintiff", "defendant", "appellant", "respondent", "petitioner",
+        "court held", "court ordered", "court finds", "court ruled",
+        "hon. justice", "honourable justice", "learned judge", "presiding judge",
+        "case no", "case number", "sc appeal", "hc appeal", "ca appeal",
+        "supreme court", "high court", "district court", "magistrate court",
+        "court of appeal", "labour tribunal",
+        "judgment", "judgement", "verdict", "decree", "order of court",
+        "prosecution", "accused", "convicted", "acquitted", "sentenced",
+        "bail", "indictment", "charge sheet",
+        "witness", "testimony", "cross-examination", "examination-in-chief",
+        "objection", "sustained", "overruled",
+        "appeal dismissed", "appeal allowed", "writ of",
+        "habeas corpus", "certiorari", "mandamus", "quo warranto",
+        "ratio decidendi", "obiter dicta", "stare decisis", "precedent",
+        "plaintiff-appellant", "defendant-respondent",
+        "before the court", "this court", "in the matter of",
+    ]
+
+    # Strong regex patterns for judgment documents (each match = 3 points)
+    judgment_patterns = [
+        r"case\s*no\.?\s*[a-z]{0,5}\s*/?\s*\d+",        # Case No. SC/123
+        r"s\.?c\.?\s*(appeal|application)",               # S.C. Appeal
+        r"h\.?c\.?\s*(appeal|application)",               # H.C. Appeal
+        r"c\.?a\.?\s*(appeal|application)",               # C.A. Appeal
+        r"plaintiff[\s-]*(appellant|respondent)",          # Plaintiff-Appellant
+        r"defendant[\s-]*(appellant|respondent)",          # Defendant-Respondent
+        r"before\s+(hon|justice|judge)",                   # Before Hon. Justice
+        r"(delivered|pronounced)\s+on\s+\d",              # Delivered on 12...
+    ]
+
+    # --- Contract / Agreement keywords ---
+    contract_keywords = [
+        "agreement", "contract", "employer", "employee", "salary", "wages",
+        "tenant", "landlord", "lessor", "lessee", "rental", "lease",
+        "whereas", "now therefore", "hereby agrees", "shall be bound",
+        "terms and conditions", "party of the first part", "party of the second part",
+        "indemnify", "covenant", "undertaking", "obligations",
+        "termination clause", "notice period", "probation period",
+        "effective date", "commencement date", "expiry date",
+        "signed by", "witnessed by", "in witness whereof",
+        "confidentiality", "non-disclosure", "non-compete",
+        "remuneration", "compensation", "benefits", "allowance",
+        "working hours", "leave entitlement", "annual leave",
+        "provident fund", "epf", "etf", "gratuity",
+        "loan agreement", "borrower", "lender", "interest rate",
+        "repayment", "collateral", "mortgage",
+        "partnership deed", "partner", "profit sharing",
+        "finance leasing", "installment", "down payment",
+    ]
+
+    # --- Legislation / Gazette keywords ---
+    legislation_keywords = [
+        "enacted by", "parliament", "bill no", "gazette",
+        "legislative enactment", "statute", "act no",
+        "regulation no", "by-law", "ordinance",
+        "section amended", "hereby repealed",
+    ]
+
+    # --- Academic Paper keywords ---
+    academic_keywords = [
+        "abstract", "methodology", "literature review", "bibliography",
+        "research paper", "hypothesis", "peer review", "journal of",
+        "findings suggest", "in conclusion", "references",
+    ]
+
+    # --- News Article keywords ---
+    news_keywords = [
+        "breaking news", "press release", "reported by", "news desk",
+        "according to sources", "media statement",
+    ]
+
+    # Count keyword matches
+    judgment_score = sum(1 for kw in judgment_keywords if kw in text_lower)
+    contract_score = sum(1 for kw in contract_keywords if kw in text_lower)
+    legislation_score = sum(1 for kw in legislation_keywords if kw in text_lower)
+    academic_score = sum(1 for kw in academic_keywords if kw in text_lower)
+    news_score = sum(1 for kw in news_keywords if kw in text_lower)
+
+    # Boost judgment score with regex pattern matches (3 points each)
+    for pattern in judgment_patterns:
+        if re.search(pattern, text_lower):
+            judgment_score += 3
+
+    # --- Decision logic ---
+
+    # Reject court judgments
+    if judgment_score >= 5 and judgment_score > contract_score:
+        return False, (
+            "This document appears to be a court judgment or case law document "
+            f"(judgment indicators: {judgment_score}, contract indicators: {contract_score}). "
+            "This component only accepts contracts and agreements "
+            "(e.g., Employment Contracts, Rental Agreements, Loan Agreements, "
+            "Finance Leasing, Partnership Deeds). "
+            "Please upload a contract or agreement document instead."
+        )
+
+    # Reject legislation / gazette
+    if legislation_score >= 3 and legislation_score > contract_score:
+        return False, (
+            "This document appears to be legislation or a gazette notification. "
+            "This component only accepts contracts and agreements. "
+            "Please upload a contract or agreement document instead."
+        )
+
+    # Reject academic papers
+    if academic_score >= 3 and academic_score > contract_score:
+        return False, (
+            "This document appears to be an academic or research paper. "
+            "This component only accepts contracts and agreements. "
+            "Please upload a contract or agreement document instead."
+        )
+
+    # Reject news articles
+    if news_score >= 2 and news_score > contract_score:
+        return False, (
+            "This document appears to be a news article or press release. "
+            "This component only accepts contracts and agreements. "
+            "Please upload a contract or agreement document instead."
+        )
+
+    # Reject if text is long enough but has zero contract indicators
+    if len(text.strip()) > 200 and contract_score == 0:
+        return False, (
+            "This document does not appear to contain any contract or agreement terms. "
+            "This component only accepts contracts and agreements "
+            "(e.g., Employment Contracts, Rental Agreements, Loan Agreements, "
+            "Finance Leasing, Partnership Deeds). "
+            "Please upload a valid contract or agreement document."
+        )
+
+    return True, None
 
 app = FastAPI()
 
@@ -116,6 +263,11 @@ async def save_analysis_to_db(filename: str, document_type: str, result: dict, t
 # ----------------------------
 @app.post("/check")
 async def check_contract(request: ContractRequest):
+    # Validate document type before compliance check
+    is_valid, rejection_reason = validate_document_is_contract(request.contract_text)
+    if not is_valid:
+        raise HTTPException(status_code=422, detail=rejection_reason)
+
     result = check_compliance(request.contract_text)
     
     # Save to MongoDB
@@ -147,6 +299,11 @@ async def upload_pdf(file: UploadFile = File(...)):
         full_text += page.get_text()
 
     doc.close()
+
+    # Validate document type before compliance check
+    is_valid, rejection_reason = validate_document_is_contract(full_text)
+    if not is_valid:
+        raise HTTPException(status_code=422, detail=rejection_reason)
 
     # Run compliance checker
     result = check_compliance(full_text)

@@ -297,7 +297,10 @@ The Employee will receive a monthly salary of Rs 50,000..."
         {error && (
           <div className="error-message">
             <span className="error-icon">⚠️</span>
-            <span>{error}</span>
+            <div className="error-content">
+              <strong className="error-title">Document Rejected</strong>
+              <span className="error-detail">{error}</span>
+            </div>
           </div>
         )}
 

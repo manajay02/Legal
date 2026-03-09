@@ -427,12 +427,61 @@
   color: #94a3b8;
 }
 
+/* Validation Notice Banner */
+.validation-notice {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid #fcd34d;
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 10px rgba(251, 191, 36, 0.15);
+}
+
+.validation-notice-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  color: #92400e;
+}
+
+.validation-notice-icon {
+  font-size: 1.25rem;
+}
+
+.validation-notice-text {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  color: #78350f;
+  line-height: 1.5;
+}
+
+.accepted-types-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.accepted-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.75rem;
+  background: white;
+  border: 1px solid #fbbf24;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #92400e;
+}
+
 /* Error Message */
 .error-message {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
-  padding: 1rem 1.5rem;
+  padding: 1.25rem 1.5rem;
   background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
   border: 1px solid #fecaca;
   border-radius: 12px;
@@ -442,6 +491,24 @@
 
 .error-icon {
   font-size: 1.25rem;
+  margin-top: 0.1rem;
+}
+
+.error-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.error-title {
+  font-size: 0.95rem;
+  color: #991b1b;
+}
+
+.error-detail {
+  font-size: 0.88rem;
+  color: #b91c1c;
+  line-height: 1.5;
 }
 
 /* Security Notice */

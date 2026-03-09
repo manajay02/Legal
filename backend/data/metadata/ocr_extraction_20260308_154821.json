@@ -1,0 +1,83 @@
+{
+  "extraction_date": "2026-03-08T15:48:21.620286",
+  "total_files": 5,
+  "successful_files": 5,
+  "failed_files": 0,
+  "total_pages_processed": 56,
+  "fast_extraction_pages": 56,
+  "ocr_fallback_pages": 0,
+  "overall_efficiency": "100.0%",
+  "total_words_extracted": 16129,
+  "files": [
+    {
+      "filename": "10. Final Judgment WRT 217-25 NMRA Gaviscon (1).pdf.pdf",
+      "case_id": "10. Final Judgment WRT 217-25 NMRA Gaviscon (1).pdf",
+      "processed_at": "2026-03-08T15:48:15.140813",
+      "total_pages": 21,
+      "successful_pages": 21,
+      "fast_path_pages": 21,
+      "ocr_fallback_pages": 0,
+      "failed_pages": 0,
+      "errors": [],
+      "character_count": 48645,
+      "word_count": 7917,
+      "extraction_efficiency": "21/21 pages (100.0%) fast extraction"
+    },
+    {
+      "filename": "5.07022023-CA-CA-PHC-211-19.pdf.pdf",
+      "case_id": "5.07022023-CA-CA-PHC-211-19.pdf",
+      "processed_at": "2026-03-08T15:48:17.643670",
+      "total_pages": 8,
+      "successful_pages": 8,
+      "fast_path_pages": 8,
+      "ocr_fallback_pages": 0,
+      "failed_pages": 0,
+      "errors": [],
+      "character_count": 11076,
+      "word_count": 1793,
+      "extraction_efficiency": "8/8 pages (100.0%) fast extraction"
+    },
+    {
+      "filename": "6.07022022-CA-PHC-APN-CPA-159 19.pdf.pdf",
+      "case_id": "6.07022022-CA-PHC-APN-CPA-159 19.pdf",
+      "processed_at": "2026-03-08T15:48:18.433352",
+      "total_pages": 11,
+      "successful_pages": 11,
+      "fast_path_pages": 11,
+      "ocr_fallback_pages": 0,
+      "failed_pages": 0,
+      "errors": [],
+      "character_count": 16375,
+      "word_count": 2640,
+      "extraction_efficiency": "11/11 pages (100.0%) fast extraction"
+    },
+    {
+      "filename": "8.14022022-CA-CPA-79-22.pdf.pdf",
+      "case_id": "8.14022022-CA-CPA-79-22.pdf",
+      "processed_at": "2026-03-08T15:48:19.561567",
+      "total_pages": 6,
+      "successful_pages": 6,
+      "fast_path_pages": 6,
+      "ocr_fallback_pages": 0,
+      "failed_pages": 0,
+      "errors": [],
+      "character_count": 9784,
+      "word_count": 1583,
+      "extraction_efficiency": "6/6 pages (100.0%) fast extraction"
+    },
+    {
+      "filename": "_judgment of CA HCC 224-2023.pdf.pdf",
+      "case_id": "_judgment of CA HCC 224-2023.pdf",
+      "processed_at": "2026-03-08T15:48:20.187445",
+      "total_pages": 10,
+      "successful_pages": 10,
+      "fast_path_pages": 10,
+      "ocr_fallback_pages": 0,
+      "failed_pages": 0,
+      "errors": [],
+      "character_count": 12812,
+      "word_count": 2196,
+      "extraction_efficiency": "10/10 pages (100.0%) fast extraction"
+    }
+  ]
+}

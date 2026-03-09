@@ -330,12 +330,14 @@ class GeminiBackend:
             raise RuntimeError("GOOGLE_API_KEY not set in .env")
         
         self.api_key = GOOGLE_API_KEY
-        self.model = "gemini-2.5-pro"
+        self.model = os.getenv("GEMINI_MODEL_NAME", "gemini-2.0-flash-lite")
         self.api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
         self.last_request_time = 0
-        self.min_request_interval = 35  # 35 seconds between requests (2 RPM limit)
+        # gemini-2.0-flash-lite: 30 RPM free tier → 2s interval is safe
+        # gemini-2.5-pro: 2 RPM → needs 35s; kept as fallback
+        self.min_request_interval = 2 if "flash" in self.model else 35
         
-        logger.info(f"✓ Gemini backend ready (model: {self.model})")
+        logger.info(f"Gemini backend ready (model: {self.model}, interval: {self.min_request_interval}s)")
     
     def _rate_limit(self):
         """Enforce rate limiting to avoid 429 errors.
@@ -366,7 +368,7 @@ class GeminiBackend:
             "generationConfig": {
                 "temperature": temperature,
                 "topP": 0.9,
-                "maxOutputTokens": 8192,
+                "maxOutputTokens": 4096,
             },
         }
         headers = {"Content-Type": "application/json"}
@@ -375,10 +377,9 @@ class GeminiBackend:
             try:
                 response = requests.post(url, json=payload, headers=headers, timeout=120)
                 if response.status_code == 429:
-                    wait = (attempt + 1) * 60
-                    logger.warning(f"Rate limited (429). Waiting {wait}s...")
-                    time.sleep(wait)
-                    continue
+                    # Quota exhausted — don't wait; raise immediately so the
+                    # caller can fall through to the fallback backend.
+                    raise RuntimeError("Gemini API quota exceeded (429). Switch INFERENCE_BACKEND to openrouter.")
                 response.raise_for_status()
                 data = response.json()
                 # Mark successful request for rate limiting.
@@ -435,53 +436,58 @@ class OpenRouterBackend:
         
         logger.info(f"✓ OpenRouter backend ready (model: {self.model})")
     
-    def generate(self, argument_text: str) -> str:
-        """Generate response using OpenRouter API."""
+    def _post(self, messages: list, max_tokens: int = None, temperature: float = None) -> str:
+        """Make a chat completion request, falling back to user-merged prompt if system role unsupported."""
         headers = {
             "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
-        
-        user_prompt = f"Critique this legal argument:\n\n{argument_text}"
-        
         payload = {
             "model": self.model,
-            "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt}
-            ],
-            "temperature": float(os.getenv("OPENROUTER_TEMPERATURE", "0.7")),
-            "max_tokens": int(os.getenv("OPENROUTER_MAX_TOKENS", "2048"))
+            "messages": messages,
+            "temperature": temperature if temperature is not None else float(os.getenv("OPENROUTER_TEMPERATURE", "0.7")),
+            "max_tokens": max_tokens if max_tokens is not None else int(os.getenv("OPENROUTER_MAX_TOKENS", "2048")),
         }
-        
         try:
-            response = requests.post(
-                self.base_url,
-                json=payload,
-                headers=headers,
-                timeout=120
-            )
-            
-            if response.status_code != 200:
-                error_detail = response.text
-                logger.error(f"OpenRouter API error ({response.status_code}): {error_detail}")
-                raise RuntimeError(f"OpenRouter API error: {response.status_code} - {error_detail}")
-            
-            data = response.json()
-            content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-            
-            if not content:
-                logger.error(f"Empty response from OpenRouter: {data}")
-                raise RuntimeError("Empty response from OpenRouter API")
-            
-            return content
-            
+            response = requests.post(self.base_url, json=payload, headers=headers, timeout=120)
         except requests.exceptions.Timeout:
-            logger.error("OpenRouter API timeout")
             raise RuntimeError("OpenRouter API timeout")
         except requests.exceptions.RequestException as e:
-            logger.error(f"OpenRouter request error: {str(e)}")
-            raise RuntimeError(f"OpenRouter API error: {str(e)}")
+            raise RuntimeError(f"OpenRouter API error: {e}")
+
+        if response.status_code == 400 and "developer instruction" in response.text.lower():
+            # Model does not support system role — merge system+user into single user message
+            merged_user = ""
+            for msg in messages:
+                if msg["role"] == "system":
+                    merged_user += msg["content"] + "\n\n"
+                else:
+                    merged_user += msg["content"]
+            payload["messages"] = [{"role": "user", "content": merged_user.strip()}]
+            try:
+                response = requests.post(self.base_url, json=payload, headers=headers, timeout=120)
+            except requests.exceptions.RequestException as e:
+                raise RuntimeError(f"OpenRouter API error: {e}")
+
+        if response.status_code == 429:
+            raise RuntimeError(f"OpenRouter rate limited (429): {response.text[:200]}")
+
+        if response.status_code != 200:
+            raise RuntimeError(f"OpenRouter API error: {response.status_code} - {response.text[:300]}")
+
+        content = response.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+        if not content:
+            raise RuntimeError("Empty response from OpenRouter API")
+        return content
+
+    def generate(self, argument_text: str) -> str:
+        """Generate response using OpenRouter API."""
+        user_prompt = f"Critique this legal argument:\n\n{argument_text}"
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ]
+        return self._post(messages)
 
 
 class OllamaBackend:
@@ -755,26 +761,11 @@ class InferenceService:
                 content = self.backend.generate_grounded(user_prompt)
 
             elif self.backend_name == "openrouter":
-                headers = {
-                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                    "Content-Type": "application/json",
-                }
-                payload = {
-                    "model": OPENROUTER_MODEL,
-                    "messages": [
-                        {"role": "system", "content": SYSTEM_PROMPT_GROUNDED},
-                        {"role": "user",   "content": user_prompt},
-                    ],
-                    "temperature": float(os.getenv("OPENROUTER_TEMPERATURE", "0.4")),
-                    "max_tokens": int(os.getenv("OPENROUTER_MAX_TOKENS", "2048")),
-                }
-                resp = requests.post(
-                    "https://openrouter.ai/api/v1/chat/completions",
-                    json=payload, headers=headers, timeout=120,
-                )
-                if resp.status_code != 200:
-                    raise RuntimeError(f"OpenRouter API error: {resp.status_code} - {resp.text}")
-                content = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+                messages = [
+                    {"role": "system", "content": SYSTEM_PROMPT_GROUNDED},
+                    {"role": "user",   "content": user_prompt},
+                ]
+                content = self.backend._post(messages, temperature=0.4)
 
             elif self.backend_name == "ollama":
                 payload = {
@@ -845,6 +836,7 @@ class InferenceService:
             if self.backend_name != "openrouter" and OPENROUTER_API_KEY:
                 try:
                     logger.warning("Primary grounded backend failed; attempting OpenRouter grounded fallback...")
+                    alt_or = OpenRouterBackend()
                     # Rebuild the same user prompt used in the main path.
                     user_prompt = (
                         "=== SOURCE_JUDGMENT ===\n"
@@ -862,29 +854,10 @@ class InferenceService:
                         "- Do NOT repeat the same reasoning across different categories.\n"
                         "- Do NOT use vague phrases without textual proof."
                     )
-
-                    headers = {
-                        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                        "Content-Type": "application/json",
-                    }
-                    payload = {
-                        "model": OPENROUTER_MODEL,
-                        "messages": [
-                            {"role": "system", "content": SYSTEM_PROMPT_GROUNDED},
-                            {"role": "user", "content": user_prompt},
-                        ],
-                        "temperature": float(os.getenv("OPENROUTER_TEMPERATURE", "0.4")),
-                        "max_tokens": int(os.getenv("OPENROUTER_MAX_TOKENS", "2048")),
-                    }
-                    resp = requests.post(
-                        "https://openrouter.ai/api/v1/chat/completions",
-                        json=payload,
-                        headers=headers,
-                        timeout=120,
+                    content = alt_or._post(
+                        [{"role": "system", "content": SYSTEM_PROMPT_GROUNDED}, {"role": "user", "content": user_prompt}],
+                        temperature=0.4,
                     )
-                    if resp.status_code != 200:
-                        raise RuntimeError(f"OpenRouter API error: {resp.status_code} - {resp.text}")
-                    content = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
                     alt_critique = self._extract_json(content)
                     if alt_critique is not None and self._validate_critique(alt_critique):
                         alt_critique = self._inject_missing_citations(alt_critique, evidence_pack)
@@ -1243,21 +1216,7 @@ class InferenceService:
                     best_score, best_id = score, eid
             return best_id
 
-        # ── 3. Inject into any uncited rationale ───────────────────────
-        citation_re = _re.compile(r'\[E\d+\]', _re.IGNORECASE)
-        injected = 0
-        for item in critique.get("breakdown", []):
-            rationale = item.get("rationale", "")
-            if not citation_re.search(rationale):
-                eid = best_ev_id_for(rationale)
-                item["rationale"] = (
-                    rationale.rstrip()
-                    + f" (See [{eid}] for the most relevant supporting excerpt.)"
-                )
-                injected += 1
-
-        if injected:
-            logger.info(f"[citation-inject] Injected citations into {injected} rationale(s).")
+        # Citation injection disabled — [E#] references are not shown in the UI.
 
         return critique
 
@@ -1314,27 +1273,11 @@ class InferenceService:
                     CLAIM_SUPPORT_SYSTEM_PROMPT, user_prompt, temperature=0.1
                 )
             elif self.backend_name == "openrouter":
-                import requests as _req
-                headers = {
-                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                    "Content-Type": "application/json",
-                }
-                payload = {
-                    "model": OPENROUTER_MODEL,
-                    "messages": [
-                        {"role": "system", "content": CLAIM_SUPPORT_SYSTEM_PROMPT},
-                        {"role": "user",   "content": user_prompt},
-                    ],
-                    "temperature": 0.1,
-                    "max_tokens": 2048,
-                }
-                resp = _req.post(
-                    "https://openrouter.ai/api/v1/chat/completions",
-                    json=payload, headers=headers, timeout=120,
-                )
-                if resp.status_code != 200:
-                    raise RuntimeError(f"OpenRouter claim-support error: {resp.status_code}")
-                raw = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+                messages = [
+                    {"role": "system", "content": CLAIM_SUPPORT_SYSTEM_PROMPT},
+                    {"role": "user",   "content": user_prompt},
+                ]
+                raw = self.backend._post(messages, temperature=0.1)
             elif self.backend_name == "ollama":
                 import requests as _req
                 payload = {

@@ -39,20 +39,35 @@ const API = {
      * Analyze text argument with grounding in uploaded documents
      */
     async analyzeTextGrounded(text, doc_ids = [], include_case_corpus = true) {
-        const response = await fetch(`${CONFIG.API_URL}${CONFIG.ENDPOINTS.ANALYZE_GROUNDED}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ text, doc_ids, include_case_corpus })
-        });
+        const controller = new AbortController();
+        const timeoutMs = 300000; // 5 minutes
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-        if (!response.ok) {
-            const message = await response.text();
-            throw new Error(message || `HTTP error! status: ${response.status}`);
+        try {
+            const response = await fetch(`${CONFIG.API_URL}${CONFIG.ENDPOINTS.ANALYZE_GROUNDED}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text, doc_ids, include_case_corpus }),
+                signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                const message = await response.text();
+                throw new Error(message || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            clearTimeout(timeoutId);
+            if (error && error.name === 'AbortError') {
+                throw new Error('Analysis timed out after 5 minutes. The AI service may be overloaded — please try again.');
+            }
+            if (error instanceof TypeError) {
+                throw new Error(`Failed to reach API at ${CONFIG.API_URL}. Is the backend running?`);
+            }
+            throw error;
         }
-
-        return await response.json();
     },
 
     /**
@@ -66,7 +81,7 @@ const API = {
 
         // Avoid indefinite "Uploading..." when PDF extraction takes too long.
         const controller = new AbortController();
-        const timeoutMs = 180000; // 3 minutes
+        const timeoutMs = 600000; // 10 minutes
         const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
         try {

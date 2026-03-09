@@ -32,10 +32,10 @@ async def lifespan(app: FastAPI):
 
     try:
         get_inference_service()
-        print("✓ Model loaded and ready for inference")
+        print("[OK] Model loaded and ready for inference")
     except Exception as e:
-        print(f"✗ Failed to load model: {e}")
-        print("⚠ API will start but /analyze endpoint will fail")
+        print(f"[WARN] Failed to load model: {e}")
+        print("[WARN] API will start but /analyze endpoint will fail")
 
     yield
 

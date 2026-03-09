@@ -35,7 +35,7 @@ const UI = {
     /**
      * Show loading state
      */
-    showLoading(containerId, message = 'Analyzing your argument... This may take 10-30 seconds.') {
+    showLoading(containerId, message = 'Analyzing your argument... This may take 30-90 seconds.') {
         const container = document.getElementById(containerId);
         container.innerHTML = `
             <div class="loading">
@@ -106,10 +106,12 @@ const UI = {
 
     /** Wrap [E#] tags in styled spans inside a rationale string */
     highlightCitations(text) {
-        return UI.escapeHtml(text).replace(
-            /\[E(\d+)\]/gi,
-            '<span class="citation-inline">[E$1]</span>'
-        );
+        // Strip [E#] citation tags and any surrounding parenthetical "(See [E#]...)" notes
+        const cleaned = (text || '')
+            .replace(/\s*\(See \[E\d+\][^)]*\)/gi, '')
+            .replace(/\[E\d+\]/gi, '')
+            .trim();
+        return UI.escapeHtml(cleaned);
     },
 
     /** Best-effort: summarize an excerpt into a short, UI-friendly sentence */
@@ -382,62 +384,51 @@ const UI = {
                    </div>`
                 : '';
 
-            const supportHtml = (support.length > 0 || ratioText || claimCountText)
+            // Filter out "Argument citation:" bullets — only show document citations
+            const docSupport = support.filter(s => !s.startsWith('Argument citation:'));
+
+            const supportHtml = (docSupport.length > 0 || claimCountText)
                 ? `<div class="cat-section-block cat-section-support">
                         <p class="ev-section-label cat-section-heading">📄 Document Support Detected</p>
                         ${claimCountText ? `<p class="cat-claim-count">${claimCountText}</p>` : ''}
-                        ${support.length > 0
-                            ? `<ul class="cat-bullets cat-support">${support.map(s => `<li>${UI.escapeHtml(s)}</li>`).join('')}</ul>`
+                        ${docSupport.length > 0
+                            ? `<ul class="cat-bullets cat-support">${docSupport.map(s => `<li>${UI.escapeHtml(s)}</li>`).join('')}</ul>`
                             : `<p class="no-evidence-note">ℹ️ No mapped support detected for this category.</p>`}
                         ${notRefHtml}
-                        ${ratioText ? `<div class="support-ratio">${ratioText}</div>` : ''}
                    </div>`
                 : '';
-
-            // Supporting evidence — ONLY show excerpts the model explicitly cited [E#]
-            // Never guess/fallback: irrelevant excerpts mislead more than help.
-            let evidenceHtml = '';
-            if (citedItems.length > 0) {
-                evidenceHtml = `
-                    <div class="evidence-inline">
-                        <p class="ev-section-label">📋 Supporting Evidence</p>
-                        ${citedItems.map(item => UI.renderInlineQuote(item)).join('')}
-                    </div>`;
-            } else if (!hasEvidence) {
-                evidenceHtml = `<div class="evidence-inline"><p class="no-evidence-note">ℹ️ Upload a supporting document and re-run to see quoted evidence here.</p></div>`;
-            }
 
             const pts = category.points ?? (category.rubric_score / 5 * category.weight).toFixed(1);
 
             html += `
                 <div class="category-card score-${level}">
-                    <div class="cat-header-row">
+                    <div class="cat-header-row cat-toggle" onclick="this.closest('.category-card').classList.toggle('cat-expanded')">
                         <span class="cat-letter">${letter}</span>
                         <div class="cat-title-block">
                             <span class="category-name">${UI.escapeHtml(category.category)}</span>
-                            <span class="cat-weight-badge">Weight: ${category.weight}</span>
                         </div>
                         <div class="cat-score-block">
-                            <span class="cat-score-icon">${icon}</span>
                             <span class="cat-score-fraction score-${level}">${category.rubric_score} / 5</span>
                         </div>
+                        <span class="cat-chevron">&#9660;</span>
                     </div>
-                    <div class="cat-points-row">
-                        Points: (${category.rubric_score}/5 × ${category.weight}) = <strong>${pts}</strong>
+                    <div class="cat-body">
+                        <div class="cat-points-row">
+                            Points: <strong>${pts}</strong>
+                        </div>
+                        <div class="category-bar">
+                            <div class="category-bar-fill" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="cat-reason-section">
+                            <p class="ev-section-label cat-section-heading">📋 Why you got this score</p>
+                            ${quoteHtml}
+                            ${judgmentQuoteHtml}
+                            <div class="category-rationale">${UI.highlightCitations(category.rationale)}</div>
+                        </div>
+                        ${strengthsHtml}
+                        ${gapsHtml}
+                        ${supportHtml}
                     </div>
-                    <div class="category-bar">
-                        <div class="category-bar-fill" style="width: ${percentage}%"></div>
-                    </div>
-                    <div class="cat-reason-section">
-                        <p class="ev-section-label cat-section-heading">📋 Why you got this score</p>
-                        ${quoteHtml}
-                        ${judgmentQuoteHtml}
-                        <div class="category-rationale">${UI.highlightCitations(category.rationale)}</div>
-                    </div>
-                    ${strengthsHtml}
-                    ${gapsHtml}
-                    ${supportHtml}
-                    ${evidenceHtml}
                 </div>
             `;
         });

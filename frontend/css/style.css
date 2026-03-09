@@ -397,6 +397,38 @@ body {
     box-shadow: 0 6px 20px rgba(0,0,0,0.09);
 }
 
+/* ── Collapsible body ────────────────────────────────────────── */
+.cat-body {
+    display: none;
+    margin-top: 12px;
+}
+.category-card.cat-expanded .cat-body {
+    display: block;
+}
+
+/* Chevron arrow */
+.cat-chevron {
+    font-size: 0.75em;
+    color: #888;
+    margin-left: 6px;
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+    display: inline-block;
+}
+.category-card.cat-expanded .cat-chevron {
+    transform: rotate(180deg);
+}
+
+/* Toggle cursor on header */
+.cat-toggle {
+    cursor: pointer;
+    user-select: none;
+    margin-bottom: 0;
+}
+.cat-toggle:hover .category-name {
+    color: #1d3b73;
+}
+
 /* Score-level border colours */
 .category-card.score-strong   { border-left-color: #2e7d32; background: #f1faf2; }
 .category-card.score-moderate { border-left-color: #1565c0; background: #f0f4ff; }

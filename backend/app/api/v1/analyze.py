@@ -432,20 +432,75 @@ def chunk_text_with_offsets(text: str, max_chars: int = 1200) -> List[OffsetChun
     return chunks
 
 
+_PAGE_MARKER_RE = re.compile(r"---\s*[Pp]age\s+(\d+)\s*---")
+
+
 def estimate_page_number(doc_text: str, offset: int) -> Optional[int]:
     """Estimate PDF page number for a character offset.
 
     When PDFs are extracted, we preserve page breaks as form-feed (\f).
     That makes page detection exact: page = 1 + count(\f) before the offset.
 
-    If no page breaks exist (e.g., TXT, or fallback extractor), we fall back to
-    a coarse chars-per-page heuristic.
+    For TXT files produced by the OCR pipeline, pages are delimited by
+    ``--- Page N ---`` markers; we parse these for an exact page number.
+
+    If no page breaks exist, we fall back to a coarse chars-per-page heuristic.
     """
     if offset is None or offset < 0:
         return None
     if "\f" in doc_text:
         return doc_text[:offset].count("\f") + 1
+    # Support "--- Page N ---" markers inserted by the OCR/preprocessing pipeline.
+    last_page = None
+    for m in _PAGE_MARKER_RE.finditer(doc_text):
+        if m.start() > offset:
+            break
+        last_page = int(m.group(1))
+    if last_page is not None:
+        return last_page
     return max(1, offset // _CHARS_PER_PAGE + 1)
+
+
+def _build_para_index(doc_text: str) -> List[Tuple[int, int]]:
+    """Build a sorted ``(char_offset, para_number)`` index for a document.
+
+    Returns a non-empty list only when the document uses *systematic* paragraph
+    numbering — i.e. there are at least three numbered items whose sequence
+    contains at least two consecutive numbers.  Documents that only have one or
+    two incidental numbered list items (e.g. "3. The Industrial Disputes Act")
+    are rejected so that those accidental numbers are never shown as paragraph
+    references in the UI.
+
+    The returned list is sorted ascending by offset so callers can binary-search
+    or scan in reverse to find the last paragraph marker before a given offset.
+    """
+    _para_scan_re = re.compile(
+        r"(?im)(?:^|\n)\s*(?:\((\d{1,4})\)|(?:(\d{1,4})[\.)])\s+|para(?:graph)?\.?\s*(\d{1,4})\b)"
+    )
+    found: dict = {}  # para_num -> first offset in doc
+    for m in _para_scan_re.finditer(doc_text):
+        num = m.group(1) or m.group(2) or m.group(3)
+        if not num:
+            continue
+        try:
+            n = int(num)
+        except Exception:
+            continue
+        if 1 <= n <= 999 and n not in found:
+            found[n] = m.start()
+
+    if len(found) < 3:
+        return []
+
+    nums_sorted = sorted(found.keys())
+    # Require at least two consecutive pairs (i.e. three items like 1,2,3 or 4,5,6).
+    consecutive = sum(
+        1 for i in range(1, len(nums_sorted)) if nums_sorted[i] == nums_sorted[i - 1] + 1
+    )
+    if consecutive < 2:
+        return []
+
+    return sorted((offset, n) for n, offset in found.items())
 
 
 def estimate_section_title(doc_text: str, offset: int) -> Optional[str]:
@@ -1011,6 +1066,14 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
             chunk_spans = chunk_text_with_offsets(doc.text, max_chars=1200)
             chunks = [c.text for c in chunk_spans]
             ranked = top_k_tfidf(request.text, chunks, k=tfidf_k_per_doc)
+
+            # Build a document-level paragraph index ONCE per document.
+            # _build_para_index validates that the document uses systematic numbering
+            # (≥3 items with ≥2 consecutive); returns [] for documents with only
+            # incidental numbered items (e.g. a 3-point list in a narrative judgment),
+            # which suppresses false "Para N" labels in those cases.
+            _doc_para_idx = _build_para_index(doc.text)
+
             for idx, score in ranked:
                 span = chunk_spans[idx]
                 excerpt = span.text
@@ -1021,36 +1084,16 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                 probe_offset = min(len(doc.text), span.end, start_offset + 200)
                 section_est = estimate_section_title(doc.text, probe_offset)
 
-                # Paragraph estimate: prefer nearest numbered paragraph before the excerpt
-                # (within the same page when page breaks are available).
+                # Paragraph estimate: use the pre-built doc-level para index so we
+                # only assign para numbers for documents with real sequential
+                # paragraph numbering, avoiding false positives from incidental
+                # numbered list items in narrative judgments.
                 para_est = None
-                try:
-                    if start_offset >= 0:
-                        if "\f" in doc.text:
-                            page_start = doc.text.rfind("\f", 0, start_offset)
-                            page_start = 0 if page_start < 0 else page_start + 1
-                            lo = max(page_start, start_offset - 6000)
-                        else:
-                            lo = max(0, start_offset - 6000)
-                        window = doc.text[lo:start_offset]
-                        # Reuse the existing paragraph-detection logic on the window.
-                        para_re = re.compile(
-                            r"(?im)(?:^|\n)\s*(?:\((\d{1,4})\)|(?:(\d{1,4})[\.)])\s+|para(?:graph)?\.?\s*(\d{1,4})\b)"
-                        )
-                        last = None
-                        for m in para_re.finditer(window):
-                            num = m.group(1) or m.group(2) or m.group(3)
-                            if not num:
-                                continue
-                            try:
-                                n = int(num)
-                            except Exception:
-                                continue
-                            if 1 <= n <= 9999:
-                                last = n
-                        para_est = last
-                except Exception:
-                    para_est = None
+                if _doc_para_idx:
+                    for _pidx_off, _pidx_num in reversed(_doc_para_idx):
+                        if _pidx_off <= start_offset:
+                            para_est = _pidx_num
+                            break
 
                 if para_est is None:
                     para_est = estimate_paragraph_number(excerpt)
@@ -1104,6 +1147,10 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
         if request.fast_mode:
             critique = inference_service._get_fallback_critique(request.text)
             critique["warning"] = "Fast mode enabled: used rule-based fallback critique (no external model call)."
+        elif not evidence_items and not similar_case_items:
+            # No documents uploaded and no case corpus — use the simpler non-grounded
+            # prompt (shorter system instruction, single API call, faster response).
+            critique = inference_service.generate_critique(request.text)
         else:
             critique = inference_service.generate_grounded_critique(request.text, evidence_pack=evidence_pack)
 

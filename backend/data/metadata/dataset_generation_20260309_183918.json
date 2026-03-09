@@ -1,0 +1,11 @@
+{
+  "generation_date": "2026-03-09T19:45:14.977775",
+  "teacher_model": "openai/gpt-4o-mini",
+  "temperature": 0.7,
+  "total_files_processed": 87,
+  "successful_examples": 87,
+  "failed_files": [],
+  "total_time_seconds": 3956.78263092041,
+  "average_time_per_file": 45.48026012552196,
+  "output_file": "D:\\Y4S1\\Research new\\reserch component\\Legal\\backend\\data\\training_data\\train_20260309_183918.jsonl"
+}

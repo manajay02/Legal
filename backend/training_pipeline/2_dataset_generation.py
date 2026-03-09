@@ -32,7 +32,7 @@ from tqdm import tqdm
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.services.llm_service import get_gemini_service
+from app.services.llm_service import get_gemini_service, get_openrouter_service, get_deepseek_service
 from app.core.config import settings
 
 
@@ -41,6 +41,7 @@ from app.core.config import settings
 # ============================================
 
 BASE_DIR = Path(__file__).parent.parent
+RAW_PDF_DIR = BASE_DIR / "data" / "raw_pdfs"
 PROCESSED_TEXT_DIR = BASE_DIR / "data" / "processed_text"
 TRAINING_DATA_DIR = BASE_DIR / "data" / "training_data"
 METADATA_DIR = BASE_DIR / "data" / "metadata"
@@ -131,6 +132,7 @@ Based on the judgment summary below, create a flawed plaintiff's written submiss
 
 Your weak argument should be 300-500 words and sound like a poorly prepared submission.
 
+{variant_instruction}
 ---
 
 JUDGMENT SUMMARY:
@@ -140,6 +142,26 @@ JUDGMENT SUMMARY:
 
 WEAK PLAINTIFF ARGUMENT:
 """
+
+# Different focuses for generating varied weak arguments from the same case
+VARIANT_INSTRUCTIONS = [
+    # v0 – default (all weaknesses equally)
+    "",
+    # v1 – especially weak on jurisdiction / procedural grounds
+    "Focus especially on procedural and jurisdictional errors: wrong court, time-bar issues, wrong parties named, failure to exhaust remedies.\n\n",
+    # v2 – especially weak on evidence / proof
+    "Focus especially on evidentiary failures: no documentary exhibits, hearsay reliance, unsworn assertions, missing expert evidence.\n\n",
+    # v3 – especially weak on legal authority
+    "Focus especially on misapplied law: cite irrelevant sections, confuse civil and criminal standards, ignore binding precedents.\n\n",
+    # v4 – especially weak on remedies / quantum
+    "Focus especially on remedy and quantification failures: unspecified damages, no calculation shown, wrong type of relief requested.\n\n",
+    # v5 – defendant perspective gone wrong (plaintiff arguing from wrong side)
+    "Make the plaintiff inadvertently argue facts that actually support the defendant's case, contradicting their own claim.\n\n",
+    # v6 – emotional / non-legal language
+    "Use excessively emotional, non-legal language throughout — appeals to sympathy rather than law, personal attacks, dramatic assertions.\n\n",
+    # v7 – contradictory timeline / inconsistent facts
+    "Introduce internal contradictions in dates and facts: the timeline should be inconsistent and self-contradictory.\n\n",
+]
 
 
 STEP3_CRITIQUE_PROMPT = """You are an expert legal argument critic for Sri Lankan civil cases.
@@ -304,105 +326,85 @@ def validate_json_structure(critique: Dict[str, Any]) -> bool:
     return True
 
 
+def summarize_judgment(text_file: Path, gemini_service, temperature: float = 0.3) -> str:
+    """Summarize a judgment text file. Returns summary string."""
+    judgment_text = load_judgment_text(text_file)
+    logger.info(f"  Loaded judgment ({len(judgment_text):,} chars)")
+    step1_prompt = STEP1_SUMMARIZE_PROMPT.format(judgment_text=judgment_text)
+    summary = gemini_service.get_analysis_from_gemini(prompt=step1_prompt, temperature=temperature)
+    logger.info(f"  ✓ Summary generated ({len(summary):,} chars)")
+    return summary
+
+
 def generate_training_example(
     text_file: Path,
     gemini_service,
-    temperature: float = 0.7
+    temperature: float = 0.7,
+    variant_index: int = 0,
+    summary: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
     """
-    Generate a complete training example from a judgment text file.
-    
-    Three-step process:
-    1. Summarize the judgment
-    2. Generate a weak argument based on the summary
-    3. Generate a detailed JSON critique of the weak argument
-    
-    Args:
-        text_file: Path to the extracted judgment text file
-        gemini_service: Initialized Gemini service
-        temperature: Sampling temperature for generation
-        
-    Returns:
-        Training example dictionary, or None if generation fails
+    Generate one training example from a judgment.
+
+    If `summary` is provided it is reused (avoids re-summarising for multi-variant runs).
+    `variant_index` selects a different weak-argument focus from VARIANT_INSTRUCTIONS.
+    The case_id is stored as  <stem>__v<variant_index>  so each variant is tracked separately.
     """
-    case_id = text_file.stem
+    case_id = f"{text_file.stem}__v{variant_index}"
     logger.info(f"\n{'='*60}")
-    logger.info(f"Processing: {case_id}")
+    logger.info(f"Processing: {text_file.stem}  [variant {variant_index}]")
     logger.info(f"{'='*60}")
-    
+
     try:
-        # Load the judgment text
-        judgment_text = load_judgment_text(text_file)
-        logger.info(f"[1/3] Loaded judgment ({len(judgment_text):,} chars)")
-        
         # ============================================
-        # STEP 1: Summarize Judgment
+        # STEP 1: Summarize Judgment (skip if already done)
         # ============================================
-        logger.info("[2/3] Summarizing judgment with Gemini...")
-        
-        step1_prompt = STEP1_SUMMARIZE_PROMPT.format(
-            judgment_text=judgment_text
-        )
-        
-        summary = gemini_service.get_analysis_from_gemini(
-            prompt=step1_prompt,
-            temperature=0.3  # Lower temperature for factual summarization
-        )
-        
-        logger.info(f"  ✓ Summary generated ({len(summary)} chars)")
-        
-        # Rate limiting: Free tier allows 15 requests/min (4 sec/request)
-        time.sleep(4)
-        
+        if summary is None:
+            logger.info("[1/3] Summarizing judgment...")
+            summary = summarize_judgment(text_file, gemini_service)
+            time.sleep(4)
+        else:
+            logger.info("[1/3] Reusing cached summary")
+
         # ============================================
         # STEP 2: Generate Weak Argument
         # ============================================
-        logger.info("[3/3] Generating weak plaintiff argument...")
-        
+        logger.info("[2/3] Generating weak plaintiff argument...")
+        variant_instruction = VARIANT_INSTRUCTIONS[variant_index % len(VARIANT_INSTRUCTIONS)]
         step2_prompt = STEP2_WEAK_ARGUMENT_PROMPT.format(
-            summary=summary
+            summary=summary,
+            variant_instruction=variant_instruction,
         )
-        
-        weak_argument = gemini_service.get_analysis_from_gemini(
-            prompt=step2_prompt,
-            temperature=temperature
-        )
-        
-        logger.info(f"  ✓ Weak argument generated ({len(weak_argument)} chars)")
-        
-        # Rate limiting delay
+        # Slightly raise temperature for later variants to increase diversity
+        arg_temp = min(temperature + variant_index * 0.05, 1.0)
+        weak_argument = gemini_service.get_analysis_from_gemini(prompt=step2_prompt, temperature=arg_temp)
+        logger.info(f"  ✓ Weak argument generated ({len(weak_argument):,} chars)")
         time.sleep(4)
-        
+
         # ============================================
         # STEP 3: Generate JSON Critique
         # ============================================
-        logger.info("[4/3] Generating JSON critique...")
-        
+        logger.info("[3/3] Generating JSON critique...")
         rubric_table = create_rubric_table()
         step3_prompt = STEP3_CRITIQUE_PROMPT.format(
             rubric_table=rubric_table,
-            weak_argument=weak_argument
+            weak_argument=weak_argument,
         )
-        
         critique = gemini_service.get_json_from_gemini(
             prompt=step3_prompt,
-            temperature=0.2,  # Low temperature for structured output
-            max_tokens=4096   # Ensure enough tokens for full JSON response
+            temperature=0.2,
+            max_tokens=4096,
         )
-        
         logger.info(f"  ✓ Critique generated (score: {critique.get('overall_score', 'N/A')})")
-        
-        # Validate the JSON structure
+
         if not validate_json_structure(critique):
             logger.error("  ✗ Invalid JSON structure, skipping example")
             return None
-        
-        # ============================================
-        # Construct Training Example
-        # ============================================
+
         training_example = {
             "case_id": case_id,
             "source_file": text_file.name,
+            "variant_index": variant_index,
             "generated_at": datetime.now().isoformat(),
             "summary": summary,
             "weak_argument": weak_argument,
@@ -410,13 +412,12 @@ def generate_training_example(
             "metadata": {
                 "summary_length": len(summary),
                 "argument_length": len(weak_argument),
-                "overall_score": critique["overall_score"]
-            }
+                "overall_score": critique["overall_score"],
+            },
         }
-        
-        logger.info(f"✓ Training example created successfully")
+        logger.info("✓ Training example created successfully")
         return training_example
-        
+
     except Exception as e:
         logger.error(f"✗ Failed to generate training example: {str(e)}")
         return None
@@ -470,7 +471,7 @@ def main():
     Main execution function for dataset generation pipeline.
     """
     parser = argparse.ArgumentParser(
-        description="Generate training data from Supreme Court judgments using Gemini"
+        description="Generate training data from Supreme Court judgments"
     )
     parser.add_argument(
         "--limit",
@@ -482,32 +483,83 @@ def main():
         "--temperature",
         type=float,
         default=0.7,
-        help="Sampling temperature for Gemini (0.0-1.0)"
+        help="Sampling temperature (0.0-1.0)"
     )
-    
+    parser.add_argument(
+        "--provider",
+        type=str,
+        default="openrouter",
+        choices=["gemini", "openrouter", "deepseek"],
+        help="LLM provider to use: 'gemini', 'openrouter', or 'deepseek' (default: openrouter)"
+    )
+    parser.add_argument(
+        "--only-from-raw-pdfs",
+        action="store_true",
+        default=False,
+        help="Only process .txt files whose source PDF exists in data/raw_pdfs/ (skip all others)"
+    )
+    parser.add_argument(
+        "--examples-per-file",
+        type=int,
+        default=1,
+        dest="examples_per_file",
+        help="Number of training examples to generate per judgment file (default: 1, max useful: 8)"
+    )
+
     args = parser.parse_args()
-    
-    logger.info("=" * 60)
-    logger.info("Dataset Generation Pipeline Started")
-    logger.info("Teacher Model: Google Gemini 1.5 Flash")
-    logger.info("Student Model: Qwen2-1.5B-Instruct (target)")
-    logger.info("=" * 60)
-    
-    # Initialize Gemini service
-    try:
-        gemini_service = get_gemini_service()
-        logger.info("\n✓ Gemini service initialized")
-        
-        # Health check
-        if not gemini_service.check_health():
-            logger.error("Gemini health check failed. Please verify your API key.")
+
+    # Initialize the chosen LLM service
+    if args.provider == "deepseek":
+        logger.info("=" * 60)
+        logger.info("Dataset Generation Pipeline Started")
+        logger.info(f"Teacher Model: DeepSeek ({settings.DEEPSEEK_MODEL_NAME})")
+        logger.info("Student Model: Qwen2-1.5B-Instruct (target)")
+        logger.info("=" * 60)
+        try:
+            gemini_service = get_deepseek_service()
+            logger.info("\n✓ DeepSeek service initialized")
+            if not gemini_service.check_health():
+                logger.error("DeepSeek health check failed. Please verify your API key.")
+                return
+        except Exception as e:
+            logger.error(f"Failed to initialize DeepSeek service: {str(e)}")
+            logger.error("Make sure DEEPSEEK_API_KEY is set in your .env file")
+            logger.error("Get your key from: https://platform.deepseek.com/")
             return
-        
-    except Exception as e:
-        logger.error(f"Failed to initialize Gemini service: {str(e)}")
-        logger.error("Make sure GOOGLE_API_KEY is set in your .env file")
-        logger.error("Get your API key from: https://makersuite.google.com/app/apikey")
-        return
+    elif args.provider == "openrouter":
+        logger.info("=" * 60)
+        logger.info("Dataset Generation Pipeline Started")
+        logger.info(f"Teacher Model: OpenRouter ({settings.OPENROUTER_MODEL})")
+        logger.info("Student Model: Qwen2-1.5B-Instruct (target)")
+        logger.info("=" * 60)
+        try:
+            gemini_service = get_openrouter_service()
+            logger.info("\n✓ OpenRouter service initialized")
+            if not gemini_service.check_health():
+                logger.error("OpenRouter health check failed. Please verify your API key.")
+                return
+        except Exception as e:
+            logger.error(f"Failed to initialize OpenRouter service: {str(e)}")
+            logger.error("Make sure OPENROUTER_API_KEY is set in your .env file")
+            logger.error("Get your key from: https://openrouter.ai/")
+            return
+    else:
+        logger.info("=" * 60)
+        logger.info("Dataset Generation Pipeline Started")
+        logger.info(f"Teacher Model: Google Gemini ({settings.GEMINI_MODEL_NAME})")
+        logger.info("Student Model: Qwen2-1.5B-Instruct (target)")
+        logger.info("=" * 60)
+        try:
+            gemini_service = get_gemini_service()
+            logger.info("\n✓ Gemini service initialized")
+            if not gemini_service.check_health():
+                logger.error("Gemini health check failed. Please verify your API key.")
+                return
+        except Exception as e:
+            logger.error(f"Failed to initialize Gemini service: {str(e)}")
+            logger.error("Make sure GOOGLE_API_KEY is set in your .env file")
+            logger.error("Get your key from: https://aistudio.google.com/apikey")
+            return
     
     # Get all processed text files
     if not PROCESSED_TEXT_DIR.exists():
@@ -523,55 +575,133 @@ def main():
         return
     
     logger.info(f"\nFound {len(text_files)} processed judgment files")
-    
-    # Apply limit if specified
+
+    # Skip variant IDs already present in any training data JSONL
+    # IDs are stored as  <stem>__v<n>  (new format) or bare <stem> (legacy, counts as v0)
+    already_done: set = set()
+    for jsonl_file in TRAINING_DATA_DIR.glob("*.jsonl"):
+        with open(jsonl_file, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                    if "case_id" in obj:
+                        cid = obj["case_id"]
+                        already_done.add(cid)
+                        # Legacy entries have bare stem — treat as variant 0
+                        if "__v" not in cid:
+                            already_done.add(f"{cid}__v0")
+                except json.JSONDecodeError:
+                    pass
+
+    examples_per_file = max(1, args.examples_per_file)
+
+    # A file is fully done only when all requested variants exist
+    def _variants_needed(stem: str) -> List[int]:
+        return [
+            i for i in range(examples_per_file)
+            if f"{stem}__v{i}" not in already_done
+        ]
+
+    text_files_with_variants = [
+        (f, _variants_needed(f.stem)) for f in text_files
+    ]
+    text_files_with_variants = [(f, vs) for f, vs in text_files_with_variants if vs]
+
+    skipped = len(text_files) - len(text_files_with_variants)
+    if skipped:
+        logger.info(f"Skipping {skipped} fully-processed files")
+    text_files = text_files  # keep original for length reference
+
+    # If --only-from-raw-pdfs, restrict to files whose PDF is in raw_pdfs/
+    if args.only_from_raw_pdfs:
+        if not RAW_PDF_DIR.exists():
+            logger.error(f"raw_pdfs directory not found: {RAW_PDF_DIR}")
+            return
+        raw_pdf_stems = {p.stem for p in RAW_PDF_DIR.glob("*.pdf")}
+        before = len(text_files)
+        text_files = [f for f in text_files if f.stem in raw_pdf_stems]
+        logger.info(f"--only-from-raw-pdfs: keeping {len(text_files)} of {before} files (matched PDFs in raw_pdfs/)")
+        if not text_files:
+            logger.info("No matching .txt files found for PDFs in raw_pdfs/. Nothing to do.")
+            return
+
+    if not text_files_with_variants:
+        logger.info("All files already processed. Nothing to do.")
+        return
+
+    total_variants = sum(len(vs) for _, vs in text_files_with_variants)
+    logger.info(f"Files to process: {len(text_files_with_variants)}  ({total_variants} examples total, {examples_per_file} per file)")
+
+    # Apply limit if specified (limits the number of files, not variants)
     if args.limit:
-        text_files = text_files[:args.limit]
-        logger.info(f"Limiting to {len(text_files)} files (--limit {args.limit})")
-    
+        text_files_with_variants = text_files_with_variants[:args.limit]
+        total_variants = sum(len(vs) for _, vs in text_files_with_variants)
+        logger.info(f"Limiting to {len(text_files_with_variants)} files (--limit {args.limit})")
+
+    # Output file
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    train_file = TRAINING_DATA_DIR / f"train_{timestamp}.jsonl"
+    train_file.parent.mkdir(parents=True, exist_ok=True)
+    logger.info(f"Saving to: {train_file}")
+
     # Process each file
     training_examples = []
     failed_files = []
-    
+    example_count = 0
+
     start_time = time.time()
-    
-    for idx, text_file in enumerate(text_files, 1):
-        logger.info(f"\n[{idx}/{len(text_files)}] Processing: {text_file.stem}")
-        
-        try:
-            example = generate_training_example(
-                text_file=text_file,
-                gemini_service=gemini_service,
-                temperature=args.temperature
-            )
-            
-            if example:
-                training_examples.append(example)
-                logger.info(f"✓ Success ({len(training_examples)}/{idx} examples generated)")
-            else:
-                failed_files.append(text_file.stem)
-                logger.warning(f"✗ Failed to generate example")
-            
-        except Exception as e:
-            logger.error(f"✗ Error processing {text_file.stem}: {str(e)}")
-            failed_files.append(text_file.stem)
-        
-        # Rate limiting: small delay between API calls
-        if idx < len(text_files):
-            time.sleep(2)  # 2 seconds between files
+
+    for file_idx, (text_file, variants) in enumerate(text_files_with_variants, 1):
+        logger.info(f"\n[{file_idx}/{len(text_files_with_variants)}] {text_file.stem}  ({len(variants)} variant(s) needed)")
+
+        # Summarize the judgment once, then reuse for all variants of this file
+        cached_summary: Optional[str] = None
+        if len(variants) > 1 or variants[0] != 0:
+            # We'll summarize on the first variant call; cache it for the rest
+            pass
+
+        for variant_idx in variants:
+            example_count += 1
+            logger.info(f"  → variant {variant_idx}  (example {example_count}/{total_variants})")
+            try:
+                example = generate_training_example(
+                    text_file=text_file,
+                    gemini_service=gemini_service,
+                    temperature=args.temperature,
+                    variant_index=variant_idx,
+                    summary=cached_summary,
+                )
+
+                if example:
+                    # Cache the summary for the next variant of this file
+                    if cached_summary is None:
+                        cached_summary = example["summary"]
+                    training_examples.append(example)
+                    with open(train_file, "a", encoding="utf-8") as f:
+                        f.write(json.dumps(example, ensure_ascii=False) + "\n")
+                    logger.info(f"  ✓ Success ({len(training_examples)} total examples so far)")
+                else:
+                    failed_files.append(f"{text_file.stem}__v{variant_idx}")
+                    logger.warning("  ✗ Failed to generate example")
+
+            except Exception as e:
+                logger.error(f"  ✗ Error on variant {variant_idx}: {str(e)}")
+                failed_files.append(f"{text_file.stem}__v{variant_idx}")
+
+            # Brief delay between variants
+            time.sleep(2)
+
+        # Slightly longer pause between files
+        if file_idx < len(text_files_with_variants):
+            time.sleep(2)
     
     # Calculate statistics
     total_time = time.time() - start_time
     avg_time = total_time / len(text_files) if text_files else 0
-    
-    # Save results
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    
-    # Save training data
-    if training_examples:
-        train_file = TRAINING_DATA_DIR / f"train_{timestamp}.jsonl"
-        save_training_data(training_examples, train_file)
-    
+
     # Save metadata
     metadata = {
         "generation_date": datetime.now().isoformat(),
@@ -592,7 +722,7 @@ def main():
     logger.info("\n" + "=" * 60)
     logger.info("Dataset Generation Pipeline Completed")
     logger.info("=" * 60)
-    logger.info(f"Total files processed: {len(text_files)}")
+    logger.info(f"Total files processed: {len(text_files_with_variants)}")
     logger.info(f"Successful examples: {len(training_examples)}")
     logger.info(f"Failed files: {len(failed_files)}")
     logger.info(f"Total time: {total_time/60:.1f} minutes")

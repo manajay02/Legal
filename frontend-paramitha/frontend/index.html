@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>CivilModel - Legal Document Analyzer</title>
+    <link rel="stylesheet" href="styles.css?v=dashboard1">
+    <style>
+        /* Force enhanced Notes design immediately */
+        .unified-notes-container {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%) !important;
+            min-height: 100% !important;
+            padding: 0 !important;
+            position: relative !important;
+        }
+        .notes-page-header {
+            background: linear-gradient(135deg, 
+                rgba(79, 70, 229, 0.9) 0%, 
+                rgba(99, 102, 241, 0.8) 25%,
+                rgba(34, 197, 94, 0.8) 75%, 
+                rgba(16, 185, 129, 0.9) 100%) !important;
+            border-bottom: 3px solid rgba(79, 70, 229, 0.3) !important;
+            padding: 40px !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+        }
+        .stat-item {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%) !important;
+            border-radius: 20px !important;
+            border: 2px solid rgba(255, 255, 255, 0.2) !important;
+            backdrop-filter: blur(20px) !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+        }
+        .filter-btn {
+            background: linear-gradient(135deg, rgba(51, 65, 85, 0.8) 0%, rgba(71, 85, 105, 0.6) 100%) !important;
+            border: 2px solid rgba(79, 70, 229, 0.3) !important;
+            border-radius: 20px !important;
+            padding: 12px 24px !important;
+            backdrop-filter: blur(10px) !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+        }
+        .note-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(51, 65, 85, 0.9) 100%) !important;
+            border: 2px solid rgba(79, 70, 229, 0.2) !important;
+            border-radius: 20px !important;
+            backdrop-filter: blur(20px) !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-balance-scale"></i>
+                <span>CivilModel</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-page="upload">
+                    <i class="fas fa-upload"></i>
+                    <span>Upload Document</span>
+                </a>
+                <a href="#" class="nav-item" data-page="batches">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Batches</span>
+                </a>
+                <a href="#" class="nav-item" data-page="documents">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Documents</span>
+                </a>
+                <a href="#" class="nav-item" data-page="search">
+                    <i class="fas fa-search"></i>
+                    <span>Search</span>
+                </a>
+                <a href="#" class="nav-item" data-page="output">
+                    <i class="fas fa-file-export"></i>
+                    <span>Output</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="api-status" id="api-status">
+                    <div class="status-dot"></div>
+                    <span>Checking API...</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <section class="page active" id="dashboard-page">
+                <header class="page-header">
+                    <h1>Dashboard</h1>
+                    <p>Sri Lankan Supreme Court Civil Case Structure & Metadata Extractor</p>
+                </header>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-file-pdf"></i></div>
+                        <div class="stat-info"><h3 id="total-docs">0</h3><p>Total Documents</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon batches"><i class="fas fa-layer-group"></i></div>
+                        <div class="stat-info"><h3 id="total-batches">0</h3><p>Batches</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon completed"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-info"><h3 id="completed-docs">0</h3><p>Completed</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon processing"><i class="fas fa-spinner fa-spin"></i></div>
+                        <div class="stat-info"><h3 id="processing-docs">0</h3><p>Processing</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon error"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="stat-info"><h3 id="failed-docs">0</h3><p>Failed</p></div>
+                    </div>
+                </div>
+
+                <div class="recent-section">
+                    <h2>Recent Documents</h2>
+                    <div class="documents-list" id="recent-docs-list">
+                        <p class="empty-state">No documents yet. Upload a PDF to get started!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Upload Page -->
+            <section class="page" id="upload-page">
+                <header class="page-header">
+                    <h1>Upload Document</h1>
+                    <p>Upload one or multiple Sri Lankan Supreme Court case PDFs</p>
+                </header>
+
+                <div class="upload-mode-toggle">
+                    <button class="mode-btn active" id="mode-single" onclick="setUploadMode('single')">
+                        <i class="fas fa-file-pdf"></i> Single Document
+                    </button>
+                    <button class="mode-btn" id="mode-batch" onclick="setUploadMode('batch')">
+                        <i class="fas fa-layer-group"></i> Batch Upload
+                    </button>
+                </div>
+
+                <div class="upload-container">
+                    <!-- Single upload -->
+                    <div id="single-upload-section">
+                        <div class="upload-zone" id="upload-zone">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <h3>Drag &amp; Drop your PDF here</h3>
+                            <p>or click to browse files</p>
+                            <input type="file" id="file-input" accept=".pdf" hidden>
+                            <span class="file-info">Maximum file size: 50MB</span>
+                        </div>
+                        <div class="upload-progress hidden" id="upload-progress">
+                            <div class="progress-info">
+                                <span class="filename" id="upload-filename"></span>
+                                <span class="status" id="upload-status">Uploading...</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-fill"></div>
+                            </div>
+                        </div>
+                        <div class="upload-result hidden" id="upload-result">
+                            <div class="result-icon"><i class="fas fa-check-circle"></i></div>
+                            <h3>Upload Successful!</h3>
+                            <p>Document ID: <code id="result-doc-id"></code></p>
+                            <div class="result-actions">
+                                <button class="btn btn-primary" id="process-btn">
+                                    <i class="fas fa-cog"></i> Process Document
+                                </button>
+                                <button class="btn btn-secondary" id="upload-another-btn">
+                                    <i class="fas fa-plus"></i> Upload Another
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Batch upload -->
+                    <div id="batch-upload-section" class="hidden">
+                        <div class="upload-zone" id="batch-upload-zone">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <h3>Drag &amp; Drop multiple PDFs here</h3>
+                            <p>or click to select files</p>
+                            <input type="file" id="batch-file-input" accept=".pdf" multiple hidden>
+                            <span class="file-info">Maximum 50 MB per file &nbsp;|&nbsp; Any number of files</span>
+                        </div>
+                        <div id="batch-file-list" class="batch-file-list hidden"></div>
+                        <div class="batch-upload-actions hidden" id="batch-upload-actions">
+                            <button class="btn btn-primary" id="start-batch-btn">
+                                <i class="fas fa-upload"></i> Upload All Files
+                            </button>
+                            <button class="btn btn-secondary" id="clear-batch-btn">
+                                <i class="fas fa-trash"></i> Clear
+                            </button>
+                        </div>
+                        <div class="batch-result hidden" id="batch-result">
+                            <div class="result-icon"><i class="fas fa-layer-group"></i></div>
+                            <h3>Batch Upload Complete!</h3>
+                            <p>Batch ID: <code id="batch-result-id"></code></p>
+                            <div id="batch-result-items"></div>
+                            <div class="result-actions" style="margin-top:1.5rem;">
+                                <button class="btn btn-primary" onclick="navigateTo('batches')">
+                                    <i class="fas fa-layer-group"></i> View Batch
+                                </button>
+                                <button class="btn btn-secondary" onclick="resetBatchUpload()">
+                                    <i class="fas fa-plus"></i> Upload Another Batch
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Batches Page -->
+            <section class="page" id="batches-page">
+                <header class="page-header">
+                    <h1>Batches</h1>
+                    <p>Groups of documents uploaded together</p>
+                    <button class="btn btn-primary refresh-btn" id="refresh-batches-btn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </header>
+                <div id="batches-container">
+                    <p class="empty-state">No batches found. Use Batch Upload to group documents.</p>
+                </div>
+            </section>
+
+            <!-- Documents Page -->
+            <section class="page" id="documents-page">
+                <header class="page-header">
+                    <h1>Documents</h1>
+                    <p>View and manage all processed documents</p>
+                    <button class="btn btn-primary refresh-btn" id="refresh-docs-btn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </header>
+
+                <div class="documents-grid" id="documents-grid">
+                    <p class="empty-state">No documents found.</p>
+                </div>
+            </section>
+
+            <!-- Output Page -->
+            <section class="page" id="output-page">
+                <header class="page-header">
+                    <h1>Document Output</h1>
+                    <p>View extracted metadata and sections from processed documents</p>
+                </header>
+
+                <div class="output-container">
+                    <div class="output-selector">
+                        <label for="output-doc-select">Select Document:</label>
+                        <select id="output-doc-select">
+                            <option value="">-- Choose a document --</option>
+                        </select>
+                        <button class="btn btn-primary" id="load-output-btn">
+                            <i class="fas fa-eye"></i> View Output
+                        </button>
+                    </div>
+
+                    <div class="output-content hidden" id="output-content">
+                        <!-- Tabs -->
+                        <div class="output-tabs">
+                            <button class="tab-btn active" data-tab="metadata"><i class="fas fa-info-circle"></i> Metadata</button>
+                            <button class="tab-btn" data-tab="outcome"><i class="fas fa-gavel"></i> Outcome</button>
+                            <button class="tab-btn" data-tab="sections"><i class="fas fa-list"></i> Sections</button>
+                            <button class="tab-btn" data-tab="timeline"><i class="fas fa-stream"></i> Timeline</button>
+                            <button class="tab-btn" data-tab="citations"><i class="fas fa-quote-left"></i> Citations</button>
+                            <button class="tab-btn" data-tab="insights"><i class="fas fa-lightbulb"></i> Insights</button>
+                            <button class="tab-btn" data-tab="notes"><i class="fas fa-sticky-note"></i> Notes</button>
+                            <button class="tab-btn" data-tab="confidence"><i class="fas fa-chart-bar"></i> Confidence</button>
+                            <button class="tab-btn" data-tab="rawtext"><i class="fas fa-file-alt"></i> Raw Text</button>
+                            <button class="tab-btn" data-tab="json"><i class="fas fa-code"></i> JSON Export</button>
+                        </div>
+
+                        <!-- Metadata Tab -->
+                        <div class="tab-content active" id="metadata-tab">
+                            <div class="metadata-card">
+                                <h3><i class="fas fa-gavel"></i> Case Information</h3>
+                                <div class="metadata-grid" id="case-metadata"></div>
+                            </div>
+                            <div class="metadata-card">
+                                <h3><i class="fas fa-users"></i> Parties &amp; Judges</h3>
+                                <div class="metadata-grid" id="parties-metadata"></div>
+                            </div>
+                            <div class="metadata-card">
+                                <h3><i class="fas fa-book"></i> Legal Provisions</h3>
+                                <div id="legal-provisions-metadata"></div>
+                            </div>
+                        </div>
+
+                        <!-- Outcome Tab -->
+                        <div class="tab-content" id="outcome-tab">
+                            <div id="outcome-content"></div>
+                        </div>
+
+                        <!-- Sections Tab -->
+                        <div class="tab-content" id="sections-tab">
+                            <div class="sections-list" id="sections-list"></div>
+                        </div>
+
+                        <!-- Timeline Tab -->
+                        <div class="tab-content" id="timeline-tab">
+                            <div id="timeline-content"></div>
+                        </div>
+
+                        <!-- Citations Tab -->
+                        <div class="tab-content" id="citations-tab">
+                            <div id="citations-content"></div>
+                        </div>
+
+                        <!-- Insights Tab -->
+                        <div class="tab-content" id="insights-tab">
+                            <div id="insights-content"></div>
+                        </div>
+
+                        <!-- Notes Tab -->
+                        <div class="tab-content" id="notes-tab">
+                            <div class="notes-dashboard">
+                                <!-- Header Section -->
+                                <div class="notes-header-card">
+                                    <div class="header-title">
+                                        <h1 class="notes-title">
+                                            <i class="fas fa-sticky-note"></i>
+                                            Notes & Annotations
+                                        </h1>
+                                        <p class="notes-subtitle">Manage and organize your document annotations</p>
+                                    </div>
+                                </div>
+
+                                <!-- Statistics Cards -->
+                                <div class="stats-row">
+                                    <div class="stat-card" id="total-notes-stat">
+                                        <div class="stat-number" id="total-notes-count">0</div>
+                                        <div class="stat-label">Total Notes</div>
+                                    </div>
+                                    <div class="stat-card" id="doc-notes-stat">
+                                        <div class="stat-number" id="doc-notes-count">0</div>
+                                        <div class="stat-label">Document Notes</div>
+                                    </div>
+                                    <div class="stat-card" id="section-notes-stat">
+                                        <div class="stat-number" id="section-notes-count">0</div>
+                                        <div class="stat-label">Section Notes</div>
+                                    </div>
+                                </div>
+
+                                <!-- Add Note Form -->
+                                <div class="add-note-section">
+                                    <div class="section-card">
+                                        <div class="card-header">
+                                            <h3 class="card-title">
+                                                <i class="fas fa-plus"></i>
+                                                Add New Note
+                                            </h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <form class="add-note-form">
+                                                <div class="form-grid">
+                                                    <div class="form-field">
+                                                        <label for="note-section-select" class="field-label">Attach to</label>
+                                                        <select id="note-section-select" class="field-input">
+                                                            <option value="document">📄 Entire Document</option>
+                                                            <!-- Sections will be populated dynamically -->
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-field">
+                                                        <label for="note-category-select" class="field-label">Category</label>
+                                                        <select id="note-category-select" class="field-input">
+                                                            <option value="General">General</option>
+                                                            <option value="Key Points">Key Points</option>
+                                                            <option value="Questions">Questions</option>
+                                                            <option value="Analysis">Analysis</option>
+                                                            <option value="Follow-up">Follow-up</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="form-field full-width">
+                                                    <label for="note-content-input" class="field-label">Note Content</label>
+                                                    <textarea 
+                                                        id="note-content-input" 
+                                                        class="field-input field-textarea"
+                                                        placeholder="Write your note here..."
+                                                        rows="4"></textarea>
+                                                </div>
+                                                <div class="form-actions">
+                                                    <button type="button" id="clear-note-btn" class="btn btn-secondary">
+                                                        <i class="fas fa-times"></i>
+                                                        Clear
+                                                    </button>
+                                                    <button type="button" id="add-note-btn" class="btn btn-primary">
+                                                        <i class="fas fa-plus"></i>
+                                                        Add Note
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Filters Section -->
+                                <div class="filters-section">
+                                    <div class="section-card">
+                                        <div class="filters-container">
+                                            <div class="filter-group">
+                                                <span class="filter-label">Show:</span>
+                                                <div class="filter-tabs">
+                                                    <button class="filter-tab active" data-filter="all">
+                                                        <i class="fas fa-list"></i>
+                                                        All Notes
+                                                    </button>
+                                                    <button class="filter-tab" data-filter="document">
+                                                        <i class="fas fa-file-text"></i>
+                                                        Document
+                                                    </button>
+                                                    <button class="filter-tab" data-filter="section">
+                                                        <i class="fas fa-paragraph"></i>
+                                                        Section
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="filter-group">
+                                                <label for="category-filter" class="filter-label">Category:</label>
+                                                <select id="category-filter" class="filter-select">
+                                                    <option value="">All Categories</option>
+                                                    <option value="General">General</option>
+                                                    <option value="Key Points">Key Points</option>
+                                                    <option value="Questions">Questions</option>
+                                                    <option value="Analysis">Analysis</option>
+                                                    <option value="Follow-up">Follow-up</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Notes List -->
+                                <div class="notes-list-section">
+                                    <div class="section-card">
+                                        <div id="notes-display" class="notes-grid">
+                                            <!-- Notes will be populated here dynamically -->
+                                            <div class="empty-state" id="notes-empty-state">
+                                                <div class="empty-icon">
+                                                    <i class="fas fa-sticky-note"></i>
+                                                </div>
+                                                <h3 class="empty-title">No notes yet</h3>
+                                                <p class="empty-description">Create your first note to get started organizing your thoughts and insights.</p>
+                                            </div>
+                                            
+                                            <!-- Loading state -->
+                                            <div id="notes-loading" class="loading-state hidden">
+                                                <div class="loading-spinner"></div>
+                                                <span class="loading-text">Loading notes...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Confidence Tab -->
+                        <div class="tab-content" id="confidence-tab">
+                            <div id="confidence-content"></div>
+                        </div>
+
+                        <!-- Raw Text Tab -->
+                        <div class="tab-content" id="rawtext-tab">
+                            <div class="raw-text-actions">
+                                <button class="btn btn-secondary" id="copy-raw-btn"><i class="fas fa-copy"></i> Copy Text</button>
+                                <button class="btn btn-secondary" id="download-raw-btn"><i class="fas fa-download"></i> Download TXT</button>
+                            </div>
+                            <pre class="raw-text-preview" id="raw-text-content"></pre>
+                        </div>
+
+                        <!-- JSON Export Tab -->
+                        <div class="tab-content" id="json-tab">
+                            <div class="json-actions">
+                                <button class="btn btn-secondary" id="copy-json-btn"><i class="fas fa-copy"></i> Copy JSON</button>
+                                <button class="btn btn-primary" id="download-json-btn"><i class="fas fa-download"></i> Download JSON</button>
+                            </div>
+                            <pre class="json-preview" id="json-content"></pre>
+                        </div>
+                    </div>
+
+                    <div class="output-empty" id="output-empty">
+                        <i class="fas fa-file-export"></i>
+                        <h3>No Document Selected</h3>
+                        <p>Select a completed document from the dropdown above to view its extracted data.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Search Page -->
+            <section class="page" id="search-page">
+                <header class="page-header search-page-header">
+                    <div>
+                        <h1>Case Search</h1>
+                        <p>Hybrid structured + semantic search across all processed cases</p>
+                    </div>
+                    <button class="btn btn-secondary" id="rebuild-index-btn" onclick="rebuildSearchIndex()">
+                        <i class="fas fa-sync-alt"></i> Rebuild Index
+                    </button>
+                </header>
+
+                <!-- Search Bar -->
+                <div class="search-bar-row">
+                    <div class="search-input-wrap">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="search-query" class="search-input"
+                               placeholder="e.g. high risk state discrimination cases after 2020"
+                               onkeydown="if(event.key==='Enter') runSearch()" />
+                        <button class="btn btn-primary search-btn" onclick="runSearch()">
+                            Search
+                        </button>
+                    </div>
+                    <button class="btn btn-secondary filter-toggle-btn" id="filter-toggle" onclick="toggleFilterDrawer()">
+                        <i class="fas fa-sliders-h"></i> Filters
+                        <span class="filter-badge hidden" id="filter-count">0</span>
+                    </button>
+                </div>
+
+                <!-- Preset chips -->
+                <div class="presets-row" id="presets-row">
+                    <span class="presets-label">Quick filters:</span>
+                    <!-- populated by JS -->
+                </div>
+
+                <!-- Index status bar -->
+                <div class="index-status-bar" id="index-status-bar">
+                    <i class="fas fa-database"></i>
+                    <span id="index-status-text">Checking index...</span>
+                </div>
+
+                <!-- Results area -->
+                <div class="search-results-area">
+                    <div class="search-results-header" id="search-results-header" style="display:none">
+                        <span id="search-results-count"></span>
+                        <div class="search-sort-row">
+                            <label>Sort by:</label>
+                            <select id="sort-select" onchange="sortResults()">
+                                <option value="final_score">Best Match</option>
+                                <option value="semantic_score">Semantic Score</option>
+                                <option value="structured_score">Filter Score</option>
+                                <option value="year">Year</option>
+                            </select>
+                            <label>Alpha (structured weight):</label>
+                            <input type="range" id="alpha-slider" min="0" max="1" step="0.1" value="0.4"
+                                   oninput="document.getElementById('alpha-val').textContent=this.value"
+                                   onchange="runSearch()" />
+                            <span id="alpha-val">0.4</span>
+                        </div>
+                    </div>
+                    <div id="search-results-list"></div>
+                    <div class="search-empty-state" id="search-empty-state">
+                        <i class="fas fa-search"></i>
+                        <h3>Search your case library</h3>
+                        <p>Type a query above or apply a quick filter to get started.</p>
+                    </div>
+                </div>
+
+                <!-- Filter Drawer -->
+                <div class="filter-drawer-overlay hidden" id="filter-overlay" onclick="toggleFilterDrawer()"></div>
+                <aside class="filter-drawer hidden" id="filter-drawer">
+                    <div class="filter-drawer-header">
+                        <h2><i class="fas fa-sliders-h"></i> Advanced Filters</h2>
+                        <button class="btn-icon" onclick="toggleFilterDrawer()"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="filter-drawer-body">
+
+                        <div class="filter-group">
+                            <label>Outcome</label>
+                            <select id="f-outcome">
+                                <option value="">Any</option>
+                                <option value="Allowed">Allowed</option>
+                                <option value="Dismissed">Dismissed</option>
+                                <option value="Partially Allowed">Partially Allowed</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Court</label>
+                            <input type="text" id="f-court" placeholder="e.g. Supreme Court" />
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Year Range</label>
+                            <div class="year-range">
+                                <input type="number" id="f-year-from" placeholder="From" min="1900" max="2099" />
+                                <span>–</span>
+                                <input type="number" id="f-year-to" placeholder="To" min="1900" max="2099" />
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Case Type</label>
+                            <input type="text" id="f-case-type" placeholder="e.g. FR Application" />
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Legal Provision</label>
+                            <input type="text" id="f-legal-prov" placeholder="e.g. Article 12" />
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Risk Level</label>
+                            <select id="f-risk-level">
+                                <option value="">Any</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label>State Involvement</label>
+                            <select id="f-state">
+                                <option value="">Any</option>
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Min Confidence (%)</label>
+                            <input type="number" id="f-confidence" placeholder="e.g. 70" min="0" max="100" />
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Batch ID</label>
+                            <input type="text" id="f-batch-id" placeholder="e.g. Upload_2026_..." />
+                        </div>
+
+                    </div>
+                    <div class="filter-drawer-footer">
+                        <button class="btn btn-secondary" onclick="clearFilters()">Clear All</button>
+                        <button class="btn btn-primary" onclick="applyFiltersAndSearch()">Apply &amp; Search</button>
+                    </div>
+                </aside>
+            </section>
+
+            <!-- Document Detail Modal -->
+            <div class="modal hidden" id="document-modal">
+                <div class="modal-overlay"></div>
+                <div class="modal-content">
+                    <button class="modal-close" id="modal-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="modal-header">
+                        <h2 id="modal-title">Document Details</h2>
+                        <span class="status-badge" id="modal-status">Processing</span>
+                    </div>
+                    <div class="modal-body" id="modal-body">
+                        <!-- Document details will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js?v=7"></script>
+</body>
+</html>

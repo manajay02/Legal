@@ -4,12 +4,15 @@ env/
 .venv/
 .env/
 ENV/
+backend_env/
 
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pyd
+*.dll
 .Python
 build/
 develop-eggs/
@@ -31,7 +34,7 @@ wheels/
 .ipynb_checkpoints/
 *.ipynb_checkpoints
 
-# Machine Learning / Data Science
+# Machine Learning / Data Science - Model files
 *.h5
 *.hdf5
 *.pkl
@@ -42,12 +45,21 @@ wheels/
 *.ckpt
 *.pt
 *.pth
+*.safetensors
+*.onnx
+*.bin
+*.gguf
 models/
 checkpoints/
+checkpoint-*/
 logs/
 runs/
 wandb/
 mlruns/
+
+# Node.js
+node_modules/
+package-lock.json
 
 # Data files (uncomment if needed)
 # data/
@@ -61,6 +73,9 @@ mlruns/
 *.tar.gz
 *.tar
 *.gz
+
+# Large PDFs
+*.pdf
 
 # IDE
 .idea/

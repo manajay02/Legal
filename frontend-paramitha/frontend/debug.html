@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Diagnostic Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .result { margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
+        .error { background-color: #ffebee; color: #d32f2f; }
+        .success { background-color: #e8f5e8; color: #2e7d32; }
+        .log { background-color: #f5f5f5; padding: 10px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; }
+        .test-section { margin: 30px 0; border: 2px solid #ddd; padding: 20px; }
+        .test-section h2 { margin-top: 0; }
+    </style>
+</head>
+<body>
+    <h1>Complete Frontend-Backend Diagnostic</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: API Connectivity</h2>
+        <button onclick="testApiConnectivity()">Test API Connection</button>
+        <div id="api-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Documents Endpoint</h2>
+        <button onclick="testDocumentsEndpoint()">Test Documents API</button>
+        <div id="docs-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: JavaScript Functions</h2>
+        <button onclick="testJavaScriptFunctions()">Test JS Functions</button>
+        <div id="js-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 4: DOM Elements Check</h2>
+        <button onclick="testDOMElements()">Test DOM</button>
+        <div id="dom-results"></div>
+    </div>
+
+    <script>
+        const API_V1_URL = 'http://localhost:8000/api/v1';
+        
+        function log(element, message, type = 'log') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            element.appendChild(div);
+            console.log(message);
+        }
+        
+        function clearResults(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+        
+        async function testApiConnectivity() {
+            const resultsDiv = document.getElementById('api-results');
+            clearResults('api-results');
+            
+            try {
+                log(resultsDiv, 'Testing basic API connectivity...', 'log');
+                
+                // Test health endpoint
+                const healthResponse = await fetch(`${API_V1_URL.replace('/api/v1', '')}/health`);
+                log(resultsDiv, `Health endpoint: ${healthResponse.status} (${healthResponse.statusText})`, 
+                    healthResponse.ok ? 'success' : 'error');
+                
+                if (healthResponse.ok) {
+                    const healthData = await healthResponse.json();
+                    log(resultsDiv, `Health check passed: ${JSON.stringify(healthData)}`, 'success');
+                } else {
+                    log(resultsDiv, 'Health check failed', 'error');
+                }
+                
+            } catch (error) {
+                log(resultsDiv, `API connectivity failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testDocumentsEndpoint() {
+            const resultsDiv = document.getElementById('docs-results');
+            clearResults('docs-results');
+            
+            try {
+                log(resultsDiv, `Testing documents endpoint: ${API_V1_URL}/documents`, 'log');
+                
+                const response = await fetch(`${API_V1_URL}/documents`);
+                log(resultsDiv, `Response status: ${response.status} (${response.statusText})`, 
+                    response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(resultsDiv, `Response structure: keys = [${Object.keys(data).join(', ')}]`, 'log');
+                    log(resultsDiv, `Total documents: ${data.total}`, 'success');
+                    log(resultsDiv, `Documents array length: ${data.documents ? data.documents.length : 'null/undefined'}`, 
+                        data.documents && data.documents.length > 0 ? 'success' : 'error');
+                    
+                    if (data.documents && data.documents.length > 0) {
+                        const firstDoc = data.documents[0];
+                        log(resultsDiv, `First document: ID=${firstDoc.id || firstDoc.document_id}, filename=${firstDoc.filename}`, 'success');
+                        log(resultsDiv, `First document keys: [${Object.keys(firstDoc).join(', ')}]`, 'log');
+                        
+                        // Test creating a card
+                        log(resultsDiv, 'Testing card creation...', 'log');
+                        try {
+                            const cardHtml = createDocumentCardTest(firstDoc);
+                            log(resultsDiv, `Card HTML generated (${cardHtml.length} chars)`, 'success');
+                        } catch (cardError) {
+                            log(resultsDiv, `Card creation failed: ${cardError.message}`, 'error');
+                        }
+                    }
+                } else {
+                    log(resultsDiv, 'Documents endpoint failed', 'error');
+                    const errorText = await response.text();
+                    log(resultsDiv, `Error response: ${errorText}`, 'error');
+                }
+                
+            } catch (error) {
+                log(resultsDiv, `Documents endpoint test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function createDocumentCardTest(doc) {
+            const statusClass = doc.status?.toLowerCase() || 'uploaded';
+            const meta = doc.metadata || {};
+            const caseNumber = meta.case_number || 'N/A';
+            const court = meta.court || 'N/A';
+            return `
+                <div class="document-card" data-doc-id="${doc.id || doc.document_id}">
+                    <div class="document-card-header">
+                        <h3>${doc.filename || 'Unknown'}</h3>
+                        <span class="status-badge ${statusClass}">${doc.status || 'Unknown'}</span>
+                    </div>
+                    <div class="document-card-meta">
+                        <span>${caseNumber}</span>
+                        <span>${court}</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        async function testJavaScriptFunctions() {
+            const resultsDiv = document.getElementById('js-results');
+            clearResults('js-results');
+            
+            log(resultsDiv, 'Testing JavaScript functionality...', 'log');
+            
+            // Test if we can recreate the main app functions
+            try {
+                log(resultsDiv, 'Testing fetch function...', 'log');
+                const testFetch = async () => {
+                    const response = await fetch(`${API_V1_URL}/documents`);
+                    if (!response.ok) throw new Error('Failed to fetch documents');
+                    return await response.json();
+                };
+                
+                const testData = await testFetch();
+                log(resultsDiv, `Fetch test successful: ${testData.documents.length} docs`, 'success');
+                
+                // Test array mapping
+                log(resultsDiv, 'Testing array mapping...', 'log');
+                const mappedCards = testData.documents.map(doc => createDocumentCardTest(doc));
+                log(resultsDiv, `Mapped ${mappedCards.length} cards successfully`, 'success');
+                
+                // Test DOM manipulation
+                log(resultsDiv, 'Testing DOM manipulation...', 'log');
+                const testDiv = document.createElement('div');
+                testDiv.innerHTML = mappedCards.slice(0, 3).join('');
+                log(resultsDiv, `DOM test: Created ${testDiv.children.length} elements`, 'success');
+                
+            } catch (error) {
+                log(resultsDiv, `JavaScript test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testDOMElements() {
+            const resultsDiv = document.getElementById('dom-results');
+            clearResults('dom-results');
+            
+            log(resultsDiv, 'Testing DOM elements that main app needs...', 'log');
+            
+            // We can't test the actual app's DOM from this page, but we can test basic DOM functionality
+            const testElements = [
+                'documents-grid',
+                'total-docs',
+                'recent-docs-list'
+            ];
+            
+            testElements.forEach(id => {
+                log(resultsDiv, `Would look for element with ID: ${id}`, 'log');
+            });
+            
+            // Test creating elements
+            try {
+                const testGrid = document.createElement('div');
+                testGrid.id = 'test-grid';
+                testGrid.innerHTML = '<p>Test content</p>';
+                log(resultsDiv, 'DOM element creation test passed', 'success');
+                
+                // Test query selector
+                const testQuery = testGrid.querySelector('p');
+                log(resultsDiv, `Query selector test: ${testQuery ? 'passed' : 'failed'}`, 
+                    testQuery ? 'success' : 'error');
+                    
+            } catch (error) {
+                log(resultsDiv, `DOM test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-run all tests
+        window.addEventListener('load', async () => {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            testApiConnectivity();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            testDocumentsEndpoint();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            testJavaScriptFunctions();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            testDOMElements();
+        });
+    </script>
+</body>
+</html>

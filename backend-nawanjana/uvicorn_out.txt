@@ -1,0 +1,6 @@
+============================================================
+Starting Legal Argument Critic API
+============================================================
+[OK] Model loaded and ready for inference
+INFO:     127.0.0.1:54907 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57041 - "GET / HTTP/1.1" 200 OK

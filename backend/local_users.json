@@ -3,5 +3,10 @@
     "name": "Test User",
     "email": "chamathka@gmail.com",
     "password": "scrypt:32768:8:1$gk71aQipkvBdFh2Q$0654993927f73abad7b0bfecfe8e6d7717413e31825f018d52468b89ed447b3ec142b9d369096bb3a68598a324f96dd070f8dbe17cf5e9493901430bf871e87d"
+  },
+  {
+    "name": "Maneth Jayawardhana",
+    "email": "maneth@gmail.com",
+    "password": "scrypt:32768:8:1$2HFnmbm2v4qX3FN8$d5f5f651de4124d5ed098a7b353b7026919d49cac6318640074a487865bb380eab54a9f4d5084f98bfe68fc639cf98ff0be8112d806c9e41d1f85f638dde7d5f"
   }
 ]

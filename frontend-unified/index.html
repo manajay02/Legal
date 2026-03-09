@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LegalAI Sri Lanka</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
+  <aside id="sidebar">
+    <div class="sb-header">
+      <div class="sb-logo">
+        <div class="sb-logo-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div>
+          <div class="sb-logo-name">LegalAI</div>
+          <div class="sb-logo-tag">Sri Lanka</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sb-section-label">Main</div>
+    <ul class="sb-nav">
+      <li class="sb-item active" data-panel="dashboard">
+        <span class="sb-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </span>
+        <span class="sb-label">Dashboard</span>
+      </li>
+      <li class="sb-item" data-panel="similarity">
+        <span class="sb-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </span>
+        <span class="sb-label">Case Similarity</span>
+        <span class="sb-badge blue">Search</span>
+      </li>
+      <li class="sb-item" data-panel="scorer">
+        <span class="sb-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </span>
+        <span class="sb-label">Argument Scorer</span>
+        <span class="sb-badge gold">AI</span>
+      </li>
+      <li class="sb-item" data-panel="extractor">
+        <span class="sb-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </span>
+        <span class="sb-label">Doc Extractor</span>
+        <span class="sb-badge green">Extract</span>
+      </li>
+      <li class="sb-item" data-panel="compliance">
+        <span class="sb-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </span>
+        <span class="sb-label">Compliance Audit</span>
+        <span class="sb-badge purple">Audit</span>
+      </li>
+    </ul>
+
+    <div class="sb-section-label" style="margin-top:auto; padding-top:16px;">Account</div>
+    <ul class="sb-nav">
+      <li class="sb-item" data-panel="about">
+        <span class="sb-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        </span>
+        <span class="sb-label">About</span>
+      </li>
+    </ul>
+
+    <div class="sb-user" id="sb-user">
+      <div class="sb-user-avatar" id="sb-avatar">U</div>
+      <div class="sb-user-info">
+        <div class="sb-user-name" id="sb-name">Loading…</div>
+        <div class="sb-user-role">Researcher</div>
+      </div>
+      <button class="sb-logout-btn" id="btn-logout" title="Sign out">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Main Content ─────────────────────────────────────────────── -->
+  <div id="main-wrap">
+
+    <!-- Top bar -->
+    <header id="topbar">
+      <div class="topbar-left">
+        <button id="sidebar-toggle" class="icon-btn" aria-label="Toggle sidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="topbar-breadcrumb">
+          <span>LegalAI</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          <span id="topbar-page">Dashboard</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-status-group" id="topbar-statuses">
+          <div class="svc-pill" id="svc-search" title="Case Search API (port 5000)">
+            <span class="svc-dot"></span><span>Search</span>
+          </div>
+          <div class="svc-pill" id="svc-scorer" title="Argument Scorer API (port 8000)">
+            <span class="svc-dot"></span><span>Scorer</span>
+          </div>
+          <div class="svc-pill" id="svc-extractor" title="Doc Extractor API (port 8001)">
+            <span class="svc-dot"></span><span>Extractor</span>
+          </div>
+          <div class="svc-pill" id="svc-compliance" title="Compliance API (port 8002)">
+            <span class="svc-dot"></span><span>Compliance</span>
+          </div>
+        </div>
+        <div class="topbar-user-badge">
+          <span id="topbar-avatar">U</span>
+          <span id="topbar-name">User</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ═══════════════ PANELS ══════════════════════════════════════ -->
+
+    <!-- ── DASHBOARD ─────────────────────────────────────────────── -->
+    <section class="panel active" id="panel-dashboard">
+      <div class="panel-scroll">
+        <div class="page-hero">
+          <div class="hero-text">
+            <h1 class="hero-title">Welcome to <span class="gradient-text">LegalAI</span></h1>
+            <p class="hero-sub">Your unified AI-powered legal research platform for Sri Lankan civil and criminal cases.</p>
+          </div>
+          <div class="hero-art">
+            <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+              <circle cx="60" cy="60" r="56" stroke="rgba(59,130,246,0.2)" stroke-width="2"/>
+              <circle cx="60" cy="60" r="42" stroke="rgba(59,130,246,0.15)" stroke-width="1.5"/>
+              <path d="M60 20 L60 100 M20 60 L100 60" stroke="rgba(59,130,246,0.2)" stroke-width="1"/>
+              <path d="M60 10 s8-4 8-10V-3l-8-3-8 3v7c0 6 8 10 8 10z" fill="rgba(59,130,246,0.3)" transform="scale(3) translate(8,12)"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Feature cards -->
+        <div class="feature-grid">
+          <div class="feature-card" data-goto="similarity">
+            <div class="fc-icon blue">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </div>
+            <div class="fc-content">
+              <h3>Case Similarity Search</h3>
+              <p>Find related Sri Lankan legal cases using AI-powered TF-IDF text matching. Classify new documents instantly.</p>
+              <ul class="fc-features">
+                <li>Search by filename, text, or upload PDF</li>
+                <li>AI category &amp; subcategory classifier</li>
+                <li>Add to database with metadata</li>
+              </ul>
+            </div>
+            <div class="fc-action">
+              <button class="btn-primary btn-sm">Launch <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+            </div>
+            <div class="fc-tag blue">Port 5000</div>
+          </div>
+
+          <div class="feature-card" data-goto="scorer">
+            <div class="fc-icon gold">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </div>
+            <div class="fc-content">
+              <h3>Legal Argument Scorer</h3>
+              <p>Evaluate the strength of legal arguments using a fine-tuned AI model. Upload evidence documents for grounded analysis.</p>
+              <ul class="fc-features">
+                <li>Argument strength scoring (0–100)</li>
+                <li>Evidence citation grounding</li>
+                <li>Detailed critique &amp; recommendations</li>
+              </ul>
+            </div>
+            <div class="fc-action">
+              <button class="btn-primary btn-sm btn-gold">Launch <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+            </div>
+            <div class="fc-tag gold">Port 8000</div>
+          </div>
+
+          <div class="feature-card" data-goto="extractor">
+            <div class="fc-icon green">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div class="fc-content">
+              <h3>Civil Document Extractor</h3>
+              <p>Extract structured metadata and content from Sri Lankan Supreme Court civil case PDFs. Supports batch processing.</p>
+              <ul class="fc-features">
+                <li>Structure &amp; metadata extraction</li>
+                <li>Batch document processing</li>
+                <li>Search &amp; export results</li>
+              </ul>
+            </div>
+            <div class="fc-action">
+              <button class="btn-primary btn-sm btn-green">Launch <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+            </div>
+            <div class="fc-tag green">Port 8001</div>
+          </div>
+
+          <div class="feature-card" data-goto="compliance">
+            <div class="fc-icon purple">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <div class="fc-content">
+              <h3>Contract Compliance Auditor</h3>
+              <p>Audit Sri Lankan civil contracts against local law. Detect missing mandatory clauses and compliance violations.</p>
+              <ul class="fc-features">
+                <li>Employment, rental &amp; loan contracts</li>
+                <li>Mandatory clause detection</li>
+                <li>Download relevant acts</li>
+              </ul>
+            </div>
+            <div class="fc-action">
+              <button class="btn-primary btn-sm btn-purple">Launch <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+            </div>
+            <div class="fc-tag purple">Port 8002</div>
+          </div>
+        </div>
+
+        <!-- API Status Overview -->
+        <div class="section-header">
+          <h2>Backend Services</h2>
+          <p>Real-time status of all API backends</p>
+        </div>
+        <div class="services-grid" id="services-overview">
+          <div class="svc-card" id="svc-card-search">
+            <div class="svc-card-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
+            <div class="svc-card-info">
+              <div class="svc-card-name">Case Search API</div>
+              <div class="svc-card-url">localhost:5000</div>
+            </div>
+            <div class="svc-card-status" id="svc-status-search"><div class="pulse-dot"></div><span>Checking…</span></div>
+          </div>
+          <div class="svc-card" id="svc-card-scorer">
+            <div class="svc-card-icon gold"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+            <div class="svc-card-info">
+              <div class="svc-card-name">Argument Scorer API</div>
+              <div class="svc-card-url">localhost:8000</div>
+            </div>
+            <div class="svc-card-status" id="svc-status-scorer"><div class="pulse-dot"></div><span>Checking…</span></div>
+          </div>
+          <div class="svc-card" id="svc-card-extractor">
+            <div class="svc-card-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+            <div class="svc-card-info">
+              <div class="svc-card-name">Doc Extractor API</div>
+              <div class="svc-card-url">localhost:8001</div>
+            </div>
+            <div class="svc-card-status" id="svc-status-extractor"><div class="pulse-dot"></div><span>Checking…</span></div>
+          </div>
+          <div class="svc-card" id="svc-card-compliance">
+            <div class="svc-card-icon purple"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/></svg></div>
+            <div class="svc-card-info">
+              <div class="svc-card-name">Compliance Audit API</div>
+              <div class="svc-card-url">localhost:8002</div>
+            </div>
+            <div class="svc-card-status" id="svc-status-compliance"><div class="pulse-dot"></div><span>Checking…</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SIMILARITY SEARCH ──────────────────────────────────────── -->
+    <section class="panel" id="panel-similarity">
+      <div class="panel-scroll">
+        <div class="panel-header">
+          <div class="panel-header-icon blue">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </div>
+          <div>
+            <h1>Case Similarity Search</h1>
+            <p>Find similar Sri Lankan legal cases using AI-powered TF-IDF matching &amp; classify documents</p>
+          </div>
+        </div>
+
+        <div class="tab-row" id="sim-tabs">
+          <button class="tab-btn active" data-tab="classify">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-4.3-4.3"/><circle cx="11" cy="11" r="8"/><path d="M11 8v6M8 11h6"/></svg>
+            Classify &amp; Add
+          </button>
+          <button class="tab-btn" data-tab="by-text">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="13" y1="18" x2="3" y2="18"/></svg>
+            Search by Text
+          </button>
+          <button class="tab-btn" data-tab="by-file">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            Browse by Category
+          </button>
+        </div>
+
+        <div class="card" id="sim-tab-classify">
+          <div class="card-section">
+            <div class="form-row-2">
+              <div class="form-col">
+                <label class="form-label">Upload PDF Document</label>
+                <div class="upload-zone" id="clf-upload-zone">
+                  <div class="upload-zone-inner">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <p>Drop a PDF here or <b>click to browse</b></p>
+                    <p class="upload-hint">Accepts PDF files only</p>
+                  </div>
+                  <input type="file" id="clf-file" accept=".pdf" style="display:none;"/>
+                </div>
+                <div id="clf-file-name" class="file-selected" style="display:none;"></div>
+              </div>
+              <div class="form-col">
+                <label class="form-label">Or Paste Document Text</label>
+                <textarea id="clf-text" rows="8" placeholder="Paste the legal document content here…" class="form-textarea"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="card-section" style="border-top:1px solid var(--border);">
+            <div class="form-row-inline">
+              <button class="btn-primary" id="btn-classify">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-4.3-4.3"/><circle cx="11" cy="11" r="8"/></svg>
+                Classify Document
+              </button>
+              <button class="btn-secondary" id="btn-add-case" style="display:none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Save to Database
+              </button>
+            </div>
+          </div>
+          <div id="classify-result-panel" style="display:none;" class="card-section result-panel">
+            <div id="classify-result-content"></div>
+          </div>
+        </div>
+
+        <div class="card" id="sim-tab-by-text" style="display:none;">
+          <div class="card-section">
+            <label class="form-label">Enter case description or keywords</label>
+            <textarea id="txt-query" rows="6" placeholder="e.g. murder conviction appeal sentence reduction Ceylon Penal Code…" class="form-textarea"></textarea>
+            <div class="form-row-inline" style="margin-top:14px;">
+              <div class="select-wrap">
+                <label class="form-label-sm">Results</label>
+                <select id="sel-topn-text" class="form-select">
+                  <option value="5">5</option>
+                  <option value="10" selected>10</option>
+                  <option value="20">20</option>
+                </select>
+              </div>
+              <label class="checkbox-label">
+                <input type="checkbox" id="chk-global-text"/>
+                <span>Global search (all categories)</span>
+              </label>
+              <div id="text-cat-wrap" class="select-wrap">
+                <label class="form-label-sm">Category</label>
+                <select id="sel-category-text" class="form-select"><option value="">-- Any --</option></select>
+              </div>
+              <div id="text-sub-wrap" class="select-wrap">
+                <label class="form-label-sm">Subcategory</label>
+                <select id="sel-subcategory-text" class="form-select" disabled><option value="">-- Any --</option></select>
+              </div>
+            </div>
+          </div>
+          <div class="card-section" style="border-top:1px solid var(--border);">
+            <button class="btn-primary" id="btn-search-text">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              Find Similar Cases
+            </button>
+          </div>
+          <div id="sim-text-results" style="display:none;" class="card-section result-panel"></div>
+        </div>
+
+        <div class="card" id="sim-tab-by-file" style="display:none;">
+          <div class="card-section">
+            <div class="form-row-2">
+              <div class="form-col">
+                <label class="form-label">Category</label>
+                <select id="sel-category-file" class="form-select form-select-lg"><option value="">-- Select category --</option></select>
+              </div>
+              <div class="form-col">
+                <label class="form-label">Subcategory</label>
+                <select id="sel-subcategory-file" class="form-select form-select-lg" disabled><option value="">-- Select subcategory --</option></select>
+              </div>
+            </div>
+          </div>
+          <div id="file-cases-list" style="display:none;" class="card-section">
+            <label class="form-label">Select a Case</label>
+            <div id="file-cases-container" class="cases-grid"></div>
+          </div>
+          <div id="file-search-options" style="display:none;" class="card-section" style="border-top:1px solid var(--border);">
+            <div class="form-row-inline">
+              <div class="select-wrap">
+                <label class="form-label-sm">Results</label>
+                <select id="sel-topn-file" class="form-select">
+                  <option value="5">5</option>
+                  <option value="10" selected>10</option>
+                  <option value="20">20</option>
+                </select>
+              </div>
+              <button class="btn-primary" id="btn-search-file" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                Find Similar
+              </button>
+            </div>
+          </div>
+          <div id="sim-file-results" style="display:none;" class="card-section result-panel"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ARGUMENT SCORER ────────────────────────────────────────── -->
+    <section class="panel" id="panel-scorer">
+      <div class="panel-scroll">
+        <div class="panel-header">
+          <div class="panel-header-icon gold">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </div>
+          <div>
+            <h1>Legal Argument Strength Scorer</h1>
+            <p>AI-powered scoring and critique of Sri Lankan civil legal arguments with evidence grounding</p>
+          </div>
+          <div class="api-status-badge" id="scorer-api-badge">
+            <div class="pulse-dot"></div><span>Connecting…</span>
+          </div>
+        </div>
+
+        <div class="two-col-layout">
+          <div class="col-main">
+            <div class="card">
+              <div class="card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="13" y1="18" x2="3" y2="18"/></svg>
+                Legal Argument
+              </div>
+              <div class="card-section">
+                <label class="form-label">Enter your legal argument (50 – 10,000 characters)</label>
+                <textarea id="scorer-text" rows="12" class="form-textarea" placeholder="The appellant challenges the District Court's decision on grounds of procedural irregularity. The lower court failed to consider Section 91 of the Civil Procedure Code which mandates proper notice to all parties…"></textarea>
+                <div class="char-counter"><span id="scorer-char-count">0</span> / 10,000</div>
+              </div>
+              <div class="card-section" style="border-top:1px solid var(--border);">
+                <button class="btn-primary btn-gold" id="btn-analyze-argument">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  Analyze Argument
+                </button>
+              </div>
+              <div id="scorer-results" style="display:none;" class="card-section result-panel"></div>
+            </div>
+          </div>
+
+          <div class="col-side">
+            <div class="card">
+              <div class="card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                Supporting Evidence
+              </div>
+              <div class="card-section">
+                <p class="card-hint">Upload a PDF or TXT file as evidence to ground the analysis in case law or statutes.</p>
+                <div class="upload-zone upload-zone-sm" id="support-upload-zone">
+                  <div class="upload-zone-inner">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <p><b>Click or drag</b> PDF/TXT</p>
+                    <p class="upload-hint">Max 10 MB</p>
+                  </div>
+                  <input type="file" id="support-file-input" accept=".pdf,.txt" style="display:none;"/>
+                </div>
+                <button class="btn-secondary btn-sm" id="btn-upload-support" disabled style="margin-top:10px;width:100%;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Upload Document
+                </button>
+                <div id="support-docs-list" style="margin-top:12px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── DOCUMENT EXTRACTOR ─────────────────────────────────────── -->
+    <section class="panel" id="panel-extractor">
+      <div class="panel-scroll">
+        <div class="panel-header">
+          <div class="panel-header-icon green">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div>
+            <h1>Civil Document Extractor</h1>
+            <p>Extract structured metadata from Sri Lankan Supreme Court civil case PDFs</p>
+          </div>
+          <div class="api-status-badge" id="extractor-api-badge">
+            <div class="pulse-dot"></div><span>Connecting…</span>
+          </div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="stats-row" id="extractor-stats">
+          <div class="stat-pill">
+            <div class="stat-pill-icon green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+            <div><div class="stat-num" id="ext-total-docs">0</div><div class="stat-label">Documents</div></div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-pill-icon blue"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/></svg></div>
+            <div><div class="stat-num" id="ext-total-batches">0</div><div class="stat-label">Batches</div></div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-pill-icon gold"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <div><div class="stat-num" id="ext-completed">0</div><div class="stat-label">Completed</div></div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-pill-icon purple"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+            <div><div class="stat-num" id="ext-processing">0</div><div class="stat-label">Processing</div></div>
+          </div>
+        </div>
+
+        <div class="tab-row" id="ext-tabs">
+          <button class="tab-btn active" data-tab="ext-upload">Upload</button>
+          <button class="tab-btn" data-tab="ext-documents">Documents</button>
+          <button class="tab-btn" data-tab="ext-search">Search</button>
+        </div>
+
+        <!-- Upload tab -->
+        <div class="card" id="ext-tab-upload">
+          <div class="card-section">
+            <div class="upload-mode-toggle" id="ext-mode-toggle">
+              <button class="mode-btn active" data-mode="single">Single File</button>
+              <button class="mode-btn" data-mode="batch">Batch Upload</button>
+            </div>
+          </div>
+          <div class="card-section" id="ext-single-upload">
+            <label class="form-label">Upload Civil Case PDF</label>
+            <div class="upload-zone" id="ext-upload-zone">
+              <div class="upload-zone-inner">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <p>Drop a PDF here or <b>click to browse</b></p>
+                <p class="upload-hint">Supreme Court civil case PDF</p>
+              </div>
+              <input type="file" id="ext-file-input" accept=".pdf" style="display:none;"/>
+            </div>
+            <div id="ext-file-name" class="file-selected" style="display:none;"></div>
+          </div>
+          <div class="card-section" id="ext-batch-upload" style="display:none;">
+            <label class="form-label">Upload Multiple PDFs</label>
+            <div class="upload-zone" id="ext-batch-zone">
+              <div class="upload-zone-inner">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <p>Drop PDF files here or <b>click to browse</b></p>
+                <p class="upload-hint">Multiple files supported</p>
+              </div>
+              <input type="file" id="ext-batch-input" accept=".pdf" multiple style="display:none;"/>
+            </div>
+            <div id="ext-batch-list" class="batch-file-list" style="display:none;"></div>
+          </div>
+          <div class="card-section" style="border-top:1px solid var(--border);">
+            <button class="btn-primary btn-green" id="btn-ext-upload">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/></svg>
+              Upload &amp; Extract
+            </button>
+          </div>
+          <div id="ext-upload-result" class="card-section result-panel" style="display:none;"></div>
+        </div>
+
+        <!-- Documents tab -->
+        <div class="card" id="ext-tab-documents" style="display:none;">
+          <div class="card-section">
+            <div class="list-toolbar">
+              <button class="btn-secondary btn-sm" id="btn-refresh-docs">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+          <div id="ext-docs-list" class="card-section">
+            <div class="empty-state">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+              <p>No documents yet. Upload a PDF to get started.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search tab -->
+        <div class="card" id="ext-tab-search" style="display:none;">
+          <div class="card-section">
+            <label class="form-label">Search Documents</label>
+            <div class="search-input-wrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" id="ext-search-input" placeholder="Search by filename, case number, parties…" class="search-input"/>
+              <button class="btn-primary btn-sm" id="btn-ext-search">Search</button>
+            </div>
+          </div>
+          <div id="ext-search-results" class="card-section result-panel" style="display:none;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── COMPLIANCE AUDITOR ─────────────────────────────────────── -->
+    <section class="panel" id="panel-compliance">
+      <div class="panel-scroll">
+        <div class="panel-header">
+          <div class="panel-header-icon purple">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </div>
+          <div>
+            <h1>Contract Compliance Auditor</h1>
+            <p>Audit Sri Lankan civil contracts against local statutes and detect missing mandatory clauses</p>
+          </div>
+          <div class="api-status-badge" id="compliance-api-badge">
+            <div class="pulse-dot"></div><span>Connecting…</span>
+          </div>
+        </div>
+
+        <div class="tab-row" id="comp-tabs">
+          <button class="tab-btn active" data-tab="comp-upload">Analyze Contract</button>
+          <button class="tab-btn" data-tab="comp-results">Results</button>
+          <button class="tab-btn" data-tab="comp-history">History</button>
+          <button class="tab-btn" data-tab="comp-clauses">Mandatory Clauses</button>
+        </div>
+
+        <!-- Upload/Analyze tab -->
+        <div id="comp-tab-upload">
+          <div class="upload-mode-toggle">
+            <button class="mode-btn active" id="comp-mode-file" onclick="setCompMode('file')">Upload PDF</button>
+            <button class="mode-btn" id="comp-mode-text" onclick="setCompMode('text')">Paste Text</button>
+          </div>
+
+          <div class="card" id="comp-file-section">
+            <div class="card-section">
+              <label class="form-label">Upload Contract Document</label>
+              <div class="supported-formats">
+                <span class="fmt-badge pdf">PDF</span>
+                <span class="fmt-badge txt">TXT</span>
+                <span class="fmt-badge docx">DOCX</span>
+              </div>
+              <div class="upload-zone" id="comp-upload-zone" style="margin-top:12px;">
+                <div class="upload-zone-inner">
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <p>Drop contract file or <b>click to browse</b></p>
+                  <p class="upload-hint">Employment, Rental, Loan, Partnership agreements…</p>
+                </div>
+                <input type="file" id="comp-file-input" accept=".pdf,.txt,.docx" style="display:none;"/>
+              </div>
+              <div id="comp-file-name" class="file-selected" style="display:none;"></div>
+            </div>
+            <div class="card-section" style="border-top:1px solid var(--border);">
+              <button class="btn-primary btn-purple" id="btn-comp-upload">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/></svg>
+                Analyze Compliance
+              </button>
+            </div>
+          </div>
+
+          <div class="card" id="comp-text-section" style="display:none;">
+            <div class="card-section">
+              <label class="form-label">Paste Contract Text</label>
+              <textarea id="comp-text-input" rows="14" class="form-textarea" placeholder="Paste the full text of the contract agreement here…"></textarea>
+            </div>
+            <div class="card-section" style="border-top:1px solid var(--border);">
+              <button class="btn-primary btn-purple" id="btn-comp-text">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/></svg>
+                Analyze Compliance
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results tab -->
+        <div id="comp-tab-results" style="display:none;">
+          <div id="comp-results-content">
+            <div class="empty-state">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              <p>No analysis results yet. Analyze a contract first.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- History tab -->
+        <div id="comp-tab-history" style="display:none;">
+          <div class="card">
+            <div class="card-section">
+              <div class="list-toolbar">
+                <button class="btn-secondary btn-sm" id="btn-refresh-history">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                  Refresh
+                </button>
+              </div>
+            </div>
+            <div id="comp-history-list" class="card-section">
+              <div class="empty-state">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <p>No previous analyses found.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mandatory Clauses Reference tab -->
+        <div id="comp-tab-clauses" style="display:none;">
+          <div class="contract-types-grid" id="contract-types-grid">
+            <div class="contract-type-card" data-type="employment">
+              <div class="ct-icon">👔</div>
+              <div class="ct-name">Employment Contract</div>
+              <div class="ct-count">14 mandatory clauses</div>
+            </div>
+            <div class="contract-type-card" data-type="rental">
+              <div class="ct-icon">🏠</div>
+              <div class="ct-name">Rental Agreement</div>
+              <div class="ct-count">8 mandatory clauses</div>
+            </div>
+            <div class="contract-type-card" data-type="loan">
+              <div class="ct-icon">💰</div>
+              <div class="ct-name">Loan / Credit Agreement</div>
+              <div class="ct-count">6 mandatory clauses</div>
+            </div>
+            <div class="contract-type-card" data-type="partnership">
+              <div class="ct-icon">🤝</div>
+              <div class="ct-name">Partnership Agreement</div>
+              <div class="ct-count">6 mandatory clauses</div>
+            </div>
+            <div class="contract-type-card" data-type="finance_leasing">
+              <div class="ct-icon">🚗</div>
+              <div class="ct-name">Finance Leasing</div>
+              <div class="ct-count">6 mandatory clauses</div>
+            </div>
+            <div class="contract-type-card" data-type="sale_of_goods">
+              <div class="ct-icon">🛒</div>
+              <div class="ct-name">Sale of Goods</div>
+              <div class="ct-count">5 mandatory clauses</div>
+            </div>
+          </div>
+          <div id="clause-detail-panel" class="card" style="display:none; margin-top:16px;">
+            <div id="clause-detail-content" class="card-section"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ABOUT ──────────────────────────────────────────────────── -->
+    <section class="panel" id="panel-about">
+      <div class="panel-scroll">
+        <div class="about-hero">
+          <div class="about-logo">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h1>LegalAI Sri Lanka</h1>
+          <p>A unified AI-powered platform for Sri Lankan legal research and compliance auditing.</p>
+        </div>
+
+        <div class="about-grid">
+          <div class="about-card">
+            <h3>Platform Overview</h3>
+            <p>LegalAI integrates four specialized AI tools built specifically for the Sri Lankan legal system — covering case law research, argument analysis, document processing, and contract compliance.</p>
+          </div>
+          <div class="about-card">
+            <h3>Technology Stack</h3>
+            <ul>
+              <li>Flask REST API — Case search &amp; classification (port 5000)</li>
+              <li>FastAPI + Qwen2.5 AI — Argument scoring (port 8000)</li>
+              <li>FastAPI + OCR/Tesseract — Document extraction (port 8001)</li>
+              <li>FastAPI + NLP — Compliance auditing (port 8002)</li>
+            </ul>
+          </div>
+          <div class="about-card">
+            <h3>Data Sources</h3>
+            <p>The platform draws on a dataset of Sri Lankan Supreme Court civil and criminal cases, Sri Lankan civil statutes, and AI models fine-tuned specifically for Sri Lankan legal language.</p>
+          </div>
+          <div class="about-card">
+            <h3>Research Project</h3>
+            <p>Developed as part of a research initiative at a Sri Lankan university to demonstrate the application of AI/ML to the local legal domain. &copy; 2026 All rights reserved.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /main-wrap -->
+
+  <!-- Toast container -->
+  <div id="toast-container" style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;"></div>
+
+  <!-- Loading overlay -->
+  <div id="loading-overlay" style="display:none;position:fixed;inset:0;background:rgba(10,15,35,0.7);z-index:8888;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+    <div style="text-align:center;">
+      <div class="spinner-lg"></div>
+      <div id="loading-msg" style="color:rgba(255,255,255,0.7);margin-top:16px;font-size:.9rem;">Processing…</div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/similarity.js"></script>
+  <script src="js/scorer.js"></script>
+  <script src="js/extractor.js"></script>
+  <script src="js/compliance.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

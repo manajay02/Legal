@@ -1,0 +1,7 @@
+2026-03-10 00:47:20.233 | INFO     | app.db.session:__init__:51 - SQLite database initialised at D:\research comoponent\Legal\backend -paramitha\backend (1) new\data\civilmodel.db (1 documents)
+INFO:     Started server process [24976]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8003 (Press CTRL+C to quit)
+2026-03-10 00:50:59 | INFO     | app.api.v1.endpoints.upload:upload_document:79 - Uploaded file saved: D:\research comoponent\Legal\backend -paramitha\backend (1) new\data\uploads\doc_d45f57927937_test1.pdf (574618 bytes)
+2026-03-10 00:51:00 | INFO     | app.api.v1.endpoints.upload:upload_document:106 - Document created in database: doc_d45f57927937

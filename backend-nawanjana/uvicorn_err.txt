@@ -1,6 +1,8 @@
-INFO:     Will watch for changes in these directories: ['D:\\Y4S1\\Research new\\reserch component\\Legal\\backend']
-INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [22420] using WatchFiles
-INFO:     Started server process [46376]
+C:\Users\Chamathka Manoli\AppData\Local\Programs\Python\Python312\Lib\site-packages\pydantic\_internal\_fields.py:149: UserWarning: Field "model_loaded" has conflict with protected namespace "model_".
+
+You may be able to resolve this warning by setting `model_config['protected_namespaces'] = ()`.
+  warnings.warn(
+INFO:     Started server process [14028]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)

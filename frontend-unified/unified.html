@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal Research Platform - Unified System</title>
+    <link rel="stylesheet" href="css/unified.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-balance-scale"></i>
+            <h2>Legal AI</h2>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item active" data-component="dashboard">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </li>
+            <li class="nav-item" data-component="similarity">
+                <i class="fas fa-search"></i>
+                <span>Case Similarity</span>
+                <span class="badge">5000</span>
+            </li>
+            <li class="nav-item" data-component="argument">
+                <i class="fas fa-gavel"></i>
+                <span>Argument Critic</span>
+                <span class="badge">8001</span>
+            </li>
+            <li class="nav-item" data-component="extractor">
+                <i class="fas fa-file-alt"></i>
+                <span>Case Extractor</span>
+                <span class="badge">8003</span>
+            </li>
+            <li class="nav-item" data-component="compliance">
+                <i class="fas fa-clipboard-check"></i>
+                <span>Compliance Auditor</span>
+                <span class="badge">8002</span>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <button id="statusBtn" class="status-btn">
+                <i class="fas fa-server"></i>
+                <span>Check Services</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Component -->
+        <section id="dashboard" class="component-section active">
+            <div class="section-header">
+                <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+                <p>Legal Research Platform - All Components</p>
+            </div>
+            <div class="dashboard-grid">
+                <div class="dashboard-card" data-goto="similarity">
+                    <div class="card-icon similarity"><i class="fas fa-search"></i></div>
+                    <h3>Case Similarity Search</h3>
+                    <p>Find similar legal cases using AI-powered semantic search</p>
+                    <div class="card-status" id="status-5000">Checking...</div>
+                </div>
+                <div class="dashboard-card" data-goto="argument">
+                    <div class="card-icon argument"><i class="fas fa-gavel"></i></div>
+                    <h3>Legal Argument Critic</h3>
+                    <p>Analyze and score legal arguments with AI feedback</p>
+                    <div class="card-status" id="status-8001">Checking...</div>
+                </div>
+                <div class="dashboard-card" data-goto="extractor">
+                    <div class="card-icon extractor"><i class="fas fa-file-alt"></i></div>
+                    <h3>Case Structure Extractor</h3>
+                    <p>Extract metadata and structure from legal case PDFs</p>
+                    <div class="card-status" id="status-8003">Checking...</div>
+                </div>
+                <div class="dashboard-card" data-goto="compliance">
+                    <div class="card-icon compliance"><i class="fas fa-clipboard-check"></i></div>
+                    <h3>Contract Compliance Auditor</h3>
+                    <p>Check contracts for legal compliance issues</p>
+                    <div class="card-status" id="status-8002">Checking...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Component 1: Case Similarity Search (Port 5000) -->
+        <section id="similarity" class="component-section">
+            <div class="section-header">
+                <h1><i class="fas fa-search"></i> Case Similarity Search</h1>
+                <p>Find similar legal cases based on your query or uploaded case</p>
+            </div>
+            <div class="component-content">
+                <div class="input-panel">
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="sim-category">
+                            <option value="">All Categories</option>
+                            <option value="Civil">Civil</option>
+                            <option value="Criminal">Criminal</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Subcategory</label>
+                        <select id="sim-subcategory">
+                            <option value="">All Subcategories</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Search Query</label>
+                        <textarea id="sim-query" placeholder="Enter your legal case description or query..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Or Upload PDF</label>
+                        <input type="file" id="sim-file" accept=".pdf">
+                    </div>
+                    <div class="form-group">
+                        <label>Number of Results</label>
+                        <input type="number" id="sim-topk" value="5" min="1" max="20">
+                    </div>
+                    <button id="sim-search-btn" class="btn-primary">
+                        <i class="fas fa-search"></i> Search Similar Cases
+                    </button>
+                </div>
+                <div class="results-panel">
+                    <h3>Results</h3>
+                    <div id="sim-results" class="results-container">
+                        <p class="placeholder-text">Search results will appear here...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Component 2: Legal Argument Critic (Port 8001) -->
+        <section id="argument" class="component-section">
+            <div class="section-header">
+                <h1><i class="fas fa-gavel"></i> Legal Argument Critic</h1>
+                <p>Analyze and score your legal arguments with AI-powered feedback</p>
+            </div>
+            <div class="component-content">
+                <div class="input-panel">
+                    <div class="form-group">
+                        <label>Legal Argument Text</label>
+                        <textarea id="arg-text" rows="10" placeholder="Enter your legal argument here (minimum 50 characters)..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Or Upload Document</label>
+                        <input type="file" id="arg-file" accept=".pdf,.txt">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label>Jurisdiction</label>
+                            <select id="arg-jurisdiction">
+                                <option value="sri_lanka">Sri Lanka</option>
+                            </select>
+                        </div>
+                        <div class="form-group half">
+                            <label>Case Type</label>
+                            <select id="arg-casetype">
+                                <option value="civil">Civil</option>
+                                <option value="criminal">Criminal</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="arg-analyze-btn" class="btn-primary">
+                        <i class="fas fa-brain"></i> Analyze Argument
+                    </button>
+                </div>
+                <div class="results-panel">
+                    <h3>Analysis Results</h3>
+                    <div id="arg-results" class="results-container">
+                        <p class="placeholder-text">Analysis results will appear here...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Component 3: Case Structure Extractor (Port 8003) -->
+        <section id="extractor" class="component-section">
+            <div class="section-header">
+                <h1><i class="fas fa-file-alt"></i> Case Structure Extractor</h1>
+                <p>Extract metadata and structure from Sri Lankan Supreme Court case PDFs</p>
+            </div>
+            <div class="component-content">
+                <div class="input-panel">
+                    <div class="form-group">
+                        <label>Upload Case PDF</label>
+                        <div class="upload-zone" id="ext-upload-zone">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drag & drop a PDF file here or click to browse</p>
+                            <input type="file" id="ext-file" accept=".pdf" hidden>
+                        </div>
+                    </div>
+                    <div id="ext-file-info" class="file-info" style="display:none;">
+                        <i class="fas fa-file-pdf"></i>
+                        <span id="ext-filename"></span>
+                        <button id="ext-remove-file" class="btn-icon"><i class="fas fa-times"></i></button>
+                    </div>
+                    <button id="ext-process-btn" class="btn-primary" disabled>
+                        <i class="fas fa-cogs"></i> Extract Structure
+                    </button>
+                </div>
+                <div class="results-panel">
+                    <h3>Extracted Data</h3>
+                    <div id="ext-results" class="results-container">
+                        <p class="placeholder-text">Extracted case structure will appear here...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Component 4: Contract Compliance Auditor (Port 8002) -->
+        <section id="compliance" class="component-section">
+            <div class="section-header">
+                <h1><i class="fas fa-clipboard-check"></i> Contract Compliance Auditor</h1>
+                <p>Check contracts and agreements for legal compliance issues</p>
+            </div>
+            <div class="component-content">
+                <div class="input-panel">
+                    <div class="form-group">
+                        <label>Contract Type</label>
+                        <select id="comp-type">
+                            <option value="employment">Employment Contract</option>
+                            <option value="rental">Rental Agreement</option>
+                            <option value="loan">Loan Agreement</option>
+                            <option value="partnership">Partnership Deed</option>
+                            <option value="leasing">Finance Leasing</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Upload Contract PDF</label>
+                        <div class="upload-zone" id="comp-upload-zone">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drag & drop a contract PDF here or click to browse</p>
+                            <input type="file" id="comp-file" accept=".pdf" hidden>
+                        </div>
+                    </div>
+                    <div id="comp-file-info" class="file-info" style="display:none;">
+                        <i class="fas fa-file-pdf"></i>
+                        <span id="comp-filename"></span>
+                        <button id="comp-remove-file" class="btn-icon"><i class="fas fa-times"></i></button>
+                    </div>
+                    <button id="comp-check-btn" class="btn-primary" disabled>
+                        <i class="fas fa-shield-alt"></i> Check Compliance
+                    </button>
+                </div>
+                <div class="results-panel">
+                    <h3>Compliance Report</h3>
+                    <div id="comp-results" class="results-container">
+                        <p class="placeholder-text">Compliance report will appear here...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay" style="display:none;">
+        <div class="spinner"></div>
+        <p id="loading-text">Processing...</p>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="js/unified.js"></script>
+</body>
+</html>

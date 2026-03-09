@@ -384,3 +384,7 @@ async def delete_analysis(analysis_id: str):
 @app.get("/")
 def root():
     return {"message": "Civil Compliance Auditor API is running 🚀"}
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "service": "civil-compliance-auditor"}

@@ -23,7 +23,7 @@ from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from similarity_search import SimilarityEngine
 
-FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend")
+FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend-unified")
 MODELS_DIR   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
 UPLOADS_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "uploads")
 DATASET_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dataset")
@@ -87,7 +87,7 @@ def classify_text(text: str) -> dict:
 
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="")
 app.secret_key = os.environ.get("FLASK_SECRET", "legal-ai-secret-key-change-in-prod")
-CORS(app, supports_credentials=True, origins=["http://localhost:8080", "http://localhost:5000", "http://127.0.0.1:8080", "http://127.0.0.1:5000"])
+CORS(app, supports_credentials=True, origins=["http://localhost:8080", "http://localhost:8083", "http://localhost:5000", "http://127.0.0.1:8080", "http://127.0.0.1:8083", "http://127.0.0.1:5000"])
 
 
 # ── Serve frontend ─────────────────────────────────────────────────────────────
@@ -198,21 +198,36 @@ MONGO_URI = "mongodb+srv://maneth:pathana123@cluster0.thqkj39.mongodb.net/?appNa
 _USERS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "local_users.json")
 _mongo_available = False
 
+def _try_mongo_connect(**extra_kwargs):
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000,
+                         connectTimeoutMS=5000, **extra_kwargs)
+    db = client["legal_cases_db"]
+    db.list_collection_names()          # force actual connection attempt
+    return client, db
+
 try:
-    _client = MongoClient(MONGO_URI, tlsCAFile=certifi.where(),
-                          serverSelectionTimeoutMS=5000,
-                          connectTimeoutMS=5000)
-    _db     = _client["legal_cases_db"]
+    # Attempt 1: with certifi CA bundle
+    _client, _db = _try_mongo_connect(tlsCAFile=certifi.where())
+except Exception:
+    try:
+        # Attempt 2: allow invalid certificates (bypasses TLS version issue)
+        _client, _db = _try_mongo_connect(tlsAllowInvalidCertificates=True)
+    except Exception as _mongo_err:
+        _client = None
+        _db = None
+        print(f"[WARNING] MongoDB not available: {_mongo_err}")
+        print("[INFO] Using local file-based user store instead.")
+
+if _client is not None:
     _col    = _db["cases"]
     _users  = _db["users"]
-    _users.create_index("email", unique=True)
+    try:
+        _users.create_index("email", unique=True)
+    except Exception:
+        pass
     _mongo_available = True
     print("[INFO] MongoDB connected successfully.")
-except Exception as _mongo_err:
-    print(f"[WARNING] MongoDB not available: {_mongo_err}")
-    print("[INFO] Using local file-based user store instead.")
-    _client = None
-    _db = None
+else:
     _col = None
     _users = None
 

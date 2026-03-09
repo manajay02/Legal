@@ -1,0 +1,7 @@
+[
+  {
+    "name": "Test User",
+    "email": "chamathka@gmail.com",
+    "password": "scrypt:32768:8:1$gk71aQipkvBdFh2Q$0654993927f73abad7b0bfecfe8e6d7717413e31825f018d52468b89ed447b3ec142b9d369096bb3a68598a324f96dd070f8dbe17cf5e9493901430bf871e87d"
+  }
+]

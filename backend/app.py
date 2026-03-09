@@ -26,6 +26,7 @@ from similarity_search import SimilarityEngine
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend")
 MODELS_DIR   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
 UPLOADS_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "uploads")
+DATASET_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dataset")
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 # ── Load classifiers once at startup ─────────────────────────────────────────
@@ -86,7 +87,7 @@ def classify_text(text: str) -> dict:
 
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="")
 app.secret_key = os.environ.get("FLASK_SECRET", "legal-ai-secret-key-change-in-prod")
-CORS(app, supports_credentials=True)
+CORS(app, supports_credentials=True, origins=["http://localhost:8080", "http://localhost:5000", "http://127.0.0.1:8080", "http://127.0.0.1:5000"])
 
 
 # ── Serve frontend ─────────────────────────────────────────────────────────────
@@ -190,12 +191,54 @@ def static_files(path):
     return send_from_directory(FRONTEND_DIR, path)
 
 # ── Shared resources ──────────────────────────────────────────────────────────
+import json
+import certifi
+
 MONGO_URI = "mongodb+srv://maneth:pathana123@cluster0.thqkj39.mongodb.net/?appName=Cluster0"
-_client = MongoClient(MONGO_URI)
-_db     = _client["legal_cases_db"]
-_col    = _db["cases"]
-_users  = _db["users"]
-_users.create_index("email", unique=True)
+_USERS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "local_users.json")
+_mongo_available = False
+
+try:
+    _client = MongoClient(MONGO_URI, tlsCAFile=certifi.where(),
+                          serverSelectionTimeoutMS=5000,
+                          connectTimeoutMS=5000)
+    _db     = _client["legal_cases_db"]
+    _col    = _db["cases"]
+    _users  = _db["users"]
+    _users.create_index("email", unique=True)
+    _mongo_available = True
+    print("[INFO] MongoDB connected successfully.")
+except Exception as _mongo_err:
+    print(f"[WARNING] MongoDB not available: {_mongo_err}")
+    print("[INFO] Using local file-based user store instead.")
+    _client = None
+    _db = None
+    _col = None
+    _users = None
+
+
+# ── Local file-based user helpers (fallback when MongoDB is down) ─────────────
+def _load_local_users():
+    if os.path.exists(_USERS_FILE):
+        with open(_USERS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+def _save_local_users(users):
+    with open(_USERS_FILE, "w", encoding="utf-8") as f:
+        json.dump(users, f, indent=2, ensure_ascii=False)
+
+def _local_find_user(email):
+    for u in _load_local_users():
+        if u["email"] == email:
+            return u
+    return None
+
+def _local_insert_user(name, email, password_hash):
+    users = _load_local_users()
+    users.append({"name": name, "email": email, "password": password_hash})
+    _save_local_users(users)
+
 
 _engine = SimilarityEngine()
 
@@ -217,13 +260,20 @@ def signup():
     if len(password) < 6:
         return jsonify({"error": "Password must be at least 6 characters."}), 400
 
-    if _users.find_one({"email": email}):
-        return jsonify({"error": "An account with this email already exists."}), 409
-
-    _users.insert_one({
-        "name": name, "email": email,
-        "password": generate_password_hash(password),
-    })
+    if _mongo_available:
+        try:
+            if _users.find_one({"email": email}):
+                return jsonify({"error": "An account with this email already exists."}), 409
+            _users.insert_one({
+                "name": name, "email": email,
+                "password": generate_password_hash(password),
+            })
+        except Exception as e:
+            return jsonify({"error": "Database is currently unavailable. Please try again later."}), 503
+    else:
+        if _local_find_user(email):
+            return jsonify({"error": "An account with this email already exists."}), 409
+        _local_insert_user(name, email, generate_password_hash(password))
 
     session["user"] = {"name": name, "email": email}
     return jsonify({"success": True, "user": {"name": name, "email": email}})
@@ -235,7 +285,14 @@ def login():
     email    = (data.get("email") or "").strip().lower()
     password = data.get("password") or ""
 
-    user = _users.find_one({"email": email})
+    if _mongo_available:
+        try:
+            user = _users.find_one({"email": email})
+        except Exception as e:
+            return jsonify({"error": "Database is currently unavailable. Please try again later."}), 503
+    else:
+        user = _local_find_user(email)
+
     if not user or not check_password_hash(user["password"], password):
         return jsonify({"error": "Invalid email or password."}), 401
 
@@ -257,19 +314,61 @@ def auth_me():
     return jsonify({"authenticated": True, "user": u})
 
 
+# ── Local dataset helpers (fallback when MongoDB is down) ─────────────────────
+def _local_get_categories():
+    result = {}
+    if not os.path.isdir(DATASET_DIR):
+        return result
+    for cat in sorted(os.listdir(DATASET_DIR)):
+        cat_path = os.path.join(DATASET_DIR, cat)
+        if not os.path.isdir(cat_path):
+            continue
+        for sub in sorted(os.listdir(cat_path)):
+            sub_path = os.path.join(cat_path, sub)
+            if not os.path.isdir(sub_path):
+                continue
+            count = len([f for f in os.listdir(sub_path) if os.path.isfile(os.path.join(sub_path, f))])
+            result.setdefault(cat, []).append({"subcategory": sub, "count": count})
+    return result
+
+def _local_get_filenames(category=None, subcategory=None):
+    filenames = []
+    if not os.path.isdir(DATASET_DIR):
+        return filenames
+    cats = [category] if category else os.listdir(DATASET_DIR)
+    for cat in cats:
+        cat_path = os.path.join(DATASET_DIR, cat)
+        if not os.path.isdir(cat_path):
+            continue
+        subs = [subcategory] if subcategory else os.listdir(cat_path)
+        for sub in subs:
+            sub_path = os.path.join(cat_path, sub)
+            if not os.path.isdir(sub_path):
+                continue
+            for f in os.listdir(sub_path):
+                if os.path.isfile(os.path.join(sub_path, f)):
+                    filenames.append(f)
+    return sorted(filenames)
+
+
 # ── GET /api/categories ───────────────────────────────────────────────────────
 @app.route("/api/categories")
 def get_categories():
-    pipeline = [
-        {"$group": {"_id": {"category": "$category", "subcategory": "$subcategory"}, "count": {"$sum": 1}}},
-        {"$sort": {"_id.category": 1, "_id.subcategory": 1}}
-    ]
-    result = {}
-    for doc in _col.aggregate(pipeline):
-        cat = doc["_id"]["category"]
-        subcat = doc["_id"]["subcategory"]
-        result.setdefault(cat, []).append({"subcategory": subcat, "count": doc["count"]})
-    return jsonify(result)
+    if _mongo_available:
+        try:
+            pipeline = [
+                {"$group": {"_id": {"category": "$category", "subcategory": "$subcategory"}, "count": {"$sum": 1}}},
+                {"$sort": {"_id.category": 1, "_id.subcategory": 1}}
+            ]
+            result = {}
+            for doc in _col.aggregate(pipeline):
+                cat = doc["_id"]["category"]
+                subcat = doc["_id"]["subcategory"]
+                result.setdefault(cat, []).append({"subcategory": subcat, "count": doc["count"]})
+            return jsonify(result)
+        except Exception:
+            pass
+    return jsonify(_local_get_categories())
 
 
 # ── GET /api/filenames ────────────────────────────────────────────────────────
@@ -277,12 +376,17 @@ def get_categories():
 def get_filenames():
     category = request.args.get("category")
     subcategory = request.args.get("subcategory")
-    filt = {}
-    if category:
-        filt["category"] = category
-    if subcategory:
-        filt["subcategory"] = subcategory
-    return jsonify(sorted(_col.distinct("filename", filt)))
+    if _mongo_available:
+        try:
+            filt = {}
+            if category:
+                filt["category"] = category
+            if subcategory:
+                filt["subcategory"] = subcategory
+            return jsonify(sorted(_col.distinct("filename", filt)))
+        except Exception:
+            pass
+    return jsonify(_local_get_filenames(category, subcategory))
 
 
 # ── POST /api/search ──────────────────────────────────────────────────────────

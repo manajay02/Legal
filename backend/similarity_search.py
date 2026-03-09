@@ -21,6 +21,7 @@ import joblib
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from pymongo import MongoClient
+import certifi
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 MONGO_URI  = "mongodb+srv://maneth:pathana123@cluster0.thqkj39.mongodb.net/?appName=Cluster0"
@@ -38,7 +39,9 @@ class SimilarityEngine:
 
     def __init__(self):
         self._cache: dict = {}
-        self._client = MongoClient(MONGO_URI)
+        self._client = MongoClient(MONGO_URI, tlsCAFile=certifi.where(),
+                                   serverSelectionTimeoutMS=5000,
+                                   connectTimeoutMS=5000)
         self._col = self._client[DB_NAME][COLLECTION]
 
     # ── Model loading ─────────────────────────────────────────────────────────

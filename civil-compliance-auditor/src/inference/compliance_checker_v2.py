@@ -446,6 +446,107 @@ CATEGORY_LAW_MAPPING = {
         "section": "28",
         "rule": "Partners have rights to share in profits and participate in management."
     },
+
+    # ========== SALE OF GOODS DOMAIN ==========
+    "sale_goods": {
+        "act": "Sale of Goods Ordinance, No. 11 of 1896",
+        "section": "13",
+        "rule": "Seller must have right to sell and goods must be free from encumbrances."
+    },
+    "merchantable_quality": {
+        "act": "Sale of Goods Ordinance, No. 11 of 1896",
+        "section": "14",
+        "rule": "Goods sold must be of merchantable quality free from defects."
+    },
+    "fitness_purpose": {
+        "act": "Sale of Goods Ordinance, No. 11 of 1896",
+        "section": "15",
+        "rule": "Goods must be reasonably fit for the purpose made known to seller."
+    },
+    "sale_delivery": {
+        "act": "Sale of Goods Ordinance, No. 11 of 1896",
+        "section": "27",
+        "rule": "Delivery of goods and payment of price are concurrent conditions."
+    },
+    "sale_unfair_trade": {
+        "act": "Consumer Affairs Authority Act No. 9 of 2003",
+        "section": "18",
+        "rule": "Unfair trade practices including false representations are prohibited."
+    },
+
+    # ========== MICROFINANCE / LENDING DOMAIN ==========
+    "microfinance_license": {
+        "act": "Microfinance Act No. 6 of 2016",
+        "section": "24",
+        "rule": "Microfinance institutions must be licensed to operate legally."
+    },
+    "microfinance_interest": {
+        "act": "Money Lending Ordinance, No. 2 of 1918",
+        "section": "10",
+        "rule": "Interest rates exceeding legal limits or compound interest clauses may be unenforceable."
+    },
+    "microfinance_disclosure": {
+        "act": "Money Lending Ordinance, No. 2 of 1918",
+        "section": "3",
+        "rule": "Loan agreements must be in writing and clearly state principal, interest, and terms."
+    },
+    "microfinance_collection": {
+        "act": "Money Lending Ordinance, No. 2 of 1918",
+        "section": "15",
+        "rule": "Money lenders are not allowed to harass or intimidate borrowers."
+    },
+
+    # ========== PAWN / PLEDGE DOMAIN ==========
+    "pawn_receipt": {
+        "act": "Pawnbrokers Ordinance",
+        "section": "15",
+        "rule": "Pawnbrokers must provide proper receipt and follow redemption procedures."
+    },
+    "pawn_redemption": {
+        "act": "Pawnbrokers Ordinance",
+        "section": "15",
+        "rule": "Pledged items must be redeemable within the period specified."
+    },
+    "pawn_valuation": {
+        "act": "Pawnbrokers Ordinance",
+        "section": "General",
+        "rule": "Proper valuation of pledged items must be done before accepting the pledge."
+    },
+
+    # ========== PROPERTY / LAND SALE DOMAIN ==========
+    "land_transfer": {
+        "act": "Prevention of Frauds Ordinance, No. 7 of 1840",
+        "section": "2",
+        "rule": "No sale or transfer of land is valid unless in writing, signed, and attested by a notary and two witnesses."
+    },
+    "land_registration": {
+        "act": "Registration of Documents Ordinance",
+        "section": "2",
+        "rule": "Every deed affecting land must be registered in the appropriate Land Registry."
+    },
+    "land_description": {
+        "act": "Prevention of Frauds Ordinance, No. 7 of 1840",
+        "section": "2",
+        "rule": "The deed must contain a full description of the property including boundaries and extent."
+    },
+
+    # ========== ELECTRONIC CONTRACT / E-COMMERCE DOMAIN ==========
+    "econtract_validity": {
+        "act": "Electronic Transactions Act, No. 19 of 2006",
+        "section": "4",
+        "rule": "Electronic contracts are valid and enforceable under certain conditions."
+    },
+    "esignature": {
+        "act": "Electronic Transactions Act, No. 19 of 2006",
+        "section": "7",
+        "rule": "An electronic signature satisfies a legal requirement for a signature if reliable and appropriate."
+    },
+    "erecord": {
+        "act": "Electronic Transactions Act, No. 19 of 2006",
+        "section": "5",
+        "rule": "An electronic record satisfies a legal requirement for writing."
+    },
+
     "unknown": {
         "act": "Prevention of Frauds Ordinance",
         "section": "General",
@@ -622,6 +723,79 @@ CLAUSE_CATEGORIES = {
         "keywords": ["entire agreement", "entire understanding", "supersedes", "prior discussions"],
         "laws": ["Finance Leasing Act"]
     },
+    # SALE OF GOODS DOMAIN
+    "sale_goods": {
+        "keywords": ["sale of goods", "buyer", "seller", "purchase", "goods", "merchandise", "product", "vendor"],
+        "laws": ["Sale of Goods Ordinance", "Consumer Affairs Authority Act"]
+    },
+    "merchantable_quality": {
+        "keywords": ["merchantable quality", "quality", "defect", "defective", "fit for purpose", "fitness"],
+        "laws": ["Sale of Goods Ordinance"]
+    },
+    "sale_delivery": {
+        "keywords": ["delivery", "deliver", "shipment", "shipping", "dispatch", "transit"],
+        "laws": ["Sale of Goods Ordinance"]
+    },
+    "sale_unfair_trade": {
+        "keywords": ["unfair trade", "false representation", "misleading", "deceptive"],
+        "laws": ["Consumer Affairs Authority Act"]
+    },
+    # MICROFINANCE / LENDING DOMAIN
+    "microfinance_license": {
+        "keywords": ["microfinance", "micro finance", "mfi", "licensed", "microfinance institution"],
+        "laws": ["Microfinance Act"]
+    },
+    "microfinance_interest": {
+        "keywords": ["interest rate", "rate of interest", "annual rate", "per annum", "flat rate", "reducing balance"],
+        "laws": ["Money Lending Ordinance"]
+    },
+    "microfinance_disclosure": {
+        "keywords": ["disclosure", "total cost", "fees", "charges", "apr", "annual percentage"],
+        "laws": ["Money Lending Ordinance"]
+    },
+    "microfinance_collection": {
+        "keywords": ["collection", "recovery", "harassment", "intimidation", "debt collector"],
+        "laws": ["Money Lending Ordinance"]
+    },
+    # PAWN / PLEDGE DOMAIN
+    "pawn_receipt": {
+        "keywords": ["pawn", "pawnbroker", "pledge", "pledged", "pawn ticket", "receipt"],
+        "laws": ["Pawnbrokers Ordinance"]
+    },
+    "pawn_redemption": {
+        "keywords": ["redeem", "redemption", "reclaim", "return of pledge", "forfeit"],
+        "laws": ["Pawnbrokers Ordinance"]
+    },
+    "pawn_valuation": {
+        "keywords": ["valuation", "appraisal", "assessed value", "gold", "jewelry", "jewellery"],
+        "laws": ["Pawnbrokers Ordinance"]
+    },
+    # PROPERTY / LAND SALE DOMAIN
+    "land_transfer": {
+        "keywords": ["transfer", "conveyance", "deed of transfer", "sale of land", "vendor", "vendee", "purchaser"],
+        "laws": ["Prevention of Frauds Ordinance", "Registration of Documents Ordinance"]
+    },
+    "land_registration": {
+        "keywords": ["registration", "land registry", "registered", "registrar of lands", "folio"],
+        "laws": ["Registration of Documents Ordinance"]
+    },
+    "land_description": {
+        "keywords": ["boundaries", "extent", "plan number", "lot number", "survey", "perches", "acres", "hectares"],
+        "laws": ["Prevention of Frauds Ordinance"]
+    },
+    # ELECTRONIC CONTRACT / E-COMMERCE DOMAIN
+    "econtract_validity": {
+        "keywords": ["electronic contract", "online agreement", "e-commerce", "digital contract", "click-wrap", "browse-wrap"],
+        "laws": ["Electronic Transactions Act"]
+    },
+    "esignature": {
+        "keywords": ["electronic signature", "e-signature", "digital signature", "electronically signed"],
+        "laws": ["Electronic Transactions Act"]
+    },
+    "erecord": {
+        "keywords": ["electronic record", "digital record", "electronic document", "electronic form"],
+        "laws": ["Electronic Transactions Act"]
+    },
 }
 
 
@@ -636,7 +810,12 @@ def classify_clause(clause_text, domain=None):
         "employment": ["salary", "epf_etf", "working_hours", "leave", "termination", "maternity"],
         "finance_leasing": ["lease_term", "lease_rental", "lease_payment", "late_payment_charge", 
                             "early_termination", "repossession", "vehicle_maintenance", "vehicle_insurance",
-                            "lease_assignment", "lessor_liability", "lease_dispute", "lease_governing_law"]
+                            "lease_assignment", "lessor_liability", "lease_dispute", "lease_governing_law"],
+        "sale_of_goods": ["sale_goods", "merchantable_quality", "sale_delivery", "sale_unfair_trade"],
+        "microfinance": ["microfinance_license", "microfinance_interest", "microfinance_disclosure", "microfinance_collection"],
+        "pawn_pledge": ["pawn_receipt", "pawn_redemption", "pawn_valuation"],
+        "land_property": ["land_transfer", "land_registration", "land_description"],
+        "electronic_contract": ["econtract_validity", "esignature", "erecord"]
     }
     
     # Check domain-specific categories first
@@ -726,9 +905,53 @@ def detect_domain(text):
                            "partnership firm", "partnership business", "capital contribution",
                            "profit ratio", "loss ratio", "dissolution", "winding up"]
     
+    # Sale of Goods keywords
+    sale_of_goods_keywords = ["sale of goods", "buyer", "seller", "goods", "merchandise",
+                             "product", "merchantable quality", "fitness for purpose",
+                             "delivery of goods", "sale agreement", "purchase order",
+                             "supply agreement", "vendor", "defective goods",
+                             "implied warranty", "sale price", "consumer goods"]
+    
+    # Microfinance / Lending keywords
+    microfinance_keywords = ["microfinance", "micro finance", "mfi", "micro lending",
+                            "micro loan", "small loan", "group lending",
+                            "microfinance institution", "microfinance act",
+                            "money lender", "money lending", "licensed lender",
+                            "promissory note", "pawn ticket"]
+    
+    # Pawn / Pledge keywords
+    pawn_pledge_keywords = ["pawn", "pawnbroker", "pledge", "pledged", "pawn ticket",
+                           "redemption", "redeem", "pawned", "pawn shop",
+                           "pledged item", "gold pledge", "jewelry pledge",
+                           "forfeiture", "unredeemed"]
+    
+    # Property / Land Sale keywords
+    land_property_keywords = ["land", "deed", "conveyance", "transfer of land",
+                             "vendee", "notary", "boundaries", "survey plan",
+                             "perches", "acres", "title deed", "encumbrance",
+                             "land registry", "immovable property", "sale of land",
+                             "deed of transfer", "prevention of frauds"]
+    
+    # Electronic Contract / E-commerce keywords
+    electronic_contract_keywords = ["electronic contract", "e-commerce", "online agreement",
+                                   "digital contract", "electronic signature", "e-signature",
+                                   "click-wrap", "browse-wrap", "terms of service",
+                                   "online terms", "website terms", "digital transaction",
+                                   "electronic transaction", "online purchase"]
+    
     # Strong indicators that override general scoring - CHECK IN PRIORITY ORDER
     if "partnership agreement" in text_lower or "partnership deed" in text_lower:
         return "partnership"
+    if "pawnbroker" in text_lower or "pawn ticket" in text_lower or "pledge agreement" in text_lower:
+        return "pawn_pledge"
+    if "microfinance" in text_lower or "micro finance" in text_lower or "micro lending" in text_lower:
+        return "microfinance"
+    if "deed of transfer" in text_lower or "sale of land" in text_lower or "conveyance" in text_lower:
+        return "land_property"
+    if "electronic contract" in text_lower or "e-commerce agreement" in text_lower or "click-wrap" in text_lower:
+        return "electronic_contract"
+    if "sale of goods" in text_lower or "supply agreement" in text_lower or "purchase order" in text_lower:
+        return "sale_of_goods"
     
     # Finance Leasing - check for various patterns including "finance leasing agreement"
     if ("finance lease" in text_lower or "finance leasing" in text_lower or 
@@ -759,13 +982,25 @@ def detect_domain(text):
         if any(kw in text_lower for kw in ["vehicle", "equipment", "machinery", "repossess", "lease rental"]):
             finance_leasing_score += 5
     
+    # Calculate scores for new domains
+    sale_of_goods_score = sum(1 for kw in sale_of_goods_keywords if kw in text_lower)
+    microfinance_score = sum(1 for kw in microfinance_keywords if kw in text_lower)
+    pawn_pledge_score = sum(1 for kw in pawn_pledge_keywords if kw in text_lower)
+    land_property_score = sum(1 for kw in land_property_keywords if kw in text_lower)
+    electronic_contract_score = sum(1 for kw in electronic_contract_keywords if kw in text_lower)
+    
     # Choose the highest score
     scores = {
         "employment": employment_score, 
         "finance_leasing": finance_leasing_score,
         "rental": rental_score, 
         "consumer": consumer_score,
-        "partnership": partnership_score
+        "partnership": partnership_score,
+        "sale_of_goods": sale_of_goods_score,
+        "microfinance": microfinance_score,
+        "pawn_pledge": pawn_pledge_score,
+        "land_property": land_property_score,
+        "electronic_contract": electronic_contract_score
     }
     max_domain = max(scores, key=scores.get)
     
@@ -1247,6 +1482,187 @@ ILLEGAL_PATTERNS = {
             "section": "4",
             "rule": "Electronic signatures are valid and enforceable under certain conditions.",
             "recommendation": "REVIEW: Electronic signatures may be valid under Section 4."
+        },
+    ],
+
+    # ========== SALE OF GOODS DOMAIN ==========
+    "sale_of_goods": [
+        {
+            "pattern": r"(seller|vendor).{0,30}(no\s+liability|not\s+liable|not\s+responsible).{0,30}(defect|quality|fitness|merchantable)",
+            "act": "Sale of Goods Ordinance, No. 11 of 1896",
+            "section": "14",
+            "rule": "Implied condition that goods are of merchantable quality cannot be excluded.",
+            "recommendation": "ILLEGAL: Excluding liability for merchantable quality violates Section 14 of the Sale of Goods Ordinance."
+        },
+        {
+            "pattern": r"(buyer|purchaser).{0,30}(waive|waives|forfeit).{0,30}(right|rights).{0,30}(inspect|examination|reject)",
+            "act": "Sale of Goods Ordinance, No. 11 of 1896",
+            "section": "34",
+            "rule": "Buyer has the right to examine goods before acceptance.",
+            "recommendation": "ILLEGAL: Buyer's right to inspect goods before acceptance cannot be waived under Section 34."
+        },
+        {
+            "pattern": r"(no\s+return|no\s+refund|all\s+sales?\s+final|non.?refundable).{0,30}(defect|faulty|not\s+as\s+described)",
+            "act": "Sale of Goods Ordinance, No. 11 of 1896",
+            "section": "13",
+            "rule": "Buyer has the right to reject goods not matching description or sample.",
+            "recommendation": "ILLEGAL: 'No return' clauses for defective goods violate Section 13."
+        },
+        {
+            "pattern": r"(seller|vendor).{0,30}(substitute|replace\s+with\s+different|change\s+specifications).{0,30}(without\s+consent|unilaterally)",
+            "act": "Sale of Goods Ordinance, No. 11 of 1896",
+            "section": "13",
+            "rule": "Goods must correspond with description; unilateral changes are unlawful.",
+            "recommendation": "ILLEGAL: Unilateral substitution of goods violates Section 13."
+        },
+        {
+            "pattern": r"(risk|loss|damage).{0,30}(pass|transfer).{0,30}(before\s+delivery|before\s+possession|irrespective\s+of\s+delivery)",
+            "act": "Sale of Goods Ordinance, No. 11 of 1896",
+            "section": "20",
+            "rule": "Risk passes with property unless otherwise agreed, but buyer must have opportunity to inspect.",
+            "recommendation": "REVIEW: Risk transfer before delivery may be unfair under Section 20."
+        },
+    ],
+
+    # ========== MICROFINANCE / LENDING DOMAIN ==========
+    "microfinance": [
+        {
+            "pattern": r"(interest|rate).{0,30}(compound|compounded|capitalize|capitalized).{0,30}(monthly|daily|weekly)",
+            "act": "Money Lending Ordinance, No. 2 of 1918",
+            "section": "10",
+            "rule": "Compound interest clauses may be unenforceable if they lead to excessive charges.",
+            "recommendation": "ILLEGAL: Compound interest clauses violate Section 10 of the Money Lending Ordinance."
+        },
+        {
+            "pattern": r"(borrower|debtor).{0,30}(waive|waives|forfeit).{0,30}(right|rights).{0,30}(court|tribunal|legal)",
+            "act": "Money Lending Ordinance, No. 2 of 1918",
+            "section": "15",
+            "rule": "Borrowers cannot be required to waive their legal rights.",
+            "recommendation": "ILLEGAL: Requiring borrowers to waive legal rights violates Section 15."
+        },
+        {
+            "pattern": r"(lender|creditor).{0,30}(harass|intimidat|threaten|coerce|force).{0,30}(borrower|debtor|family|property)",
+            "act": "Money Lending Ordinance, No. 2 of 1918",
+            "section": "15",
+            "rule": "Harassment or intimidation of borrowers is prohibited.",
+            "recommendation": "ILLEGAL: Harassment of borrowers violates Section 15 of the Money Lending Ordinance."
+        },
+        {
+            "pattern": r"(loan|principal).{0,30}(not\s+in\s+writing|oral|verbal\s+agreement)",
+            "act": "Money Lending Ordinance, No. 2 of 1918",
+            "section": "3",
+            "rule": "Loan agreements must be in writing stating principal, interest, and terms.",
+            "recommendation": "ILLEGAL: Loan agreements must be in writing under Section 3."
+        },
+        {
+            "pattern": r"(interest).{0,40}(exceed|above|over|more\s+than).{0,20}(lawful|legal|statutory|prescribed).{0,10}(limit|rate|maximum)",
+            "act": "Money Lending Ordinance, No. 2 of 1918",
+            "section": "10",
+            "rule": "Interest exceeding legal limits may be unenforceable.",
+            "recommendation": "ILLEGAL: Interest rates exceeding legal limits violate Section 10."
+        },
+        {
+            "pattern": r"(microfinance|mfi|lending\s+institution).{0,30}(not\s+licensed|unlicensed|unregistered)",
+            "act": "Microfinance Act No. 6 of 2016",
+            "section": "24",
+            "rule": "Microfinance institutions must be licensed.",
+            "recommendation": "ILLEGAL: Operating without license violates Section 24 of the Microfinance Act."
+        },
+    ],
+
+    # ========== PAWN / PLEDGE DOMAIN ==========
+    "pawn_pledge": [
+        {
+            "pattern": r"(pawnbroker|pawn\s+shop).{0,30}(not\s+licensed|unlicensed|without\s+license)",
+            "act": "Pawnbrokers Ordinance",
+            "section": "3",
+            "rule": "Pawnbrokers must be licensed to operate.",
+            "recommendation": "ILLEGAL: Operating as a pawnbroker without license violates Section 3."
+        },
+        {
+            "pattern": r"(no\s+receipt|without\s+receipt|receipt\s+not\s+required|no\s+pawn\s+ticket)",
+            "act": "Pawnbrokers Ordinance",
+            "section": "15",
+            "rule": "Pawnbroker must issue a pawn ticket/receipt for every pledge.",
+            "recommendation": "ILLEGAL: Failure to issue pawn ticket violates Section 15."
+        },
+        {
+            "pattern": r"(pledged\s+item|pawn).{0,30}(forfeit|forfeited|dispose|disposed|sold).{0,30}(without\s+notice|immediately|before\s+expiry)",
+            "act": "Pawnbrokers Ordinance",
+            "section": "15",
+            "rule": "Pledged items cannot be disposed of before the redemption period expires.",
+            "recommendation": "ILLEGAL: Disposing of pledged items before redemption period expires violates Section 15."
+        },
+        {
+            "pattern": r"(pawnbroker).{0,30}(charge|fee|interest).{0,30}(exceed|above|excessive|unreasonable)",
+            "act": "Pawnbrokers Ordinance",
+            "section": "General",
+            "rule": "Pawnbrokers must charge within prescribed limits.",
+            "recommendation": "ILLEGAL: Excessive charges violate the Pawnbrokers Ordinance."
+        },
+    ],
+
+    # ========== PROPERTY / LAND SALE DOMAIN ==========
+    "land_property": [
+        {
+            "pattern": r"(sale|transfer|conveyance).{0,30}(land|property|immovable).{0,30}(oral|verbal|not\s+in\s+writing|without\s+notary)",
+            "act": "Prevention of Frauds Ordinance, No. 7 of 1840",
+            "section": "2",
+            "rule": "No sale or transfer of land is valid unless in writing, signed, and attested by a notary.",
+            "recommendation": "ILLEGAL: Land transfers must be in writing and attested by a notary under Section 2."
+        },
+        {
+            "pattern": r"(deed|transfer).{0,30}(not\s+registered|need\s+not\s+be\s+registered|registration\s+not\s+required)",
+            "act": "Registration of Documents Ordinance",
+            "section": "2",
+            "rule": "Every deed affecting land must be registered.",
+            "recommendation": "ILLEGAL: Deeds affecting land must be registered under Section 2."
+        },
+        {
+            "pattern": r"(buyer|purchaser|vendee).{0,30}(waive|waives).{0,30}(title\s+search|title\s+verification|encumbrance\s+check)",
+            "act": "Prevention of Frauds Ordinance, No. 7 of 1840",
+            "section": "2",
+            "rule": "Buyer should verify title and encumbrances before purchase.",
+            "recommendation": "REVIEW: Waiving title verification is risky and may lead to disputes."
+        },
+        {
+            "pattern": r"(vendor|seller).{0,30}(no\s+warranty|not\s+warrant|as\s+is).{0,30}(title|ownership|encumbrance)",
+            "act": "Prevention of Frauds Ordinance, No. 7 of 1840",
+            "section": "2",
+            "rule": "Vendor must warrant good and marketable title.",
+            "recommendation": "ILLEGAL: Vendor must provide warranty of title in land transactions."
+        },
+    ],
+
+    # ========== ELECTRONIC CONTRACT / E-COMMERCE DOMAIN ==========
+    "electronic_contract": [
+        {
+            "pattern": r"(electronic\s+contract|online\s+agreement|e-commerce).{0,30}(not\s+valid|not\s+enforceable|invalid|void)",
+            "act": "Electronic Transactions Act, No. 19 of 2006",
+            "section": "4",
+            "rule": "Electronic contracts are valid and enforceable when conditions are met.",
+            "recommendation": "REVIEW: Electronic contracts are valid under Section 4 of the Electronic Transactions Act."
+        },
+        {
+            "pattern": r"(electronic\s+signature|e-signature).{0,30}(not\s+acceptable|invalid|rejected|not\s+recognized)",
+            "act": "Electronic Transactions Act, No. 19 of 2006",
+            "section": "7",
+            "rule": "Electronic signatures satisfy legal signature requirements if reliable.",
+            "recommendation": "REVIEW: Electronic signatures are valid under Section 7."
+        },
+        {
+            "pattern": r"(website|platform|service\s+provider).{0,30}(no\s+liability|not\s+liable|not\s+responsible).{0,30}(any|all|whatsoever)",
+            "act": "Electronic Transactions Act, No. 19 of 2006",
+            "section": "General",
+            "rule": "Blanket liability exclusions may be unfair in e-commerce contexts.",
+            "recommendation": "REVIEW: Blanket liability exclusions may be unenforceable."
+        },
+        {
+            "pattern": r"(terms|conditions).{0,30}(change|modify|amend).{0,30}(without\s+notice|any\s+time|unilaterally)",
+            "act": "Electronic Transactions Act, No. 19 of 2006",
+            "section": "General",
+            "rule": "Changes to terms must be communicated to users; unilateral changes may be void.",
+            "recommendation": "ILLEGAL: Unilateral changes to terms without notice may violate fair dealing principles."
         },
     ],
 }
@@ -1775,6 +2191,208 @@ LEGAL_PATTERNS = {
             "recommendation": "COMPLIANT: Consumer rights acknowledgment complies with Section 10."
         },
     ],
+
+    # ========== SALE OF GOODS DOMAIN ==========
+    "sale_of_goods": [
+        {
+            "pattern": r"(goods|product).{0,30}(merchantable\s+quality|fit\s+for\s+purpose|reasonably\s+fit|free\s+from\s+defect)",
+            "act": "Sale of Goods Ordinance, No. 11 of 1896",
+            "section": "14",
+            "rule": "Goods must be of merchantable quality.",
+            "recommendation": "COMPLIANT: Merchantable quality provision complies with Section 14."
+        },
+        {
+            "pattern": r"(seller|vendor).{0,30}(right\s+to\s+sell|title|ownership|free\s+from\s+encumbrance)",
+            "act": "Sale of Goods Ordinance, No. 11 of 1896",
+            "section": "13",
+            "rule": "Seller must have the right to sell and goods free from encumbrances.",
+            "recommendation": "COMPLIANT: Title warranty complies with Section 13."
+        },
+        {
+            "pattern": r"(delivery|deliver).{0,30}(within|on\s+or\s+before|agreed\s+date|specified\s+date)",
+            "act": "Sale of Goods Ordinance, No. 11 of 1896",
+            "section": "27",
+            "rule": "Delivery of goods and payment of price are concurrent conditions.",
+            "recommendation": "COMPLIANT: Delivery terms properly specified under Section 27."
+        },
+        {
+            "pattern": r"(buyer|purchaser).{0,30}(right\s+to\s+inspect|examine|inspection\s+before\s+acceptance)",
+            "act": "Sale of Goods Ordinance, No. 11 of 1896",
+            "section": "34",
+            "rule": "Buyer has the right to examine goods before acceptance.",
+            "recommendation": "COMPLIANT: Inspection rights recognized under Section 34."
+        },
+        {
+            "pattern": r"(warranty|guarantee).{0,30}(defect|repair|replace|period|quality)",
+            "act": "Sale of Goods Ordinance, No. 11 of 1896",
+            "section": "15",
+            "rule": "Implied warranty of fitness for purpose applies.",
+            "recommendation": "COMPLIANT: Warranty provision complies with Section 15."
+        },
+        {
+            "pattern": r"(price|consideration|purchase\s+price).{0,30}(lkr|rupees|rs|agreed|specified|amount)",
+            "act": "Sale of Goods Ordinance, No. 11 of 1896",
+            "section": "8",
+            "rule": "Price must be specified or ascertainable.",
+            "recommendation": "COMPLIANT: Price properly specified under Section 8."
+        },
+    ],
+
+    # ========== MICROFINANCE / LENDING DOMAIN ==========
+    "microfinance": [
+        {
+            "pattern": r"(interest\s+rate|rate\s+of\s+interest).{0,30}(per\s+annum|annual|p\.a\.|clearly\s+stated|\%|percent)",
+            "act": "Money Lending Ordinance, No. 2 of 1918",
+            "section": "3",
+            "rule": "Interest rate must be clearly stated in writing.",
+            "recommendation": "COMPLIANT: Interest rate properly disclosed under Section 3."
+        },
+        {
+            "pattern": r"(loan|agreement).{0,30}(in\s+writing|written\s+agreement|signed|executed)",
+            "act": "Money Lending Ordinance, No. 2 of 1918",
+            "section": "3",
+            "rule": "Loan agreements must be in writing.",
+            "recommendation": "COMPLIANT: Written agreement complies with Section 3."
+        },
+        {
+            "pattern": r"(principal|loan\s+amount).{0,30}(lkr|rupees|rs|stated|specified|amount)",
+            "act": "Money Lending Ordinance, No. 2 of 1918",
+            "section": "3",
+            "rule": "Principal amount must be clearly stated.",
+            "recommendation": "COMPLIANT: Principal amount properly stated under Section 3."
+        },
+        {
+            "pattern": r"(repayment|installment).{0,30}(schedule|monthly|plan|due\s+date)",
+            "act": "Money Lending Ordinance, No. 2 of 1918",
+            "section": "General",
+            "rule": "Repayment terms must be clearly specified.",
+            "recommendation": "COMPLIANT: Repayment schedule properly specified."
+        },
+        {
+            "pattern": r"(licensed|registered).{0,30}(microfinance|mfi|lender|lending\s+institution)",
+            "act": "Microfinance Act No. 6 of 2016",
+            "section": "24",
+            "rule": "Microfinance institutions must be licensed.",
+            "recommendation": "COMPLIANT: Licensed institution reference complies with Section 24."
+        },
+        {
+            "pattern": r"(total\s+cost|total\s+amount|total\s+payable|all\s+fees).{0,30}(disclosed|stated|specified)",
+            "act": "Money Lending Ordinance, No. 2 of 1918",
+            "section": "3",
+            "rule": "Total cost of borrowing must be disclosed.",
+            "recommendation": "COMPLIANT: Total cost disclosure complies with Section 3."
+        },
+    ],
+
+    # ========== PAWN / PLEDGE DOMAIN ==========
+    "pawn_pledge": [
+        {
+            "pattern": r"(pawn\s+ticket|receipt|pawn\s+receipt).{0,30}(issue|provided|given|deliver)",
+            "act": "Pawnbrokers Ordinance",
+            "section": "15",
+            "rule": "Pawnbroker must issue pawn ticket for every pledge.",
+            "recommendation": "COMPLIANT: Pawn ticket issuance complies with Section 15."
+        },
+        {
+            "pattern": r"(redemption|redeem).{0,30}(period|within|right|entitled)",
+            "act": "Pawnbrokers Ordinance",
+            "section": "15",
+            "rule": "Pledger has the right to redeem within the specified period.",
+            "recommendation": "COMPLIANT: Redemption rights properly recognized under Section 15."
+        },
+        {
+            "pattern": r"(licensed|license|registered).{0,30}(pawnbroker|pawn\s+shop)",
+            "act": "Pawnbrokers Ordinance",
+            "section": "3",
+            "rule": "Pawnbroker must be licensed to operate.",
+            "recommendation": "COMPLIANT: Licensed pawnbroker reference complies with Section 3."
+        },
+        {
+            "pattern": r"(valuation|appraisal|assessed).{0,30}(item|pledge|gold|jewelry|jewellery)",
+            "act": "Pawnbrokers Ordinance",
+            "section": "General",
+            "rule": "Proper valuation of pledged items is required.",
+            "recommendation": "COMPLIANT: Valuation provision complies with the Pawnbrokers Ordinance."
+        },
+    ],
+
+    # ========== PROPERTY / LAND SALE DOMAIN ==========
+    "land_property": [
+        {
+            "pattern": r"(deed|transfer|conveyance).{0,30}(notary|notarially\s+attested|notarial).{0,30}(witness|signed|attested)",
+            "act": "Prevention of Frauds Ordinance, No. 7 of 1840",
+            "section": "2",
+            "rule": "Land transfers must be in writing, attested by a notary and witnesses.",
+            "recommendation": "COMPLIANT: Notarial attestation complies with Section 2."
+        },
+        {
+            "pattern": r"(deed|document).{0,30}(registered|registration).{0,30}(land\s+registry|registrar)",
+            "act": "Registration of Documents Ordinance",
+            "section": "2",
+            "rule": "Deeds affecting land must be registered.",
+            "recommendation": "COMPLIANT: Registration requirement complies with Section 2."
+        },
+        {
+            "pattern": r"(boundaries|extent|perches|acres|hectares|survey\s+plan|plan\s+number|lot\s+number)",
+            "act": "Prevention of Frauds Ordinance, No. 7 of 1840",
+            "section": "2",
+            "rule": "Property description including boundaries and extent must be specified.",
+            "recommendation": "COMPLIANT: Property description properly specified."
+        },
+        {
+            "pattern": r"(title|ownership|vendor).{0,30}(warrant|guarantee|free\s+from\s+encumbrance|good\s+and\s+marketable)",
+            "act": "Prevention of Frauds Ordinance, No. 7 of 1840",
+            "section": "2",
+            "rule": "Vendor must warrant good and marketable title.",
+            "recommendation": "COMPLIANT: Title warranty properly included."
+        },
+        {
+            "pattern": r"(consideration|purchase\s+price|sale\s+price).{0,30}(lkr|rupees|rs|amount|specified)",
+            "act": "Prevention of Frauds Ordinance, No. 7 of 1840",
+            "section": "2",
+            "rule": "Purchase price must be clearly stated.",
+            "recommendation": "COMPLIANT: Purchase price properly stated."
+        },
+    ],
+
+    # ========== ELECTRONIC CONTRACT / E-COMMERCE DOMAIN ==========
+    "electronic_contract": [
+        {
+            "pattern": r"(electronic\s+contract|digital\s+contract|online\s+agreement).{0,30}(valid|enforceable|binding|lawful)",
+            "act": "Electronic Transactions Act, No. 19 of 2006",
+            "section": "4",
+            "rule": "Electronic contracts are valid and enforceable.",
+            "recommendation": "COMPLIANT: Electronic contract validity recognized under Section 4."
+        },
+        {
+            "pattern": r"(electronic\s+signature|e-signature|digital\s+signature).{0,30}(valid|accepted|recognized|reliable)",
+            "act": "Electronic Transactions Act, No. 19 of 2006",
+            "section": "7",
+            "rule": "Electronic signatures satisfy legal signature requirements.",
+            "recommendation": "COMPLIANT: Electronic signature validity recognized under Section 7."
+        },
+        {
+            "pattern": r"(electronic\s+record|digital\s+record|electronic\s+document).{0,30}(valid|maintained|retained|preserved)",
+            "act": "Electronic Transactions Act, No. 19 of 2006",
+            "section": "5",
+            "rule": "Electronic records satisfy legal writing requirements.",
+            "recommendation": "COMPLIANT: Electronic record validity recognized under Section 5."
+        },
+        {
+            "pattern": r"(consent|agreement|acceptance).{0,30}(click|clicking|accept\s+button|check.?box|opt.?in)",
+            "act": "Electronic Transactions Act, No. 19 of 2006",
+            "section": "4",
+            "rule": "Click-wrap and opt-in consent mechanisms are valid.",
+            "recommendation": "COMPLIANT: Click-to-accept mechanism complies with Section 4."
+        },
+        {
+            "pattern": r"(data\s+protection|privacy|personal\s+data).{0,30}(protect|secure|confidential|safeguard)",
+            "act": "Electronic Transactions Act, No. 19 of 2006",
+            "section": "General",
+            "rule": "Data protection provisions are expected in e-commerce agreements.",
+            "recommendation": "COMPLIANT: Data protection provision included."
+        },
+    ],
 }
 
 
@@ -1876,6 +2494,31 @@ def get_category_law_info(category, domain):
             "act": "Partnership Ordinance",
             "section": "General",
             "rule": "Standard partnership agreement clause governed by the Partnership Ordinance."
+        },
+        "sale_of_goods": {
+            "act": "Sale of Goods Ordinance, No. 11 of 1896",
+            "section": "General",
+            "rule": "Standard sale of goods clause governed by the Sale of Goods Ordinance."
+        },
+        "microfinance": {
+            "act": "Microfinance Act No. 6 of 2016",
+            "section": "General",
+            "rule": "Standard microfinance/lending clause governed by the Microfinance Act and Money Lending Ordinance."
+        },
+        "pawn_pledge": {
+            "act": "Pawnbrokers Ordinance",
+            "section": "General",
+            "rule": "Standard pawn/pledge clause governed by the Pawnbrokers Ordinance."
+        },
+        "land_property": {
+            "act": "Prevention of Frauds Ordinance, No. 7 of 1840",
+            "section": "2",
+            "rule": "Standard land/property sale clause governed by the Prevention of Frauds Ordinance."
+        },
+        "electronic_contract": {
+            "act": "Electronic Transactions Act, No. 19 of 2006",
+            "section": "4",
+            "rule": "Standard electronic contract clause governed by the Electronic Transactions Act."
         },
         "general": {
             "act": "Prevention of Frauds Ordinance",
@@ -2327,6 +2970,269 @@ MANDATORY_CLAUSES = {
             "keywords": ["signature", "signed", "sign", "witness", "executed"],
             "patterns": [r"sign(ed|ature)?", r"witness(ed)?", r"execut(ed|ion)"],
             "nli_premise": "Partnership agreements must be signed by all partners."
+        }
+    ],
+
+    # ========== SALE OF GOODS DOMAIN ==========
+    "sale_of_goods": [
+        {
+            "id": "goods_description",
+            "name": "Description of Goods",
+            "description": "Clear description of goods being sold",
+            "legal_basis": "Sale of Goods Ordinance, No. 11 of 1896",
+            "keywords": ["goods", "product", "description", "specifications", "merchandise", "item", "quantity"],
+            "patterns": [r"(goods|product|merchandise)\s+(descri|specif)", r"quantity"],
+            "nli_premise": "Sale of goods agreements must clearly describe the goods being sold."
+        },
+        {
+            "id": "sale_price",
+            "name": "Price/Consideration",
+            "description": "Purchase price must be specified",
+            "legal_basis": "Sale of Goods Ordinance, No. 11 of 1896",
+            "keywords": ["price", "consideration", "purchase price", "amount", "payment", "cost"],
+            "patterns": [r"(price|consideration|amount|cost)", r"(lkr|rupees|rs)"],
+            "nli_premise": "Sale of goods agreements must specify the purchase price."
+        },
+        {
+            "id": "delivery_terms",
+            "name": "Delivery Terms",
+            "description": "When and how goods will be delivered",
+            "legal_basis": "Sale of Goods Ordinance, No. 11 of 1896",
+            "keywords": ["delivery", "deliver", "shipment", "dispatch", "collection", "transit"],
+            "patterns": [r"deliver(y|ed)?", r"(ship|dispatch|transit)"],
+            "nli_premise": "Sale of goods agreements must specify delivery terms."
+        },
+        {
+            "id": "quality_warranty",
+            "name": "Quality/Warranty Terms",
+            "description": "Merchantable quality and warranty provisions",
+            "legal_basis": "Sale of Goods Ordinance, No. 11 of 1896",
+            "keywords": ["warranty", "guarantee", "quality", "merchantable", "defect", "fitness"],
+            "patterns": [r"warrant(y|ies)?", r"guarantee", r"(merchantable|quality|defect)"],
+            "nli_premise": "Sale of goods agreements should include quality warranties."
+        },
+        {
+            "id": "payment_terms",
+            "name": "Payment Terms",
+            "description": "How and when payment will be made",
+            "legal_basis": "Sale of Goods Ordinance, No. 11 of 1896",
+            "keywords": ["payment", "pay", "installment", "advance", "cash", "credit", "bank transfer"],
+            "patterns": [r"payment", r"(installment|advance|credit)"],
+            "nli_premise": "Sale of goods agreements must specify payment terms."
+        }
+    ],
+
+    # ========== MICROFINANCE / LENDING DOMAIN ==========
+    "microfinance": [
+        {
+            "id": "loan_amount",
+            "name": "Principal/Loan Amount",
+            "description": "Principal amount must be clearly stated",
+            "legal_basis": "Money Lending Ordinance, No. 2 of 1918",
+            "keywords": ["principal", "loan amount", "sum", "borrowed", "advanced"],
+            "patterns": [r"(principal|loan\s+amount|sum)", r"(lkr|rupees|rs)"],
+            "nli_premise": "Loan agreements must clearly state the principal amount."
+        },
+        {
+            "id": "interest_rate",
+            "name": "Interest Rate Disclosure",
+            "description": "Interest rate must be clearly stated",
+            "legal_basis": "Money Lending Ordinance, No. 2 of 1918",
+            "keywords": ["interest", "rate", "per annum", "annual", "percentage", "flat rate"],
+            "patterns": [r"interest\s+rate", r"per\s+annum", r"\d+\s*%"],
+            "nli_premise": "Loan agreements must clearly disclose the interest rate."
+        },
+        {
+            "id": "repayment_schedule",
+            "name": "Repayment Schedule",
+            "description": "Repayment terms and schedule",
+            "legal_basis": "Money Lending Ordinance, No. 2 of 1918",
+            "keywords": ["repayment", "installment", "monthly", "schedule", "due date", "payment plan"],
+            "patterns": [r"repay(ment)?", r"installment", r"(monthly|weekly)\s+payment"],
+            "nli_premise": "Loan agreements must specify the repayment schedule."
+        },
+        {
+            "id": "total_cost",
+            "name": "Total Cost of Borrowing",
+            "description": "Total amount payable including fees and charges",
+            "legal_basis": "Money Lending Ordinance, No. 2 of 1918",
+            "keywords": ["total cost", "total amount", "total payable", "fees", "charges", "processing fee"],
+            "patterns": [r"total\s+(cost|amount|payable)", r"(fees|charges)"],
+            "nli_premise": "Loan agreements must disclose the total cost of borrowing."
+        },
+        {
+            "id": "written_agreement",
+            "name": "Written Agreement",
+            "description": "Agreement must be in writing",
+            "legal_basis": "Money Lending Ordinance, No. 2 of 1918",
+            "keywords": ["written", "in writing", "signed", "executed", "agreement"],
+            "patterns": [r"(in\s+writing|written\s+agreement)", r"sign(ed|ature)?"],
+            "nli_premise": "Loan agreements must be in writing as required by law."
+        },
+        {
+            "id": "default_terms",
+            "name": "Default/Late Payment Terms",
+            "description": "Consequences of default or late payment",
+            "legal_basis": "Money Lending Ordinance, No. 2 of 1918",
+            "keywords": ["default", "late payment", "overdue", "arrears", "penalty"],
+            "patterns": [r"default", r"late\s+payment", r"(overdue|arrears|penalty)"],
+            "nli_premise": "Loan agreements must specify default and late payment consequences."
+        }
+    ],
+
+    # ========== PAWN / PLEDGE DOMAIN ==========
+    "pawn_pledge": [
+        {
+            "id": "pledged_item_description",
+            "name": "Description of Pledged Item",
+            "description": "Pledged item must be clearly described",
+            "legal_basis": "Pawnbrokers Ordinance",
+            "keywords": ["pledged item", "article", "gold", "jewelry", "jewellery", "description", "item"],
+            "patterns": [r"(pledged|pawn)\s+(item|article)", r"(gold|jewel)"],
+            "nli_premise": "Pawn agreements must clearly describe the pledged item."
+        },
+        {
+            "id": "loan_amount_pawn",
+            "name": "Loan Amount Against Pledge",
+            "description": "Amount advanced against the pledge",
+            "legal_basis": "Pawnbrokers Ordinance",
+            "keywords": ["loan amount", "advanced", "sum", "amount", "principal"],
+            "patterns": [r"(loan|amount|sum)\s+(advanced|lent)", r"(lkr|rupees|rs)"],
+            "nli_premise": "Pawn agreements must state the loan amount advanced."
+        },
+        {
+            "id": "redemption_period",
+            "name": "Redemption Period",
+            "description": "Time allowed to redeem the pledge",
+            "legal_basis": "Pawnbrokers Ordinance",
+            "keywords": ["redemption", "redeem", "period", "months", "days", "expiry", "deadline"],
+            "patterns": [r"redemption\s+period", r"redeem\s+within", r"\d+\s+(months?|days?)"],
+            "nli_premise": "Pawn agreements must specify the redemption period."
+        },
+        {
+            "id": "pawn_ticket",
+            "name": "Pawn Ticket/Receipt",
+            "description": "Receipt must be issued for every pledge",
+            "legal_basis": "Pawnbrokers Ordinance",
+            "keywords": ["pawn ticket", "receipt", "acknowledgment", "token"],
+            "patterns": [r"pawn\s+ticket", r"receipt", r"acknowledg"],
+            "nli_premise": "A pawn ticket or receipt must be issued for every pledge."
+        },
+        {
+            "id": "interest_charges_pawn",
+            "name": "Interest/Charges",
+            "description": "Interest and charges must be specified",
+            "legal_basis": "Pawnbrokers Ordinance",
+            "keywords": ["interest", "charges", "rate", "fee", "cost"],
+            "patterns": [r"interest", r"charges?", r"(rate|fee)"],
+            "nli_premise": "Pawn agreements must specify interest rates and charges."
+        }
+    ],
+
+    # ========== PROPERTY / LAND SALE DOMAIN ==========
+    "land_property": [
+        {
+            "id": "property_description",
+            "name": "Property Description",
+            "description": "Full description including boundaries, extent, and plan number",
+            "legal_basis": "Prevention of Frauds Ordinance, No. 7 of 1840",
+            "keywords": ["boundaries", "extent", "perches", "acres", "survey plan", "plan number", "lot", "land"],
+            "patterns": [r"(boundaries|extent|perches|acres)", r"(plan|survey)\s+n", r"(lot|land)"],
+            "nli_premise": "Land sale deeds must contain a full description of the property including boundaries and extent."
+        },
+        {
+            "id": "notarial_attestation",
+            "name": "Notarial Attestation",
+            "description": "Deed must be attested by a notary public",
+            "legal_basis": "Prevention of Frauds Ordinance, No. 7 of 1840",
+            "keywords": ["notary", "notarial", "attested", "attestation", "notary public"],
+            "patterns": [r"notar(y|ial)", r"attest(ed|ation)?"],
+            "nli_premise": "Land sale deeds must be attested by a notary public."
+        },
+        {
+            "id": "witnesses",
+            "name": "Two Witnesses",
+            "description": "Deed must be signed before two witnesses",
+            "legal_basis": "Prevention of Frauds Ordinance, No. 7 of 1840",
+            "keywords": ["witness", "witnesses", "two witnesses", "attesting witness"],
+            "patterns": [r"witness(es)?", r"two\s+witness"],
+            "nli_premise": "Land sale deeds must be signed before two witnesses."
+        },
+        {
+            "id": "purchase_price_land",
+            "name": "Purchase Price/Consideration",
+            "description": "Sale price must be specified",
+            "legal_basis": "Prevention of Frauds Ordinance, No. 7 of 1840",
+            "keywords": ["price", "consideration", "purchase price", "sale price", "amount"],
+            "patterns": [r"(price|consideration)", r"(lkr|rupees|rs)"],
+            "nli_premise": "Land sale deeds must clearly state the purchase price."
+        },
+        {
+            "id": "title_warranty",
+            "name": "Title Warranty",
+            "description": "Vendor must warrant good title",
+            "legal_basis": "Prevention of Frauds Ordinance, No. 7 of 1840",
+            "keywords": ["title", "ownership", "free from encumbrance", "good title", "marketable title"],
+            "patterns": [r"(title|ownership)", r"(encumbrance|marketable)"],
+            "nli_premise": "Land sale deeds must include a warranty of good and marketable title."
+        },
+        {
+            "id": "registration",
+            "name": "Registration of Deed",
+            "description": "Deed must be registered in the Land Registry",
+            "legal_basis": "Registration of Documents Ordinance",
+            "keywords": ["registration", "registered", "land registry", "registrar"],
+            "patterns": [r"regist(er|ration|ered)", r"land\s+registry"],
+            "nli_premise": "Land sale deeds must be registered in the Land Registry."
+        }
+    ],
+
+    # ========== ELECTRONIC CONTRACT / E-COMMERCE DOMAIN ==========
+    "electronic_contract": [
+        {
+            "id": "econtract_parties",
+            "name": "Identification of Parties",
+            "description": "Parties must be clearly identified in electronic contracts",
+            "legal_basis": "Electronic Transactions Act, No. 19 of 2006",
+            "keywords": ["party", "parties", "service provider", "user", "customer", "merchant"],
+            "patterns": [r"(party|parties)", r"(provider|user|customer|merchant)"],
+            "nli_premise": "Electronic contracts must clearly identify all parties."
+        },
+        {
+            "id": "consent_mechanism",
+            "name": "Consent/Acceptance Mechanism",
+            "description": "How consent is obtained (click-wrap, opt-in etc.)",
+            "legal_basis": "Electronic Transactions Act, No. 19 of 2006",
+            "keywords": ["consent", "accept", "agree", "click", "opt-in", "check box", "terms"],
+            "patterns": [r"(consent|accept|agree)", r"(click|opt.?in|check.?box)"],
+            "nli_premise": "Electronic contracts must include a clear consent mechanism."
+        },
+        {
+            "id": "esignature_provision",
+            "name": "Electronic Signature",
+            "description": "Electronic signature validity",
+            "legal_basis": "Electronic Transactions Act, No. 19 of 2006",
+            "keywords": ["electronic signature", "e-signature", "digital signature", "electronically signed"],
+            "patterns": [r"(electronic|digital)\s+signature", r"e-signature"],
+            "nli_premise": "Electronic contracts should reference valid electronic signature mechanisms."
+        },
+        {
+            "id": "terms_accessibility",
+            "name": "Terms Accessibility",
+            "description": "Terms must be accessible and readable",
+            "legal_basis": "Electronic Transactions Act, No. 19 of 2006",
+            "keywords": ["terms", "conditions", "accessible", "readable", "available", "displayed"],
+            "patterns": [r"terms\s+(and|&)\s+conditions", r"(accessible|available|displayed)"],
+            "nli_premise": "Electronic contract terms must be accessible and readable to users."
+        },
+        {
+            "id": "dispute_resolution_ecommerce",
+            "name": "Dispute Resolution",
+            "description": "How disputes will be resolved",
+            "legal_basis": "Electronic Transactions Act, No. 19 of 2006",
+            "keywords": ["dispute", "resolution", "arbitration", "jurisdiction", "governing law"],
+            "patterns": [r"dispute\s+resolut", r"(arbitration|jurisdiction|governing\s+law)"],
+            "nli_premise": "Electronic contracts must include dispute resolution provisions."
         }
     ],
     

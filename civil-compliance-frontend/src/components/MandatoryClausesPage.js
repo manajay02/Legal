@@ -86,6 +86,73 @@ function MandatoryClausesPage({ results, onBack, onReAnalyze }) {
         { id: 'dissolution', name: 'Termination/Dissolution Terms', description: 'How the partnership can be ended', legal: 'Partnership Ordinance Section 32-44' },
       ]
     },
+    sale_of_goods: {
+      name: 'Sale of Goods Agreement',
+      icon: '🛒',
+      description: 'Required clauses under Sale of Goods Ordinance',
+      acts: ['Sale of Goods Ordinance No. 11 of 1896', 'Consumer Affairs Authority Act'],
+      clauses: [
+        { id: 'goods_description', name: 'Description of Goods', description: 'Clear description of goods being sold', legal: 'Sale of Goods Ordinance Section 13' },
+        { id: 'sale_price', name: 'Price/Consideration', description: 'Purchase price clearly specified', legal: 'Sale of Goods Ordinance Section 8' },
+        { id: 'delivery_terms', name: 'Delivery Terms', description: 'When and how goods will be delivered', legal: 'Sale of Goods Ordinance Section 27' },
+        { id: 'quality_warranty', name: 'Quality/Warranty Terms', description: 'Merchantable quality and warranty provisions', legal: 'Sale of Goods Ordinance Section 14-15' },
+        { id: 'payment_terms', name: 'Payment Terms', description: 'How and when payment will be made', legal: 'Sale of Goods Ordinance' },
+      ]
+    },
+    microfinance: {
+      name: 'Microfinance/Lending Agreement',
+      icon: '🏦',
+      description: 'Required clauses under Microfinance Act and Money Lending Ordinance',
+      acts: ['Microfinance Act No. 6 of 2016', 'Money Lending Ordinance No. 2 of 1918'],
+      clauses: [
+        { id: 'loan_amount', name: 'Principal/Loan Amount', description: 'Principal amount clearly stated', legal: 'Money Lending Ordinance Section 3' },
+        { id: 'interest_rate', name: 'Interest Rate Disclosure', description: 'Interest rate clearly disclosed', legal: 'Money Lending Ordinance Section 3' },
+        { id: 'repayment_schedule', name: 'Repayment Schedule', description: 'Repayment terms and schedule', legal: 'Money Lending Ordinance' },
+        { id: 'total_cost', name: 'Total Cost of Borrowing', description: 'Total amount payable including fees', legal: 'Money Lending Ordinance Section 3' },
+        { id: 'written_agreement', name: 'Written Agreement', description: 'Agreement must be in writing', legal: 'Money Lending Ordinance Section 3' },
+        { id: 'default_terms', name: 'Default/Late Payment Terms', description: 'Consequences of default or late payment', legal: 'Money Lending Ordinance' },
+      ]
+    },
+    pawn_pledge: {
+      name: 'Pawn/Pledge Agreement',
+      icon: '💍',
+      description: 'Required clauses under Pawnbrokers Ordinance',
+      acts: ['Pawnbrokers Ordinance'],
+      clauses: [
+        { id: 'pledged_item_description', name: 'Description of Pledged Item', description: 'Pledged item clearly described', legal: 'Pawnbrokers Ordinance Section 15' },
+        { id: 'loan_amount_pawn', name: 'Loan Amount Against Pledge', description: 'Amount advanced against the pledge', legal: 'Pawnbrokers Ordinance' },
+        { id: 'redemption_period', name: 'Redemption Period', description: 'Time allowed to redeem the pledge', legal: 'Pawnbrokers Ordinance Section 15' },
+        { id: 'pawn_ticket', name: 'Pawn Ticket/Receipt', description: 'Receipt issued for every pledge', legal: 'Pawnbrokers Ordinance Section 15' },
+        { id: 'interest_charges_pawn', name: 'Interest/Charges', description: 'Interest and charges specified', legal: 'Pawnbrokers Ordinance' },
+      ]
+    },
+    land_property: {
+      name: 'Property/Land Sale Deed',
+      icon: '🏡',
+      description: 'Required clauses under Prevention of Frauds Ordinance and Registration of Documents Ordinance',
+      acts: ['Prevention of Frauds Ordinance No. 7 of 1840', 'Registration of Documents Ordinance'],
+      clauses: [
+        { id: 'property_description', name: 'Property Description', description: 'Full description including boundaries, extent, and plan number', legal: 'Prevention of Frauds Ordinance Section 2' },
+        { id: 'notarial_attestation', name: 'Notarial Attestation', description: 'Deed attested by a notary public', legal: 'Prevention of Frauds Ordinance Section 2' },
+        { id: 'witnesses', name: 'Two Witnesses', description: 'Deed signed before two witnesses', legal: 'Prevention of Frauds Ordinance Section 2' },
+        { id: 'purchase_price_land', name: 'Purchase Price/Consideration', description: 'Sale price clearly specified', legal: 'Prevention of Frauds Ordinance Section 2' },
+        { id: 'title_warranty', name: 'Title Warranty', description: 'Vendor warrants good and marketable title', legal: 'Prevention of Frauds Ordinance' },
+        { id: 'registration', name: 'Registration of Deed', description: 'Deed registered in the Land Registry', legal: 'Registration of Documents Ordinance Section 2' },
+      ]
+    },
+    electronic_contract: {
+      name: 'Electronic/E-Commerce Agreement',
+      icon: '💻',
+      description: 'Required clauses under Electronic Transactions Act',
+      acts: ['Electronic Transactions Act No. 19 of 2006'],
+      clauses: [
+        { id: 'econtract_parties', name: 'Identification of Parties', description: 'Parties clearly identified', legal: 'Electronic Transactions Act' },
+        { id: 'consent_mechanism', name: 'Consent/Acceptance Mechanism', description: 'How consent is obtained (click-wrap, opt-in etc.)', legal: 'Electronic Transactions Act Section 4' },
+        { id: 'esignature_provision', name: 'Electronic Signature', description: 'Electronic signature validity', legal: 'Electronic Transactions Act Section 7' },
+        { id: 'terms_accessibility', name: 'Terms Accessibility', description: 'Terms accessible and readable', legal: 'Electronic Transactions Act' },
+        { id: 'dispute_resolution_ecommerce', name: 'Dispute Resolution', description: 'How disputes will be resolved', legal: 'Electronic Transactions Act' },
+      ]
+    },
     general: {
       name: 'Legal Document',
       icon: '📄',

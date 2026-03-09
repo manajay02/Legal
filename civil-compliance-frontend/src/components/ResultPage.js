@@ -81,6 +81,63 @@ function ResultPage({ results, onBack, onViewMandatory, onViewActs, activeFilter
         { id: 'dissolution', name: 'Termination/Dissolution Terms', description: 'How the partnership can be ended' },
       ]
     },
+    sale_of_goods: {
+      name: 'Sale of Goods Agreement',
+      icon: '🛒',
+      clauses: [
+        { id: 'goods_description', name: 'Description of Goods', description: 'Clear description of goods being sold' },
+        { id: 'sale_price', name: 'Price/Consideration', description: 'Purchase price clearly specified' },
+        { id: 'delivery_terms', name: 'Delivery Terms', description: 'When and how goods will be delivered' },
+        { id: 'quality_warranty', name: 'Quality/Warranty Terms', description: 'Merchantable quality and warranty provisions' },
+        { id: 'payment_terms', name: 'Payment Terms', description: 'How and when payment will be made' },
+      ]
+    },
+    microfinance: {
+      name: 'Microfinance/Lending Agreement',
+      icon: '🏦',
+      clauses: [
+        { id: 'loan_amount', name: 'Principal/Loan Amount', description: 'Principal amount clearly stated' },
+        { id: 'interest_rate', name: 'Interest Rate Disclosure', description: 'Interest rate clearly disclosed' },
+        { id: 'repayment_schedule', name: 'Repayment Schedule', description: 'Repayment terms and schedule' },
+        { id: 'total_cost', name: 'Total Cost of Borrowing', description: 'Total amount payable including fees' },
+        { id: 'written_agreement', name: 'Written Agreement', description: 'Agreement must be in writing' },
+        { id: 'default_terms', name: 'Default/Late Payment Terms', description: 'Consequences of default or late payment' },
+      ]
+    },
+    pawn_pledge: {
+      name: 'Pawn/Pledge Agreement',
+      icon: '💍',
+      clauses: [
+        { id: 'pledged_item_description', name: 'Description of Pledged Item', description: 'Pledged item clearly described' },
+        { id: 'loan_amount_pawn', name: 'Loan Amount Against Pledge', description: 'Amount advanced against the pledge' },
+        { id: 'redemption_period', name: 'Redemption Period', description: 'Time allowed to redeem the pledge' },
+        { id: 'pawn_ticket', name: 'Pawn Ticket/Receipt', description: 'Receipt issued for every pledge' },
+        { id: 'interest_charges_pawn', name: 'Interest/Charges', description: 'Interest and charges specified' },
+      ]
+    },
+    land_property: {
+      name: 'Property/Land Sale Deed',
+      icon: '🏠',
+      clauses: [
+        { id: 'property_description', name: 'Property Description', description: 'Full description including boundaries, extent, and plan number' },
+        { id: 'notarial_attestation', name: 'Notarial Attestation', description: 'Deed attested by a notary public' },
+        { id: 'witnesses', name: 'Two Witnesses', description: 'Deed signed before two witnesses' },
+        { id: 'purchase_price_land', name: 'Purchase Price/Consideration', description: 'Sale price clearly specified' },
+        { id: 'title_warranty', name: 'Title Warranty', description: 'Vendor warrants good and marketable title' },
+        { id: 'registration', name: 'Registration of Deed', description: 'Deed registered in the Land Registry' },
+      ]
+    },
+    electronic_contract: {
+      name: 'Electronic/E-Commerce Agreement',
+      icon: '💻',
+      clauses: [
+        { id: 'econtract_parties', name: 'Identification of Parties', description: 'Parties clearly identified' },
+        { id: 'consent_mechanism', name: 'Consent/Acceptance Mechanism', description: 'How consent is obtained (click-wrap, opt-in etc.)' },
+        { id: 'esignature_provision', name: 'Electronic Signature', description: 'Electronic signature validity' },
+        { id: 'terms_accessibility', name: 'Terms Accessibility', description: 'Terms accessible and readable' },
+        { id: 'dispute_resolution_ecommerce', name: 'Dispute Resolution', description: 'How disputes will be resolved' },
+      ]
+    },
     general: {
       name: 'Legal Document',
       icon: '📄',

@@ -147,18 +147,12 @@ const Compliance = (() => {
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Analyzing…';
     try {
-      // Try /analyze-text endpoint; fall back to /upload-pdf with text blob
-      let r = await fetch(`${API()}/analyze-text`, {
+      // Use /check endpoint with contract_text field
+      let r = await fetch(`${API()}/check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text })
+        body: JSON.stringify({ contract_text: text })
       });
-      if (!r.ok && r.status === 404) {
-        // Fallback: send as plain text file
-        const blob = new Blob([text], { type: 'text/plain' });
-        const fd = new FormData(); fd.append('file', blob, 'contract.txt');
-        r = await fetch(`${API()}/upload-pdf`, { method: 'POST', body: fd });
-      }
       const d = await r.json();
       if (!r.ok) throw new Error(d.detail || d.error || 'Analysis failed');
       lastResult = d;
@@ -184,13 +178,23 @@ const Compliance = (() => {
     if (!out) return;
 
     const isContract  = d.is_contract ?? d.is_valid_contract ?? true;
-    const overall    = d.compliance_status || d.overall_status || (isContract ? 'Reviewed' : 'Not a Contract');
-    const score      = d.compliance_score  ?? d.score          ?? null;
-    const present    = d.present_clauses   || d.clauses_present || [];
-    const missing    = d.missing_clauses   || d.clauses_missing || [];
-    const issues     = d.issues            || d.non_compliant_clauses || [];
-    const summary    = d.summary           || d.review_summary  || '';
-    const doctype    = d.document_type     || d.contract_type   || '';
+    const doctype    = d.document_type || d.domain || d.contract_type || '';
+    const summary    = d.summary || d.review_summary || '';
+    
+    // Parse clauses from API response - split into compliant and violations
+    const allClauses = d.clauses || [];
+    const compliantClauses = allClauses.filter(c => c.status?.includes('Compliant') || c.prediction === 'entailment');
+    const violations = allClauses.filter(c => c.status?.includes('Violation') || c.prediction === 'contradiction');
+    
+    // Get mandatory clauses
+    const presentMandatory = d.present_mandatory || [];
+    const missingMandatory = d.missing_mandatory || [];
+    
+    // Calculate compliance score
+    const totalClauses = allClauses.length;
+    const violationCount = violations.length;
+    const score = totalClauses > 0 ? Math.round(((totalClauses - violationCount) / totalClauses) * 100) : null;
+    const overall = violationCount === 0 ? 'Fully Compliant' : violationCount <= 3 ? 'Mostly Compliant' : 'Needs Review';
 
     if (!isContract) {
       out.innerHTML = `<div class="compliance-warning">
@@ -210,38 +214,68 @@ const Compliance = (() => {
         ${scoreHtml}
         <div class="compliance-meta">
           <div class="comp-status-badge ${overall.toLowerCase().replace(/\s/g,'-')}">${esc(overall)}</div>
-          ${doctype ? `<div class="comp-type">${esc(doctype)}</div>` : ''}
+          ${doctype ? `<div class="comp-type">${esc(doctype.charAt(0).toUpperCase() + doctype.slice(1))} Contract</div>` : ''}
           ${summary ? `<p class="comp-summary">${esc(summary)}</p>` : ''}
+          <p class="comp-summary">${compliantClauses.length} compliant, ${violations.length} violations, ${missingMandatory.length} missing mandatory</p>
         </div>
       </div>
-      ${present.length ? `
+      
+      ${violations.length ? `
       <div class="clause-group">
-        <h4 class="clause-group-title present">Present Clauses (${present.length})</h4>
-        ${present.map(c => `<div class="clause-item present">
-          <span class="clause-check">✓</span>
-          <span class="clause-name">${esc(typeof c === 'string' ? c : c.name || c.clause || JSON.stringify(c))}</span>
-          ${c.note ? `<span class="clause-note">${esc(c.note)}</span>` : ''}
+        <h4 class="clause-group-title issues">⚠️ Violations Found (${violations.length})</h4>
+        ${violations.map(c => `<div class="clause-item issue">
+          <div class="clause-header">
+            <span class="clause-check">🔴</span>
+            <span class="clause-category">${esc(c.category || 'General')}</span>
+            <span class="clause-confidence">${c.confidence ? c.confidence.toFixed(1) + '%' : ''}</span>
+          </div>
+          <div class="clause-text">${esc(c.clause || '')}</div>
+          <div class="clause-details">
+            <div class="clause-law"><strong>Violated:</strong> ${esc(c.violated_act || c.law_reference || '')}</div>
+            <div class="clause-rule"><strong>Rule:</strong> ${esc(c.matched_rule || '')}</div>
+            <div class="clause-recommendation"><strong>⚡ ${esc(c.recommendation || '')}</strong></div>
+          </div>
         </div>`).join('')}
       </div>` : ''}
-      ${missing.length ? `
+      
+      ${missingMandatory.length ? `
       <div class="clause-group">
-        <h4 class="clause-group-title missing">Missing Clauses (${missing.length})</h4>
-        ${missing.map(c => `<div class="clause-item missing">
+        <h4 class="clause-group-title missing">❌ Missing Mandatory Clauses (${missingMandatory.length})</h4>
+        ${missingMandatory.map(c => `<div class="clause-item missing">
           <span class="clause-check">✗</span>
-          <span class="clause-name">${esc(typeof c === 'string' ? c : c.name || c.clause || JSON.stringify(c))}</span>
-          ${c.note ? `<span class="clause-note">${esc(c.note)}</span>` : ''}
+          <span class="clause-name">${esc(c.clause || c.id || '')}</span>
+          <span class="clause-note">${esc(c.legal_basis || c.rule || '')}</span>
         </div>`).join('')}
       </div>` : ''}
-      ${issues.length ? `
+      
+      ${presentMandatory.length ? `
       <div class="clause-group">
-        <h4 class="clause-group-title issues">Issues Found (${issues.length})</h4>
-        ${issues.map(i => `<div class="clause-item issue">
-          <span class="clause-check">⚠</span>
-          <span class="clause-name">${esc(typeof i === 'string' ? i : i.name || i.issue || JSON.stringify(i))}</span>
-          ${i.description ? `<p class="clause-desc">${esc(i.description)}</p>` : ''}
+        <h4 class="clause-group-title present">✅ Present Mandatory Clauses (${presentMandatory.length})</h4>
+        ${presentMandatory.map(c => `<div class="clause-item present">
+          <span class="clause-check">✓</span>
+          <span class="clause-name">${esc(c.clause || c.id || '')}</span>
+          <span class="clause-note">${esc(c.legal_basis || '')} (${c.confidence ? c.confidence.toFixed(1) + '% confidence' : ''})</span>
         </div>`).join('')}
       </div>` : ''}
-      ${!present.length && !missing.length && !issues.length ? '<div class="empty-state">No clause details returned by the API.</div>' : ''}`;
+      
+      ${compliantClauses.length ? `
+      <div class="clause-group">
+        <h4 class="clause-group-title present">✅ Compliant Clauses (${compliantClauses.length})</h4>
+        ${compliantClauses.slice(0, 10).map(c => `<div class="clause-item present">
+          <div class="clause-header">
+            <span class="clause-check">🟢</span>
+            <span class="clause-category">${esc(c.category || 'General')}</span>
+            <span class="clause-confidence">${c.confidence ? c.confidence.toFixed(1) + '%' : ''}</span>
+          </div>
+          <div class="clause-text">${esc((c.clause || '').substring(0, 150))}${(c.clause || '').length > 150 ? '...' : ''}</div>
+          <div class="clause-details">
+            <div class="clause-law">${esc(c.law_reference || '')}</div>
+          </div>
+        </div>`).join('')}
+        ${compliantClauses.length > 10 ? `<div class="clause-item present"><em>+${compliantClauses.length - 10} more compliant clauses...</em></div>` : ''}
+      </div>` : ''}
+      
+      ${!allClauses.length && !presentMandatory.length && !missingMandatory.length ? '<div class="empty-state">No clause details returned by the API.</div>' : ''}`;
   }
 
   /* ── History ───────────────────────────────────────────────────── */

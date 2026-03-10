@@ -275,6 +275,7 @@ def signup():
     if len(password) < 6:
         return jsonify({"error": "Password must be at least 6 characters."}), 400
 
+    use_local = True  # Default to local storage
     if _mongo_available:
         try:
             if _users.find_one({"email": email}):
@@ -283,9 +284,12 @@ def signup():
                 "name": name, "email": email,
                 "password": generate_password_hash(password),
             })
+            use_local = False  # MongoDB succeeded
         except Exception as e:
-            return jsonify({"error": "Database is currently unavailable. Please try again later."}), 503
-    else:
+            print(f"[WARNING] MongoDB signup failed, using local storage: {e}")
+            use_local = True
+    
+    if use_local:
         if _local_find_user(email):
             return jsonify({"error": "An account with this email already exists."}), 409
         _local_insert_user(name, email, generate_password_hash(password))
@@ -300,12 +304,17 @@ def login():
     email    = (data.get("email") or "").strip().lower()
     password = data.get("password") or ""
 
+    user = None
+    # Try MongoDB first, fall back to local storage
     if _mongo_available:
         try:
             user = _users.find_one({"email": email})
         except Exception as e:
-            return jsonify({"error": "Database is currently unavailable. Please try again later."}), 503
-    else:
+            print(f"[WARNING] MongoDB login query failed, trying local storage: {e}")
+            user = None
+    
+    # If MongoDB failed or didn't find user, try local storage
+    if user is None:
         user = _local_find_user(email)
 
     if not user or not check_password_hash(user["password"], password):

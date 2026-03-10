@@ -19,7 +19,7 @@ const CONFIG = {
   HEALTH: {
     search:     'http://localhost:5000/login.html',
     scorer:     'http://127.0.0.1:8000/api/v1/health',
-    extractor:  'http://127.0.0.1:8001/api/v1/health',
+    extractor:  'http://127.0.0.1:8001/health',
     compliance: 'http://127.0.0.1:8002/',
   },
 

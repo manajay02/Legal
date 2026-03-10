@@ -3,11 +3,15 @@
    ============================================ */
 
 // API Endpoints Configuration
+// Port 5000: Flask (Similarity + Auth)
+// Port 8000: Argument Scorer (backend-nawanjana)
+// Port 8001: Document Extractor (backend-paramitha)
+// Port 8002: Compliance Auditor
 const API = {
     similarity: 'http://localhost:5000',
-    argument: 'http://localhost:8001',
+    argument: 'http://localhost:8000',
     compliance: 'http://localhost:8002',
-    extractor: 'http://localhost:8003'
+    extractor: 'http://localhost:8001'
 };
 
 // ============================================
@@ -80,9 +84,9 @@ document.querySelectorAll('.dashboard-card').forEach(card => {
 async function checkServiceStatus() {
     const services = [
         { port: 5000, id: 'status-5000', name: 'Similarity' },
-        { port: 8001, id: 'status-8001', name: 'Argument' },
+        { port: 8000, id: 'status-8000', name: 'Argument' },
         { port: 8002, id: 'status-8002', name: 'Compliance' },
-        { port: 8003, id: 'status-8003', name: 'Extractor' }
+        { port: 8001, id: 'status-8001', name: 'Extractor' }
     ];
     
     for (const service of services) {

@@ -34,8 +34,15 @@ const Extractor = (() => {
     try {
       const r = await fetch(`${API()}/health`, { signal: AbortSignal.timeout(4000) });
       if (r.ok) {
-        badge.className = 'api-status-badge online';
-        badge.innerHTML = '<div class="pulse-dot online"></div><span>Online · port 8001</span>';
+        const data = await r.json();
+        const status = data.status || 'unknown';
+        // Accept both 'healthy' and 'degraded' as functional
+        if (status === 'healthy' || status === 'degraded') {
+          badge.className = 'api-status-badge online';
+          badge.innerHTML = `<div class="pulse-dot online"></div><span>Online · port 8001${status === 'degraded' ? ' (limited)' : ''}</span>`;
+        } else {
+          throw new Error('unhealthy');
+        }
       } else throw new Error();
     } catch {
       badge.className = 'api-status-badge offline';
@@ -117,16 +124,31 @@ const Extractor = (() => {
     const btn  = document.getElementById('btn-ext-upload');
     const result = document.getElementById('ext-upload-result');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Extracting…';
-    result.innerHTML = '<div class="placeholder-message">Processing…</div>';
+    btn.innerHTML = '<span class="spinner"></span> Uploading…';
+    result.innerHTML = '<div class="placeholder-message">Uploading document…</div>';
     result.style.display = '';
 
     try {
+      // Step 1: Upload the file
       const fd = new FormData(); fd.append('file', file);
-      const r = await fetch(`${API()}/api/v1/upload`, { method: 'POST', body: fd });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.detail || d.error || 'Upload failed');
-      result.innerHTML = renderDocResult(d);
+      const uploadResp = await fetch(`${API()}/api/v1/upload`, { method: 'POST', body: fd });
+      const uploadData = await uploadResp.json();
+      if (!uploadResp.ok) throw new Error(uploadData.detail || uploadData.error || 'Upload failed');
+      
+      const docId = uploadData.document_id;
+      result.innerHTML = '<div class="placeholder-message">Extracting data (this may take a minute)…</div>';
+      btn.innerHTML = '<span class="spinner"></span> Extracting…';
+      
+      // Step 2: Call process endpoint to extract data
+      const processResp = await fetch(`${API()}/api/v1/process/${encodeURIComponent(docId)}`, { method: 'POST' });
+      const processData = await processResp.json();
+      if (!processResp.ok) throw new Error(processData.detail || processData.error || 'Processing failed');
+      
+      // Step 3: Fetch the processed document to get full results
+      const docResp = await fetch(`${API()}/api/v1/documents/${encodeURIComponent(docId)}`);
+      const docData = await docResp.json();
+      
+      result.innerHTML = renderDocResult(docData);
       document.getElementById('ext-upload-zone')._files = [];
       document.getElementById('ext-upload-zone').querySelector('p').textContent = 'Drag & drop a PDF/TXT, or click to browse';
       App.toast('Document processed!', 'success');
@@ -159,13 +181,25 @@ const Extractor = (() => {
     for (const file of files) {
       out.innerHTML += `<div class="batch-row" id="batch-${esc(file.name.replace(/\W/g,'_'))}">
         <span class="batch-filename">${esc(file.name)}</span>
-        <span class="batch-status pending">Processing…</span></div>`;
+        <span class="batch-status pending">Uploading…</span></div>`;
       try {
+        // Step 1: Upload
         const fd = new FormData(); fd.append('file', file);
-        const r = await fetch(`${API()}/api/v1/upload`, { method: 'POST', body: fd });
-        const d = await r.json();
-        if (!r.ok) throw new Error(d.detail || 'Failed');
-        results.push({ name: file.name, ok: true, data: d });
+        const uploadResp = await fetch(`${API()}/api/v1/upload`, { method: 'POST', body: fd });
+        const uploadData = await uploadResp.json();
+        if (!uploadResp.ok) throw new Error(uploadData.detail || 'Upload failed');
+        
+        const docId = uploadData.document_id;
+        // Update status to processing
+        const row = document.getElementById(`batch-${file.name.replace(/\W/g,'_')}`);
+        if (row) row.querySelector('.batch-status').textContent = 'Processing…';
+        
+        // Step 2: Process
+        const processResp = await fetch(`${API()}/api/v1/process/${encodeURIComponent(docId)}`, { method: 'POST' });
+        const processData = await processResp.json();
+        if (!processResp.ok) throw new Error(processData.detail || 'Processing failed');
+        
+        results.push({ name: file.name, ok: true, data: processData });
       } catch (e) {
         results.push({ name: file.name, ok: false, error: e.message });
       }
@@ -210,60 +244,133 @@ const Extractor = (() => {
       const name   = doc.filename || doc.name || doc.file_name || 'Document';
       const id     = doc.id || doc._id || doc.doc_id || '';
       const date   = doc.created_at || doc.uploaded_at || doc.timestamp || '';
-      return `<div class="doc-list-item" data-id="${esc(id)}">
-        <div class="doc-list-icon">📄</div>
+      const isClickable = status === 'completed';
+      return `<div class="doc-list-item ${isClickable ? 'clickable' : ''}" data-id="${esc(id)}" ${isClickable ? `onclick="Extractor.viewDoc('${esc(id)}')"` : ''}>
+        <div class="doc-list-icon">${status === 'completed' ? '✅' : status === 'processing' ? '⏳' : '📄'}</div>
         <div class="doc-list-info">
           <div class="doc-list-name">${esc(name)}</div>
-          <div class="doc-list-meta">${date ? `Uploaded: ${new Date(date).toLocaleString()}` : ''} ${id ? `· ID: ${esc(id)}` : ''}</div>
+          <div class="doc-list-meta">${date ? `Uploaded: ${new Date(date).toLocaleString()}` : ''} ${id ? `· ID: ${esc(id.slice(0,8))}...` : ''}</div>
         </div>
         <span class="doc-status-chip ${status}">${esc(status)}</span>
-        <button class="btn-icon-sm" title="View" onclick="Extractor.viewDoc('${esc(id)}')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
+        ${isClickable ? `<span class="doc-view-hint">Click to view details →</span>` : ''}
       </div>`;
     }).join('');
   }
 
   async function viewDoc(id) {
     if (!id) return;
+    
+    // Show loading state in detail panel
+    const detailPanel = document.getElementById('ext-doc-detail');
+    if (detailPanel) {
+      detailPanel.innerHTML = `<div class="placeholder-message"><span class="spinner-lg"></span> Loading document details...</div>`;
+      detailPanel.style.display = '';
+      detailPanel.scrollIntoView({ behavior: 'smooth' });
+    }
+    
     try {
       const r = await fetch(`${API()}/api/v1/documents/${encodeURIComponent(id)}`);
       const d = await r.json();
-      const result = document.getElementById('ext-upload-result');
-      result.innerHTML = renderDocResult(d);
-      result.style.display = '';
-      // Switch to documents tab to show result
-      document.querySelector('#ext-tabs .tab-btn[data-tab="ext-documents"]')?.click();
+      
+      // Show in document detail panel (in Documents tab)
+      if (detailPanel) {
+        detailPanel.innerHTML = `
+          <div class="detail-header">
+            <h3>📄 Document Details</h3>
+            <button class="btn-secondary btn-sm" onclick="document.getElementById('ext-doc-detail').style.display='none'">✕ Close</button>
+          </div>
+          ${renderDocResult(d)}
+        `;
+        detailPanel.scrollIntoView({ behavior: 'smooth' });
+      }
     } catch (e) {
+      if (detailPanel) {
+        detailPanel.innerHTML = `<div class="empty-state error">Could not load document details: ${esc(e.message)}</div>`;
+      }
       App.toast('Could not load document details.', 'error');
     }
   }
 
   function renderDocResult(d) {
-    const title    = d.title        || d.case_title       || d.filename || 'Extracted Document';
-    const court    = d.court        || d.court_name       || '';
-    const date     = d.judgment_date|| d.date             || '';
-    const parties  = d.parties      || d.involved_parties || '';
-    const summary  = d.summary      || d.case_summary     || '';
-    const facts    = d.key_facts    || d.facts            || '';
-    const holding  = d.holding      || d.court_holding    || '';
-    const refs     = d.legal_refs   || d.legal_references || d.citations || [];
-    const extras   = d.extracted_data || {};
-
-    const sections = [
-      court    && `<div class="ext-field"><span class="ext-label">Court</span><span class="ext-value">${esc(court)}</span></div>`,
-      date     && `<div class="ext-field"><span class="ext-label">Date</span><span class="ext-value">${esc(date)}</span></div>`,
-      parties  && `<div class="ext-field"><span class="ext-label">Parties</span><span class="ext-value">${esc(typeof parties === 'string' ? parties : JSON.stringify(parties))}</span></div>`,
-      summary  && `<div class="ext-section"><h4>Summary</h4><p>${esc(summary)}</p></div>`,
-      facts    && `<div class="ext-section"><h4>Key Facts</h4><p>${esc(facts)}</p></div>`,
-      holding  && `<div class="ext-section"><h4>Holding</h4><p>${esc(holding)}</p></div>`,
-      refs.length && `<div class="ext-section"><h4>Legal References</h4><ul>${refs.map(r => `<li>${esc(typeof r === 'string' ? r : JSON.stringify(r))}</li>`).join('')}</ul></div>`,
-      Object.keys(extras).length && `<div class="ext-section"><h4>Additional Data</h4><pre class="json-pre">${esc(JSON.stringify(extras, null, 2))}</pre></div>`,
-    ].filter(Boolean).join('');
+    // Extract metadata (API returns nested structure)
+    const meta     = d.metadata || {};
+    const title    = meta.case_number || d.title || d.case_title || d.filename || 'Extracted Document';
+    const court    = meta.court || d.court || d.court_name || '';
+    const date     = meta.date || d.judgment_date || d.date || '';
+    const caseType = meta.case_type || d.case_type || '';
+    const year     = meta.year || '';
+    const parties  = meta.parties || d.parties || d.involved_parties || [];
+    const judges   = meta.judges || d.judges || [];
+    const petitioners = meta.petitioners || [];
+    const respondents = meta.respondents || [];
+    const legalProvisions = meta.legal_provisions || d.legal_refs || d.legal_references || d.citations || [];
+    
+    // Extract sections from API response
+    const sections = d.sections || [];
+    
+    // Build metadata section
+    let metaHtml = '';
+    if (court) metaHtml += `<div class="ext-field"><span class="ext-label">Court</span><span class="ext-value">${esc(court)}</span></div>`;
+    if (date) metaHtml += `<div class="ext-field"><span class="ext-label">Date</span><span class="ext-value">${esc(date)}</span></div>`;
+    if (caseType) metaHtml += `<div class="ext-field"><span class="ext-label">Case Type</span><span class="ext-value">${esc(caseType)}</span></div>`;
+    if (year) metaHtml += `<div class="ext-field"><span class="ext-label">Year</span><span class="ext-value">${esc(year)}</span></div>`;
+    if (parties.length) metaHtml += `<div class="ext-field"><span class="ext-label">Parties</span><span class="ext-value">${esc(Array.isArray(parties) ? parties.join(' vs ') : parties)}</span></div>`;
+    if (judges.length) metaHtml += `<div class="ext-field"><span class="ext-label">Judges</span><span class="ext-value">${esc(Array.isArray(judges) ? judges.join(', ') : judges)}</span></div>`;
+    if (petitioners.length) metaHtml += `<div class="ext-field"><span class="ext-label">Petitioners</span><span class="ext-value">${esc(Array.isArray(petitioners) ? petitioners.join(', ') : petitioners)}</span></div>`;
+    if (respondents.length) metaHtml += `<div class="ext-field"><span class="ext-label">Respondents</span><span class="ext-value">${esc(Array.isArray(respondents) ? respondents.join(', ') : respondents)}</span></div>`;
+    
+    // Build legal provisions section
+    let provisionsHtml = '';
+    if (legalProvisions.length) {
+      provisionsHtml = `<div class="ext-section"><h4>📜 Legal Provisions</h4><ul>${legalProvisions.map(r => `<li>${esc(typeof r === 'string' ? r : JSON.stringify(r))}</li>`).join('')}</ul></div>`;
+    }
+    
+    // Build sections HTML
+    let sectionsHtml = '';
+    if (sections.length) {
+      sectionsHtml = sections.map(s => {
+        const sTitle = s.title || `Section ${s.order_index || ''}`;
+        const sText = s.text || s.content || '';
+        if (!sText) return '';
+        return `<div class="ext-section">
+          <h4>${esc(sTitle)}</h4>
+          <p>${esc(sText)}</p>
+        </div>`;
+      }).filter(Boolean).join('');
+    }
+    
+    // Check for timeline, citations, insights, outcome
+    let extrasHtml = '';
+    if (d.timeline && d.timeline.length) {
+      extrasHtml += `<div class="ext-section"><h4>📅 Timeline</h4><ul>${d.timeline.map(t => `<li><strong>${esc(t.date || t.year || '')}</strong>: ${esc(t.event || t.description || '')}</li>`).join('')}</ul></div>`;
+    }
+    if (d.citations && d.citations.length) {
+      extrasHtml += `<div class="ext-section"><h4>📖 Citations</h4><ul>${d.citations.map(c => `<li>${esc(typeof c === 'string' ? c : c.citation || JSON.stringify(c))}</li>`).join('')}</ul></div>`;
+    }
+    if (d.insights) {
+      extrasHtml += `<div class="ext-section"><h4>💡 Insights</h4><p>${esc(typeof d.insights === 'string' ? d.insights : JSON.stringify(d.insights))}</p></div>`;
+    }
+    if (d.outcome) {
+      extrasHtml += `<div class="ext-section"><h4>⚖️ Outcome</h4><p>${esc(typeof d.outcome === 'string' ? d.outcome : JSON.stringify(d.outcome))}</p></div>`;
+    }
+    
+    // Status badge
+    const status = d.status || 'unknown';
+    const statusClass = status === 'completed' ? 'completed' : status === 'processing' ? 'processing' : 'unknown';
+    const statusBadge = `<span class="doc-status-chip ${statusClass}">${esc(status)}</span>`;
+    
+    const hasContent = metaHtml || provisionsHtml || sectionsHtml || extrasHtml;
 
     return `<div class="ext-result-card">
-      <div class="ext-result-title">${esc(title)}</div>
-      ${sections || '<div class="empty-state">No structured data extracted.</div>'}
+      <div class="ext-result-header">
+        <div class="ext-result-title">${esc(title)}</div>
+        ${statusBadge}
+      </div>
+      ${metaHtml ? `<div class="ext-metadata">${metaHtml}</div>` : ''}
+      ${provisionsHtml}
+      ${sectionsHtml}
+      ${extrasHtml}
+      ${!hasContent ? '<div class="empty-state">No structured data extracted.</div>' : ''}
     </div>`;
   }
 

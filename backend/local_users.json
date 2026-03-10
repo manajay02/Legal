@@ -8,5 +8,10 @@
     "name": "Maneth Jayawardhana",
     "email": "maneth@gmail.com",
     "password": "scrypt:32768:8:1$2HFnmbm2v4qX3FN8$d5f5f651de4124d5ed098a7b353b7026919d49cac6318640074a487865bb380eab54a9f4d5084f98bfe68fc639cf98ff0be8112d806c9e41d1f85f638dde7d5f"
+  },
+  {
+    "name": "Test User",
+    "email": "test@gmail.com",
+    "password": "scrypt:32768:8:1$mIqWYTA9ygicDlyq$0d6104ec7c66f8ee1850d1f458e8866d00c65c72acb81e98d8dbefa85858bbf54d2248816be20ee8e18838e171a50aff874805f7ca9ab61b08fef54fdef0d4e4"
   }
 ]

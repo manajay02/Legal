@@ -28,17 +28,17 @@ $p1 = Start-Process python -ArgumentList "-m", "flask", "run", "--host=0.0.0.0",
 $procIds += $p1.Id
 Write-Host "  -> PID: $($p1.Id)"
 
-# 2. Backend-Nawanjana (FastAPI) - Port 8001
-Write-Host "Starting Backend-Nawanjana (FastAPI) on port 8001..." -ForegroundColor Green
-$p2 = Start-Process python -ArgumentList "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001" `
+# 2. Backend-Nawanjana (FastAPI) - Port 8000
+Write-Host "Starting Backend-Nawanjana (FastAPI) on port 8000..." -ForegroundColor Green
+$p2 = Start-Process python -ArgumentList "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000" `
     -WorkingDirectory "$ROOT\backend-nawanjana" -PassThru -WindowStyle Hidden `
     -RedirectStandardOutput "$ROOT\backend-nawanjana\uvicorn_out.txt" -RedirectStandardError "$ROOT\backend-nawanjana\uvicorn_err.txt"
 $procIds += $p2.Id
 Write-Host "  -> PID: $($p2.Id)"
 
-# 3. Backend-Paramitha (FastAPI) - Port 8003
-Write-Host "Starting Backend-Paramitha (FastAPI) on port 8003..." -ForegroundColor Green
-$p3 = Start-Process python -ArgumentList "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8003" `
+# 3. Backend-Paramitha (FastAPI) - Port 8001
+Write-Host "Starting Backend-Paramitha (FastAPI) on port 8001..." -ForegroundColor Green
+$p3 = Start-Process python -ArgumentList "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001" `
     -WorkingDirectory "$ROOT\backend -paramitha\backend (1) new" -PassThru -WindowStyle Hidden `
     -RedirectStandardOutput "$ROOT\backend -paramitha\backend (1) new\uvicorn_out.txt" -RedirectStandardError "$ROOT\backend -paramitha\backend (1) new\uvicorn_err.txt"
 $procIds += $p3.Id

@@ -26,7 +26,7 @@ from pymongo import MongoClient
 from tqdm import tqdm
 
 # ── Configuration ─────────────────────────────────────────────────────────────
-MONGO_URI  = "mongodb://localhost:27017/"
+MONGO_URI  = "mongodb+srv://maneth:pathana123@cluster0.thqkj39.mongodb.net/?appName=Cluster0"
 DB_NAME    = "legal_cases_db"
 COLLECTION = "cases"
 MODELS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")

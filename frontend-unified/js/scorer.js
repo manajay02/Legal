@@ -141,7 +141,7 @@ const Scorer = (() => {
         const r = await fetch(`${API()}/api/v1/analyze_grounded`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ argument_text: text, doc_ids: docIds, stream: false })
+          body: JSON.stringify({ text: text, doc_ids: docIds, stream: false })
         });
         const d = await r.json();
         if (!r.ok) throw new Error(d.detail || d.error || 'Analysis failed');

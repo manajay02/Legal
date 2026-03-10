@@ -3,7 +3,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from src.inference.compliance_checker_v2 import check_compliance
-import fitz  # PyMuPDF
+import pymupdf as fitz  # PyMuPDF (new import style for v1.24+)
 import io
 from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime
@@ -195,7 +195,7 @@ def download_act(filename: str):
 # ----------------------------
 MONGODB_URL = os.getenv(
     "MONGODB_URL",
-    "mongodb+srv://chamathka:<db_password>@studentmanagementsystem.liuiv0a.mongodb.net/?appName=studentmanagementsystem"
+    "mongodb+srv://maneth:pathana123@cluster0.thqkj39.mongodb.net/?appName=Cluster0"
 )
 DB_NAME = "civil_compliance_auditor"
 

@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LexVision — Legal AI System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=4"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
+</head>
+<body>
+
+  <!-- ── Sidebar ──────────────────────────────────────────────────────────── -->
+  <nav id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 21V7"/><path d="M3 7h2c2 0 4-2 7-2s5 2 7 2h2"/></svg>
+      </div>
+      <div class="sidebar-logo-text">
+        <div class="sidebar-logo-title">LexVision</div>
+        <div class="sidebar-logo-sub">Sri Lanka Judiciary AI</div>
+      </div>
+    </div>
+
+    <ul class="nav-list">
+      <li class="nav-item active" data-component="similarity">
+        <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
+        <span class="nav-label">Similar Case Finder</span>
+      </li>
+      <li class="nav-item" data-component="compliance">
+        <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+        <span class="nav-label">Compliance Checker</span>
+      </li>
+      <li class="nav-item" data-component="extractor">
+        <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>
+        <span class="nav-label">Case Extractor</span>
+      </li>
+      <li class="nav-item" data-component="argument">
+        <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+        <span class="nav-label">Argument Scorer</span>
+      </li>
+    </ul>
+
+    <!-- User Info Section -->
+    <div id="user-info" class="sidebar-user" style="display:none;">
+      <div class="user-avatar">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div class="user-details">
+        <span id="user-name" class="user-name">User</span>
+        <button class="logout-btn" onclick="logout()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </button>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">LexVision &copy; 2026</div>
+  </nav>
+
+  <!-- ── Main content area ──────────────────────────────────────────────── -->
+  <div id="app-content">
+
+    <!-- ── Top bar ───────────────────────────────────────────────────────── -->
+    <div id="topbar">
+      <div class="topbar-left">
+        <span class="topbar-breadcrumb">LexVision</span>
+        <span class="topbar-sep">/</span>
+        <span class="topbar-current" id="topbar-current">Similarity Search</span>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-badge">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Supreme Court of Sri Lanka
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════ COMPONENT 1: Similarity Search ══ -->
+    <div class="component-panel active" id="panel-similarity">
+
+      <div class="card" id="search-panel">
+        <h2>Search &amp; Classify</h2>
+        <div class="tabs">
+          <button class="tab active" data-tab="by-file">By Filename</button>
+          <button class="tab classify-tab" data-tab="classify">Classify / Add Case</button>
+        </div>
+
+        <!-- By Filename -->
+        <div class="tab-content active" id="by-file">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="sel-category">Category</label>
+              <select id="sel-category"><option value="">-- Select category --</option></select>
+            </div>
+            <div class="form-group">
+              <label for="sel-subcategory">Subcategory</label>
+              <select id="sel-subcategory" disabled><option value="">-- Select subcategory --</option></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Classify / Add -->
+        <div class="tab-content" id="classify">
+          <div class="classify-box">
+            <p class="classify-hint">Upload a PDF or paste text — the AI will predict its <strong>category</strong> and <strong>subcategory</strong>, then optionally save it to the database.</p>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="clf-file">Upload PDF Document</label>
+                <input type="file" id="clf-file" accept=".pdf"/>
+              </div>
+            </div>
+            <div class="divider-or"><span>or</span></div>
+            <div class="form-group">
+              <label for="clf-text">Paste document text</label>
+              <textarea id="clf-text" rows="6" placeholder="Paste the content of the legal document here..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Options row -->
+        <div class="form-row options-row" id="search-options">
+          <div class="form-group">
+            <label for="sel-topn">Results to show</label>
+            <select id="sel-topn">
+              <option value="3">3</option>
+              <option value="5" selected>5</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
+            </select>
+          </div>
+          <div class="form-group checkbox-group">
+            <label><input type="checkbox" id="chk-global"/> Search across all categories (global)</label>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button id="btn-search" class="btn-primary" style="display:none;">Find Similar Cases</button>
+          <button id="btn-classify" class="btn-primary btn-classify" style="display:none;">Classify Document</button>
+          <button id="btn-add-case" class="btn-secondary" style="display:none;">Add Case to Database</button>
+        </div>
+      </div>
+
+      <section class="card" id="results-panel" style="display:none;">
+        <h2>Results <span id="results-count" class="badge"></span></h2>
+        <div id="results-list"></div>
+      </section>
+
+      <section class="card" id="classify-panel" style="display:none;">
+        <h2>Classification Result</h2>
+        <div id="classify-result"></div>
+      </section>
+
+      <section class="card" id="stats-panel">
+        <h2>Dataset Overview</h2>
+        <div id="stats-grid" class="stats-grid"></div>
+      </section>
+
+      <!-- ── Page Footer ──────────────────────────────────────────────────── -->
+      <footer class="sim-page-footer">
+        <div class="sim-footer-inner">
+          <div class="sim-footer-brand">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 21V7"/><path d="M3 7h2c2 0 4-2 7-2s5 2 7 2h2"/></svg>
+            <span>LexVision</span>
+          </div>
+          <div class="sim-footer-divline"></div>
+          <span class="sim-footer-text">Sri Lanka Judiciary AI Systems &nbsp;&bull;&nbsp; For legal research purposes only</span>
+          <div class="sim-footer-divline"></div>
+          <span class="sim-footer-copy">&copy; 2026 LexVision. All rights reserved.</span>
+        </div>
+      </footer>
+
+    </div>
+    <div class="component-panel" id="panel-extractor">
+      <div class="comp-header">
+        <div class="comp-header-icon extractor-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+        <div>
+          <h1 class="comp-title">Civil Case Extractor</h1>
+          <p class="comp-subtitle">Upload civil case PDFs — AI extracts structured metadata, sections, citations, and legal insights</p>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="card" id="extractor-card">
+        <div class="tabs" id="ext-tabs">
+          <button class="tab active" data-etab="ext-upload">Upload &amp; Process</button>
+          <button class="tab" data-etab="ext-documents">Documents</button>
+          <button class="tab" data-etab="ext-search">Search Cases</button>
+        </div>
+
+        <!-- Upload & Process -->
+        <div class="tab-content active" id="ext-upload">
+          <div class="form-group" style="margin-bottom:1rem">
+            <label for="ext-file">Select Civil Case PDF (max 50 MB)</label>
+            <input type="file" id="ext-file" accept=".pdf"/>
+          </div>
+          <div class="btn-row">
+            <button id="btn-ext-upload" class="btn-primary">Upload &amp; Extract</button>
+          </div>
+          <div id="ext-upload-status" style="margin-top:1rem"></div>
+        </div>
+
+        <!-- Documents list -->
+        <div class="tab-content" id="ext-documents">
+          <div class="btn-row" style="margin-bottom:1rem">
+            <button id="btn-ext-refresh" class="btn-secondary">Refresh List</button>
+          </div>
+          <div id="ext-doc-list"></div>
+
+          <!-- Document detail -->
+          <div id="ext-doc-detail" style="display:none; margin-top:1.5rem">
+            <h3 style="margin-bottom:.75rem; color:var(--primary)">Case Details <span id="ext-detail-id" style="font-size:.8rem; color:var(--muted)"></span></h3>
+            <div id="ext-detail-content"></div>
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div class="tab-content" id="ext-search">
+          <div class="form-group" style="margin-bottom:.75rem">
+            <label for="ext-search-input">Natural language or keyword query</label>
+            <input type="text" id="ext-search-input" placeholder="e.g. land dispute partition family property rights..." style="width:100%;padding:.6rem .85rem;border:1px solid var(--border);border-radius:var(--radius);font-size:.95rem;"/>
+          </div>
+          <div class="form-row" style="gap:1rem; margin-bottom:.75rem">
+            <div class="form-group">
+              <label for="ext-search-outcome">Outcome</label>
+              <select id="ext-search-outcome" style="width:100%;padding:.5rem;border:1px solid var(--border);border-radius:var(--radius);">
+                <option value="">Any</option>
+                <option value="Allowed">Allowed</option>
+                <option value="Dismissed">Dismissed</option>
+                <option value="Partially Allowed">Partially Allowed</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="ext-search-year-from">Year from</label>
+              <input type="number" id="ext-search-year-from" placeholder="e.g. 2010" style="width:100%;padding:.5rem;border:1px solid var(--border);border-radius:var(--radius);"/>
+            </div>
+            <div class="form-group">
+              <label for="ext-search-year-to">Year to</label>
+              <input type="number" id="ext-search-year-to" placeholder="e.g. 2024" style="width:100%;padding:.5rem;border:1px solid var(--border);border-radius:var(--radius);"/>
+            </div>
+            <div class="form-group">
+              <label for="ext-search-k">Results</label>
+              <select id="ext-search-k" style="width:100%;padding:.5rem;border:1px solid var(--border);border-radius:var(--radius);">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button id="btn-ext-search" class="btn-primary">Search</button>
+          </div>
+          <div id="ext-search-results" style="margin-top:1rem"></div>
+        </div>
+      </div>
+
+      <!-- ═══════════════ Document Output Section ═══════════════ -->
+      <div id="ext-output" style="display:none">
+
+        <!-- Select Document bar -->
+        <div class="card ext-output-selector">
+          <div class="ext-select-row">
+            <label for="ext-output-doc" class="ext-select-label">Select Document:</label>
+            <select id="ext-output-doc" class="ext-output-dropdown"></select>
+            <button id="btn-ext-view-output" class="btn-primary ext-view-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+              View Output
+            </button>
+          </div>
+        </div>
+
+        <!-- Extraction status badges -->
+        <div class="ext-status-bar" id="ext-status-bar" style="display:none">
+          <span class="ext-status-label" id="ext-status-label">✅ All fields extracted</span>
+          <div class="ext-status-badges" id="ext-status-badges"></div>
+        </div>
+
+        <!-- Output tabs -->
+        <div class="ext-out-tabs" id="ext-out-tabs">
+          <button class="ext-otab active" data-otab="eot-metadata"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Metadata</button>
+          <button class="ext-otab" data-otab="eot-outcome"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Outcome</button>
+          <button class="ext-otab" data-otab="eot-sections"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> Sections</button>
+          <button class="ext-otab" data-otab="eot-timeline"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Timeline</button>
+          <button class="ext-otab" data-otab="eot-citations"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 17C4.89543 17 4 16.1046 4 15V5C4 3.89543 4.89543 3 6 3H18C19.1046 3 20 3.89543 20 5V15C20 16.1046 19.1046 17 18 17"/><polyline points="8 21 12 17 16 21"/></svg> Citations</button>
+          <button class="ext-otab" data-otab="eot-insights"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg> Insights</button>
+          <button class="ext-otab" data-otab="eot-notes"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Notes</button>
+          <button class="ext-otab" data-otab="eot-confidence"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Confidence</button>
+          <button class="ext-otab" data-otab="eot-rawtext"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Raw Text</button>
+          <button class="ext-otab" data-otab="eot-json"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> JSON Export</button>
+        </div>
+
+        <!-- Tab contents -->
+        <div class="card ext-out-body">
+          <div class="ext-otab-content active" id="eot-metadata"></div>
+          <div class="ext-otab-content" id="eot-outcome"></div>
+          <div class="ext-otab-content" id="eot-sections"></div>
+          <div class="ext-otab-content" id="eot-timeline"></div>
+          <div class="ext-otab-content" id="eot-citations"></div>
+          <div class="ext-otab-content" id="eot-insights"></div>
+          <div class="ext-otab-content" id="eot-notes"></div>
+          <div class="ext-otab-content" id="eot-confidence"></div>
+          <div class="ext-otab-content" id="eot-rawtext"></div>
+          <div class="ext-otab-content" id="eot-json"></div>
+        </div>
+      </div>
+
+      <!-- Spinner -->
+      <div id="ext-spinner" style="display:none; text-align:center; padding:1.5rem;">
+        <div class="spinner" style="margin:0 auto;"></div>
+        <p id="ext-spinner-msg" style="margin-top:.75rem; color:var(--muted);">Processing…</p>
+      </div>
+
+      <footer class="sim-page-footer">
+        <div class="sim-footer-inner">
+          <div class="sim-footer-brand">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 21V7"/><path d="M3 7h2c2 0 4-2 7-2s5 2 7 2h2"/></svg>
+            <span>LexVision</span>
+          </div>
+          <div class="sim-footer-divline"></div>
+          <span class="sim-footer-text">Sri Lanka Judiciary AI Systems &nbsp;&bull;&nbsp; For legal research purposes only</span>
+          <div class="sim-footer-divline"></div>
+          <span class="sim-footer-copy">&copy; 2026 LexVision. All rights reserved.</span>
+        </div>
+      </footer>
+    </div>
+
+    <!-- ══════════════════════════════════════ COMPLIANCE CHECKER (backend-C) ══ -->
+    <div class="component-panel" id="panel-compliance">
+      <div class="comp-header">
+        <div class="comp-header-icon compliance-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div>
+          <h1 class="comp-title">Civil Compliance Checker</h1>
+          <p class="comp-subtitle">Audit legal documents against Sri Lankan civil law — identify present &amp; missing mandatory clauses</p>
+        </div>
+      </div>
+
+      <div class="card" id="compliance-card">
+        <div class="tabs" id="cmp-tabs">
+          <button class="tab active" data-ctab="cmp-check">Check Document</button>
+          <button class="tab" data-ctab="cmp-history">History</button>
+          <button class="tab" data-ctab="cmp-acts">Acts Library</button>
+        </div>
+
+        <!-- Check Document -->
+        <div class="tab-content active" id="cmp-check">
+          <!-- Upload / Paste toggle tabs -->
+          <div class="cmp-upload-header">
+            <span class="cmp-upload-title">📁 Upload Your Document</span>
+          </div>
+          <div class="cmp-input-tabs">
+            <button class="cmp-itab active" id="cmp-itab-file"><span>📂</span> Upload File</button>
+            <button class="cmp-itab" id="cmp-itab-text"><span>✍️</span> Paste Text</button>
+          </div>
+
+          <!-- File upload panel -->
+          <div class="cmp-input-panel active" id="cmp-panel-file">
+            <div class="cmp-drop-zone" id="cmp-drop-zone">
+              <input type="file" id="cmp-pdf" accept=".pdf,.txt,.docx" style="display:none"/>
+              <div class="cmp-drop-inner" id="cmp-drop-inner">
+                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#7c8db5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V6m0 0-4 4m4-4 4 4"/><path d="M2 17a5 5 0 0 1 5-5h.09A7 7 0 0 1 21 13a4.5 4.5 0 0 1-1 8.5H6A4 4 0 0 1 2 17z"/></svg>
+                <div class="cmp-drop-label">Drag &amp; Drop your document</div>
+                <div class="cmp-drop-hint">or click to browse files</div>
+              </div>
+              <!-- File preview (hidden by default) -->
+              <div class="cmp-file-preview" id="cmp-file-preview" style="display:none">
+                <div class="cmp-file-icon">📄</div>
+                <div class="cmp-file-info">
+                  <div class="cmp-file-name" id="cmp-file-name"></div>
+                  <div class="cmp-file-size" id="cmp-file-size"></div>
+                </div>
+                <button type="button" class="cmp-file-remove" id="cmp-file-remove">&times;</button>
+              </div>
+            </div>
+            <div class="cmp-formats">
+              Supported formats:
+              <span class="cmp-fmt pdf">PDF</span>
+              <span class="cmp-fmt txt">TXT</span>
+              <span class="cmp-fmt docx">DOCX</span>
+            </div>
+          </div>
+
+          <!-- Text paste panel -->
+          <div class="cmp-input-panel" id="cmp-panel-text">
+            <textarea id="cmp-text" rows="8" placeholder="Paste the full text of the legal document here…" style="width:100%;"></textarea>
+          </div>
+
+          <button id="btn-cmp-check" class="cmp-analyze-btn">
+            <span class="cmp-analyze-dot"></span>
+            Analyze Document
+          </button>
+
+          <div id="cmp-check-status" style="margin-top:1rem"></div>
+
+          <!-- Privacy notice -->
+          <div class="cmp-privacy">
+            <span class="cmp-privacy-icon">🔒</span>
+            <div>
+              <strong>Your privacy is protected</strong>
+              <p>Documents are processed securely. Analysis results are stored for your reference and can be accessed from your history at any time.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- History -->
+        <div class="tab-content" id="cmp-history">
+          <div class="btn-row" style="margin-bottom:1rem">
+            <button id="btn-cmp-refresh" class="btn-secondary">Refresh History</button>
+          </div>
+          <div id="cmp-history-list"></div>
+        </div>
+
+        <!-- Acts Library -->
+        <div class="tab-content" id="cmp-acts">
+          <!-- Search & Filters -->
+          <div class="acts-controls">
+            <div class="acts-search-wrap">
+              <span class="acts-search-icon">🔍</span>
+              <input type="text" id="acts-search" class="acts-search" placeholder="Search acts by name...">
+            </div>
+            <div class="acts-cat-filters" id="acts-cat-filters">
+              <button class="acts-cat active" data-cat="all">📁 All Acts</button>
+              <button class="acts-cat" data-cat="employment">👷 Employment Law</button>
+              <button class="acts-cat" data-cat="property">🏠 Property &amp; Rental</button>
+              <button class="acts-cat" data-cat="finance">🏦 Finance &amp; Banking</button>
+              <button class="acts-cat" data-cat="consumer">🛡️ Consumer Protection</button>
+              <button class="acts-cat" data-cat="general">📜 General Law</button>
+            </div>
+          </div>
+
+          <div class="acts-count" id="acts-count"></div>
+          <div class="acts-grid" id="cmp-acts-list"></div>
+        </div>
+      </div>
+
+      <!-- ═══════ Compliance Results (hidden until analysis) ═══════ -->
+      <div id="cmp-results" style="display:none">
+
+        <!-- Top action bar -->
+        <div class="cmp-top-actions">
+          <button class="cmp-back-btn" id="btn-cmp-new">← Analyze New Document</button>
+          <button class="btn-primary cmp-download-btn" id="btn-cmp-download">📄 Download Report ▾</button>
+        </div>
+
+        <!-- Hero banner -->
+        <div class="cmp-hero">
+          <div class="cmp-hero-badge" id="cmp-hero-badge">Employment Contract</div>
+          <h2 class="cmp-hero-title">Compliance Analysis Complete</h2>
+          <p class="cmp-hero-sub">Your document has been analyzed against Sri Lankan legal requirements</p>
+          <div class="cmp-hero-score" id="cmp-hero-score">
+            <svg viewBox="0 0 120 120" width="120" height="120">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="8"/>
+              <circle cx="60" cy="60" r="50" fill="none" stroke="#fbbf24" stroke-width="8" stroke-linecap="round"
+                id="cmp-score-circle" stroke-dasharray="314" stroke-dashoffset="314" style="transform:rotate(-90deg);transform-origin:center"/>
+            </svg>
+            <div class="cmp-hero-score-text">
+              <span class="cmp-hero-pct" id="cmp-hero-pct">0%</span>
+              <span class="cmp-hero-label">Compliant</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analysis Summary cards -->
+        <div class="cmp-summary-section">
+          <h3 class="cmp-section-heading">📊 Analysis Summary</h3>
+          <div class="cmp-summary-grid" id="cmp-summary-grid"></div>
+        </div>
+
+        <!-- Mandatory + Acts row -->
+        <div class="cmp-action-row" id="cmp-action-row"></div>
+
+        <!-- Detailed Clause Analysis -->
+        <div class="cmp-clause-section">
+          <h3 class="cmp-section-heading">📋 Detailed Clause Analysis</h3>
+          <div class="cmp-clause-filters" id="cmp-clause-filters"></div>
+          <div id="cmp-clause-list"></div>
+        </div>
+
+        <!-- Mandatory Clauses Section -->
+        <div class="cmp-mandatory-section" id="cmp-mandatory-section">
+          <div class="cmp-mandatory-banner">
+            <div class="cmp-mandatory-header">
+              <div class="cmp-mandatory-header-left">
+                <span class="cmp-mandatory-icon">📋</span>
+                <h3>Present Mandatory Clauses</h3>
+              </div>
+              <span class="cmp-mandatory-count" id="cmp-present-count">0 Found</span>
+            </div>
+            <div class="cmp-mandatory-grid" id="cmp-present-grid"></div>
+
+            <div class="cmp-mandatory-header" style="margin-top:1.5rem">
+              <div class="cmp-mandatory-header-left">
+                <span class="cmp-mandatory-icon" style="background:#fef3c7;color:#d97706">⚠️</span>
+                <h3>Missing Mandatory Clauses</h3>
+              </div>
+              <span class="cmp-mandatory-count cmp-count-missing" id="cmp-missing-count">0 Missing</span>
+            </div>
+            <div class="cmp-mandatory-grid" id="cmp-missing-grid"></div>
+          </div>
+
+          <div class="cmp-results-bottom-actions">
+            <button class="cmp-back-results-btn" onclick="document.getElementById('cmp-hero')?.scrollIntoView({behavior:'smooth'})">← Back to Results</button>
+            <button class="cmp-analyze-another-btn" id="btn-cmp-new2">Analyze Another Document</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="cmp-spinner" style="display:none; text-align:center; padding:1.5rem;">
+        <div class="spinner" style="margin:0 auto;"></div>
+        <p id="cmp-spinner-msg" style="margin-top:.75rem; color:var(--muted);">Checking compliance…</p>
+      </div>
+
+      <footer class="sim-page-footer">
+        <div class="sim-footer-inner">
+          <div class="sim-footer-brand">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 21V7"/><path d="M3 7h2c2 0 4-2 7-2s5 2 7 2h2"/></svg>
+            <span>LexVision</span>
+          </div>
+          <div class="sim-footer-divline"></div>
+          <span class="sim-footer-text">Sri Lanka Judiciary AI Systems &nbsp;&bull;&nbsp; For legal research purposes only</span>
+          <div class="sim-footer-divline"></div>
+          <span class="sim-footer-copy">&copy; 2026 LexVision. All rights reserved.</span>
+        </div>
+      </footer>
+    </div>
+
+    <!-- ════════════════════════════════ COMPONENT 4: Argument Scorer ══ -->
+    <div class="component-panel" id="panel-argument">
+      <div class="comp-header">
+        <div class="comp-header-icon argument-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div>
+          <h1 class="comp-title">Argument Strength Scorer</h1>
+          <p class="comp-subtitle">AI evaluates legal arguments across 8 categories and returns a scored critique with improvement suggestions</p>
+        </div>
+      </div>
+
+      <div class="card" id="argument-card">
+        <!-- Primary input: argument text -->
+        <div class="form-group" style="margin-bottom:.25rem">
+          <label for="arg-text">Enter Legal Argument <span style="font-weight:400;color:var(--muted)">(50 – 10,000 characters)</span></label>
+          <textarea id="arg-text" rows="8" maxlength="10000" placeholder="Paste or type the legal argument text here…"></textarea>
+          <div class="arg-char-counter"><span id="arg-char-count">0</span> / 10,000 characters</div>
+        </div>
+
+        <!-- Supporting document upload -->
+        <div class="form-group" style="margin-bottom:.75rem">
+          <label>Upload Supporting Document <span style="font-weight:400;color:var(--muted)">(PDF / TXT — optional evidence for grounding)</span></label>
+          <div class="arg-drop-zone" id="arg-drop-zone">
+            <input type="file" id="arg-support-file" accept=".pdf,.txt" style="display:none"/>
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span class="arg-drop-text">Drag &amp; drop or <strong>click to browse</strong></span>
+            <span class="arg-drop-hint">PDF or TXT — max 10 MB</span>
+          </div>
+          <div id="arg-support-status" style="margin-top:.5rem"></div>
+        </div>
+
+        <div class="btn-row">
+          <button id="btn-arg-analyze" class="btn-primary">Analyze Argument</button>
+        </div>
+        <div id="arg-status" style="margin-top:1rem"></div>
+      </div>
+
+      <!-- Score result -->
+      <div id="arg-results" style="display:none">
+        <!-- Overall score card -->
+        <div class="card arg-score-card">
+          <div class="arg-score-main">
+            <div class="arg-score-gauge">
+              <svg viewBox="0 0 120 120" class="arg-gauge-svg">
+                <circle cx="60" cy="60" r="50" class="arg-gauge-bg"/>
+                <circle cx="60" cy="60" r="50" class="arg-gauge-fill" id="arg-gauge-circle"
+                  stroke-dasharray="314" stroke-dashoffset="314"/>
+              </svg>
+              <div class="arg-gauge-label">
+                <span class="arg-score-num" id="arg-score-num">0</span>
+                <span class="arg-score-den">/100</span>
+              </div>
+            </div>
+            <div class="arg-score-info">
+              <div class="arg-strength-badge" id="arg-strength-badge">—</div>
+              <p class="arg-score-desc">Overall argument strength based on 8-category scoring rubric for Sri Lankan civil cases.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category breakdown -->
+        <div class="card">
+          <h2>Category Breakdown</h2>
+          <div id="arg-breakdown"></div>
+        </div>
+
+        <!-- Areas Need Attention -->
+        <div class="card" id="arg-attention-card" style="display:none">
+          <h2>⚠️ Areas Need Attention</h2>
+          <div id="arg-attention"></div>
+        </div>
+
+        <!-- Feedback -->
+        <div class="card" id="arg-feedback-card">
+          <h2>Improvement Suggestions</h2>
+          <ul id="arg-feedback-list" class="arg-feedback-list"></ul>
+        </div>
+
+        <!-- Evidence from supporting document (grounded analysis) -->
+        <div class="card" id="arg-evidence-card" style="display:none">
+          <h2>📄 Evidence from Supporting Document</h2>
+          <div id="arg-evidence"></div>
+        </div>
+      </div>
+
+      <div id="arg-spinner" style="display:none; text-align:center; padding:1.5rem;">
+        <div class="spinner" style="margin:0 auto;"></div>
+        <p style="margin-top:.75rem; color:var(--muted);">Analyzing argument…</p>
+      </div>
+
+      <footer class="sim-page-footer">
+        <div class="sim-footer-inner">
+          <div class="sim-footer-brand">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 21V7"/><path d="M3 7h2c2 0 4-2 7-2s5 2 7 2h2"/></svg>
+            <span>LexVision</span>
+          </div>
+          <div class="sim-footer-divline"></div>
+          <span class="sim-footer-text">Sri Lanka Judiciary AI Systems &nbsp;&bull;&nbsp; For legal research purposes only</span>
+          <div class="sim-footer-divline"></div>
+          <span class="sim-footer-copy">&copy; 2026 LexVision. All rights reserved.</span>
+        </div>
+      </footer>
+    </div>
+
+  </div><!-- /app-content -->
+
+  <div id="spinner" class="spinner-overlay" style="display:none;">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Auth Check - runs before app.js -->
+  <script>
+    (async function checkAuth() {
+      try {
+        const response = await fetch('/extractor/api/v1/auth/check', { credentials: 'include' });
+        const data = await response.json();
+        if (!data.success) {
+          window.location.href = '/login.html';
+          return;
+        }
+        // Store username and show user info
+        localStorage.setItem('loggedInUser', data.username);
+        const userInfo = document.getElementById('user-info');
+        const userName = document.getElementById('user-name');
+        if (userInfo && userName) {
+          userName.textContent = data.username;
+          userInfo.style.display = 'flex';
+        }
+      } catch (error) {
+        window.location.href = '/login.html';
+      }
+    })();
+
+    async function logout() {
+      try {
+        await fetch('/extractor/api/v1/auth/logout', { method: 'POST', credentials: 'include' });
+      } catch (e) {}
+      localStorage.removeItem('loggedInUser');
+      window.location.href = '/login.html';
+    }
+  </script>
+
+  <script src="js/app.js?v=5"></script>
+</body>
+</html>

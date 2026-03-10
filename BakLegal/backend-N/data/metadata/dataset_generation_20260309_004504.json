@@ -1,0 +1,17 @@
+{
+  "generation_date": "2026-03-09T01:01:43.017412",
+  "teacher_model": "deepseek/deepseek-chat",
+  "temperature": 0.7,
+  "total_files_processed": 15,
+  "successful_examples": 10,
+  "failed_files": [
+    "182 - 2014 n (1).pdf",
+    "19. CA PHC 149-19 Judgement (Final).pdf",
+    "21- 30052023-CA-PHC-0140 2017.pdf",
+    "299-19.pdf",
+    "652-23.pdf"
+  ],
+  "total_time_seconds": 998.7566578388214,
+  "average_time_per_file": 66.58377718925476,
+  "output_file": "D:\\Y4S1\\Research new\\reserch component\\Legal\\backend\\data\\training_data\\train_20260309_004504.jsonl"
+}

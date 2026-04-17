@@ -162,67 +162,43 @@ User Input (Text)
 
 The system evaluates legal arguments across eight critical dimensions:
 
-####  **Legal Basis & Citations** (0-100 points)
-- Evaluation of statutory references
-- Case law citation accuracy
-- Constitutional grounding
-- Legal authority relevance
+Each category is graded on a **rubric score 0–5**, converted into **weighted points**, and summed to an overall **0–100** score.
 
-####  **Logical Reasoning & Coherence** (0-100 points)
-- Argument structure assessment
-- Logical flow evaluation
-- Internal consistency checking
-- Premise-conclusion alignment
+#### **Issue & Claim Clarity** (10 points)
+- Is the claim/issue clear, parties identified, relief sought stated
 
-####  **Facts & Evidence Presentation** (0-100 points)
-- Factual accuracy verification
-- Evidence organization
-- Relevance of presented facts
-- Supporting documentation quality
+#### **Facts & Chronology** (15 points)
+- Are material facts specific and in a coherent timeline
 
-####  **Clarity & Organization** (0-100 points)
-- Writing clarity assessment
-- Structural organization
-- Paragraph coherence
-- Readability scoring
+#### **Legal Basis / Elements** (20 points)
+- Correct cause of action; element-by-element mapping to facts
 
-####  **Case Law Application** (0-100 points)
-- Precedent relevance
-- Analogical reasoning strength
-- Distinguishing arguments
-- Judicial interpretation accuracy
+#### **Evidence & Support** (15 points)
+- Are factual assertions supported by documents/witnesses/admissions
 
-####  **Statutory Interpretation** (0-100 points)
-- Statutory construction methods
-- Legislative intent analysis
-- Textual interpretation accuracy
-- Contextual understanding
+#### **Reasoning & Logic** (15 points)
+- Clear chain from facts → rule → conclusion; avoids contradictions
 
-####  **Counter-Argument Handling** (0-100 points)
-- Anticipation of opposing views
-- Rebuttal effectiveness
-- Alternative perspectives consideration
-- Weaknesses addressed
+#### **Counterarguments & Rebuttal** (10 points)
+- Anticipates and answers likely opposing points
 
-####  **Professional Tone** (0-100 points)
-- Legal writing standards
-- Formal language usage
-- Objective presentation
-- Respectful discourse
+#### **Remedies & Quantification** (10 points)
+- Appropriate remedies; damages quantified/explained when relevant
+
+#### **Structure & Professionalism** (5 points)
+- Readability, headings, concise style, professional legal tone
 
 ### 2. **Intelligent Scoring System**
 
 ```
 Overall Score Calculation:
-├─ Each category: 0-100 points
-├─ Overall Score: Average of 8 categories
+├─ Each category: rubric_score 0–5 → weighted points
+├─ Overall Score: sum of weighted points (0–100)
 └─ Strength Classification:
-    ├─ 90-100: "Exceptional" 
-    ├─ 80-89:  "Strong" 
-    ├─ 70-79:  "Good" 
-    ├─ 60-69:  "Moderate" 
-    ├─ 50-59:  "Weak" 
-    └─ 0-49:   "Very Weak" 
+    ├─ 80-100: "Strong"
+    ├─ 60-79:  "Moderate"
+    ├─ 40-59:  "Weak"
+    └─ 0-39:   "Very Weak"
 ```
 
 ### 3. **AI-Powered Analysis**
@@ -545,29 +521,27 @@ notepad .env
 **Step C: Add Your Configuration**
 
 ```env
-# OpenRouter API Configuration
+# Choose ONE backend: openrouter | gemini | ollama
+INFERENCE_BACKEND=openrouter
+
+# OpenRouter (recommended)
 OPENROUTER_API_KEY=sk-or-v1-your-actual-api-key-here
+OPENROUTER_MODEL=deepseek/deepseek-chat
+OPENROUTER_TEMPERATURE=0.7
+OPENROUTER_MAX_TOKENS=2048
 
-# Model Selection (Free tier options)
-MODEL_NAME=meta-llama/llama-3.1-8b-instruct:free
+# Alternative: Google Gemini
+# INFERENCE_BACKEND=gemini
+# GOOGLE_API_KEY=your_google_api_key_here
+# GEMINI_MODEL_NAME=gemini-2.5-flash
+# GEMINI_TEMPERATURE=0.7
+# GEMINI_MAX_TOKENS=2048
 
-# Model Parameters
-MAX_TOKENS=4000
-TEMPERATURE=0.3
-
-# API Configuration
-API_HOST=0.0.0.0
-API_PORT=8000
-
-# Optional: Advanced Settings
-LOG_LEVEL=INFO
-ENVIRONMENT=development
+# Local: Ollama
+# INFERENCE_BACKEND=ollama
+# OLLAMA_BASE_URL=http://localhost:11434
+# OLLAMA_MODEL=legal-critic
 ```
-
-**Available Free Models:**
-- `meta-llama/llama-3.1-8b-instruct:free` (Recommended)
-- `google/gemini-flash-1.5` (Fast)
-- `mistralai/mistral-7b-instruct:free`
 
 ##### 2.7 Test API Connection
 
@@ -749,9 +723,9 @@ Advantages:
 
 6. **View Results**
    - **Overall Score Card**: Large animated score display
-   - **Strength Label**: Classification (Very Weak to Exceptional)
+     - **Strength Label**: Classification (Very Weak/Weak/Moderate/Strong)
    - **Category Breakdown**: 8 detailed cards showing:
-     - Individual scores (0-100)
+         - Rubric score (0-5) and weighted points
      - Detailed rationales
      - Specific suggestions for improvement
    - **Visual Indicators**:
@@ -785,7 +759,7 @@ of the Contracts Act, damages must be proven...
 # Make API request
 response = requests.post(
     API_URL,
-    json={"argument_text": argument_text}
+    json={"text": argument_text}
 )
 
 # Parse response
@@ -793,14 +767,13 @@ if response.status_code == 200:
     result = response.json()
     
     print(f"Overall Score: {result['overall_score']}/100")
-    print(f"Strength: {result['strength']}")
+    print(f"Strength: {result['strength_label']}")
     print("\nCategory Breakdown:")
     
-    for category, data in result['categories'].items():
-        print(f"\n{category.upper()}")
-        print(f"  Score: {data['score']}/100")
-        print(f"  Rationale: {data['rationale'][:100]}...")
-        print(f"  Suggestions: {len(data['suggestions'])} items")
+    for item in result.get('breakdown', []):
+        print(f"\n{item['category']}")
+        print(f"  Rubric: {item['rubric_score']}/5  Points: {item['points']}")
+        print(f"  Rationale: {item['rationale'][:100]}...")
 else:
     print(f"Error: {response.status_code}")
     print(response.json())
@@ -814,12 +787,12 @@ else:
 # Windows PowerShell
 curl -X POST "http://localhost:8000/api/v1/analyze" `
      -H "Content-Type: application/json" `
-     -d '{\"argument_text\": \"Your legal argument here...\"}'
+    -d '{\"text\": \"Your legal argument here...\"}'
 
 # Linux/Mac
 curl -X POST "http://localhost:8000/api/v1/analyze" \
      -H "Content-Type: application/json" \
-     -d '{"argument_text": "Your legal argument here..."}'
+    -d '{"text": "Your legal argument here..."}'
 ```
 
 
@@ -836,7 +809,7 @@ async function analyzeText(argumentText) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                argument_text: argumentText
+                text: argumentText
             })
         });
         
@@ -846,11 +819,9 @@ async function analyzeText(argumentText) {
         
         const result = await response.json();
         console.log('Overall Score:', result.overall_score);
-        console.log('Strength:', result.strength);
-        
-        // Process categories
-        Object.entries(result.categories).forEach(([name, data]) => {
-            console.log(`${name}: ${data.score}/100`);
+        console.log('Strength:', result.strength_label);
+        (result.breakdown || []).forEach(item => {
+            console.log(`${item.category}: ${item.rubric_score}/5 (${item.points} pts)`);
         });
         
         return result;

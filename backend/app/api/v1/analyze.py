@@ -17,12 +17,14 @@ import io
 import logging
 import os
 import re
+from collections import Counter
 from dataclasses import dataclass
 from fastapi import APIRouter, HTTPException, status, UploadFile, File
 from starlette.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional, Tuple
 
+from app.core.grading_schema import GRADING_SCHEMA
 from app.services.inference_service import get_inference_service
 from app.services.document_store import get_document_store
 from app.services.retrieval_service import chunk_text, top_k_tfidf, extract_numbered_paragraphs
@@ -32,6 +34,83 @@ logger = logging.getLogger(__name__)
 
 
 router = APIRouter()
+
+
+def _schema_key_for_category_name(name: str) -> Optional[str]:
+    """Map model-returned category names to GRADING_SCHEMA keys."""
+    n = re.sub(r"[^a-z0-9]+", " ", (name or "").lower()).strip()
+    if not n:
+        return None
+    if "issue" in n and "claim" in n:
+        return "issue_claim_clarity"
+    if "facts" in n and ("chron" in n or "timeline" in n):
+        return "facts_chronology"
+    if "legal" in n and ("basis" in n or "element" in n):
+        return "legal_basis_elements"
+    if "evidence" in n and "support" in n:
+        return "evidence_support"
+    if "reason" in n and "logic" in n:
+        return "reasoning_logic"
+    if "counter" in n and ("rebut" in n or "rebuttal" in n or "argument" in n):
+        return "counterarguments_rebuttal"
+    if "remed" in n and ("quant" in n or "quantification" in n or "damag" in n):
+        return "remedies_quantification"
+    if "structure" in n or "professional" in n or "style" in n:
+        return "structure_professionalism"
+    return None
+
+
+def _apply_grading_schema(
+    critique: Dict[str, Any],
+    *,
+    relevance_multiplier: Optional[float] = None,
+    penalize_for_irrelevant_doc: bool = False,
+) -> Dict[str, Any]:
+    """Recompute weight/points/overall_score using GRADING_SCHEMA.
+
+    Optionally scales rubric_score down using relevance_multiplier (0..1).
+    """
+    if not isinstance(critique, dict):
+        return critique
+
+    breakdown = critique.get("breakdown")
+    if not isinstance(breakdown, list):
+        return critique
+
+    total_points = 0.0
+    for item in breakdown:
+        if not isinstance(item, dict):
+            continue
+        key = _schema_key_for_category_name(str(item.get("category") or ""))
+        if not key or key not in GRADING_SCHEMA:
+            continue
+
+        schema_cat = GRADING_SCHEMA[key]
+        item["category"] = schema_cat.name
+        item["weight"] = schema_cat.weight
+
+        try:
+            rubric_score = int(item.get("rubric_score", 0))
+        except Exception:
+            rubric_score = 0
+        rubric_score = max(0, min(5, rubric_score))
+
+        if penalize_for_irrelevant_doc and relevance_multiplier is not None:
+            # Structure/Professionalism is about the argument writing itself; do not
+            # reduce it based on document relevance.
+            if key != "structure_professionalism":
+                rm = float(relevance_multiplier)
+                rm = 0.0 if rm < 0 else (1.0 if rm > 1 else rm)
+                rubric_score = int(round(rubric_score * rm))
+                rubric_score = max(0, min(5, rubric_score))
+                item["rubric_score"] = rubric_score
+
+        points = round(float(schema_cat.calculate_points(rubric_score)), 1)
+        item["points"] = points
+        total_points += points
+
+    critique["overall_score"] = int(round(max(0.0, min(100.0, total_points))))
+    return critique
 
 
 # ============================================
@@ -238,6 +317,9 @@ async def analyze_argument(request: AnalyzeRequest) -> AnalyzeResponse:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Model inference error: {critique['error']}"
             )
+
+        # Enforce weights/points from grading_schema (do not trust model arithmetic)
+        critique = _apply_grading_schema(critique)
         
         # Add strength label based on score
         score = critique.get("overall_score", 0)
@@ -881,6 +963,17 @@ class GroundedAnalyzeResponse(AnalyzeResponse):
     evidence: List[EvidenceItem] = Field(default_factory=list, description="Evidence excerpts for citations")
     similar_cases: List[EvidenceItem] = Field(default_factory=list, description="Similar prior cases (excerpts)")
 
+    doc_relevance_percent: Optional[int] = Field(
+        None,
+        ge=0,
+        le=100,
+        description="Approximate relevance of the uploaded document(s) to the argument (0-100)",
+    )
+    doc_support_shown: Optional[bool] = Field(
+        None,
+        description="Whether per-category document support was computed and should be shown in the UI",
+    )
+
 
 @router.post(
     "/documents/upload",
@@ -959,6 +1052,10 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
     try:
         store = get_document_store()
         evidence_items: List[EvidenceItem] = []
+        # Track document-level relevance: max TF-IDF similarity between the argument
+        # and any chunk in the uploaded document(s). This is more robust than raw
+        # word-overlap on long legal PDFs, which can produce false positives.
+        doc_relevance = 0.0
 
         # When only a single uploaded document is used (and case corpus is disabled),
         # retrieving too few excerpts makes every category show the same "Document Support Detected".
@@ -968,6 +1065,37 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
 
         def _words(s: str) -> set[str]:
             return set(re.findall(r"[a-z]{4,}", (s or "").lower()))
+
+        _COMMON_LEGAL_STOP = {
+            # Common legal boilerplate that appears across unrelated judgments
+            "court", "courts", "judge", "judges", "justice", "justices",
+            "appellant", "appellants", "respondent", "respondents",
+            "petitioner", "petitioners", "plaintiff", "plaintiffs",
+            "defendant", "defendants",
+            "appeal", "appeals", "revision", "application", "motion",
+            "case", "cases", "matter", "hearing", "trial",
+            "learned", "counsel", "attorney", "attorneys",
+            "section", "sections", "article", "articles",
+            "law", "legal", "evidence", "facts", "issue", "issues",
+            "order", "orders", "judgment", "judgments", "decree", "decrees",
+            "therefore", "whereas", "hereby", "herein", "hereto",
+            "said", "shall", "may", "must", "could", "would", "should",
+        }
+
+        def _content_words(s: str) -> set[str]:
+            # Filter common legal boilerplate; keep 4+ letter terms so important
+            # domain words like 'rent' are not dropped.
+            ws = re.findall(r"[a-z]{4,}", (s or "").lower())
+            return {w for w in ws if w not in _COMMON_LEGAL_STOP}
+
+        def _content_overlap_stats(query: str, doc_text: str) -> Tuple[int, float]:
+            qw = _content_words(query)
+            if not qw:
+                return 0, 0.0
+            dw = _content_words(doc_text)
+            inter = len(qw & dw)
+            ratio = inter / max(1, len(qw))
+            return inter, ratio
 
         def _summarize_excerpt(excerpt: str, max_len: int = 120) -> str:
             t = (excerpt or "").strip()
@@ -1052,6 +1180,7 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
 
         # Retrieve top excerpts from each uploaded doc
         evidence_counter = 1
+        uploaded_doc_texts: List[str] = []
         for doc_id in request.doc_ids[:10]:
             doc = store.get(doc_id)
             if doc is None:
@@ -1060,12 +1189,33 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                     detail=f"Unknown doc_id: {doc_id}. Upload first via /api/v1/documents/upload",
                 )
 
+            # Keep a small slice of the full document text for relevance scoring.
+            # This avoids false "0%" relevance when TF-IDF retrieval misses.
+            doc_head = (doc.text or "")[:50000]
+            uploaded_doc_texts.append(doc_head)
+
+            # Extra relevance signal: content-word overlap of the whole document head.
+            # This helps avoid treating a clearly related PDF as "irrelevant" when
+            # extraction is noisy, while avoiding generic legal boilerplate.
+            try:
+                _co_n, _co_r = _content_overlap_stats(request.text, doc_head)
+                doc_relevance = max(doc_relevance, float(_co_r) * 0.35)
+            except Exception:
+                pass
+
             # IMPORTANT: use NO overlap for evidence excerpts.
             # Overlap causes excerpts to start mid-sentence (tail of previous chunk),
             # which looks broken in the UI and makes paragraph-number detection harder.
             chunk_spans = chunk_text_with_offsets(doc.text, max_chars=1200)
             chunks = [c.text for c in chunk_spans]
             ranked = top_k_tfidf(request.text, chunks, k=tfidf_k_per_doc)
+
+            # Document-level relevance: best matching chunk score.
+            if ranked:
+                try:
+                    doc_relevance = max(doc_relevance, float(ranked[0][1]))
+                except Exception:
+                    pass
 
             # Build a document-level paragraph index ONCE per document.
             # _build_para_index validates that the document uses systematic numbering
@@ -1143,6 +1293,62 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
         if not evidence_pack:
             evidence_pack = "[E0] No supporting documents were provided."
 
+        # Convert TF-IDF similarity into a relevance multiplier (0..1).
+        # Thresholds are tuned for chunk-level TF-IDF cosine similarity.
+        # - Below LOW: treat as unrelated (full penalty)
+        # - At/above FULL: treat as sufficiently related (no penalty)
+        if request.doc_ids:
+            low = float(os.getenv("DOC_RELEVANCE_LOW", "0.08"))
+            full = float(os.getenv("DOC_RELEVANCE_FULL", "0.18"))
+            if full <= 0:
+                full = 0.18
+            if low < 0:
+                low = 0.0
+
+            # Threshold for showing per-category doc support in the UI.
+            # Default to a midpoint between LOW and FULL so relevant docs show
+            # support reliably, while low/irrelevant docs do not.
+            default_support_show = (low + full) / 2.0
+            support_show = float(os.getenv("DOC_SUPPORT_SHOW", str(default_support_show)))
+            if support_show <= 0:
+                support_show = default_support_show
+
+            # Align the scoring multiplier with the support-show threshold:
+            # if relevance is too low to show support, it should also reduce scores.
+            full_for_multiplier = max(full, support_show)
+
+            if doc_relevance < low:
+                relevance_multiplier = 0.0
+            else:
+                relevance_multiplier = min(1.0, doc_relevance / full_for_multiplier)
+        else:
+            relevance_multiplier = None
+            support_show = 0.0
+
+        doc_relevance_percent = int(round(max(0.0, min(1.0, float(doc_relevance))) * 100))
+        # Additional guard: require meaningful overlap of content words so unrelated
+        # but "legal-ish" documents don't trigger support display.
+        min_overlap_words = int(os.getenv("DOC_SUPPORT_MIN_OVERLAP_WORDS", "6"))
+        min_overlap_ratio = float(os.getenv("DOC_SUPPORT_MIN_OVERLAP_RATIO", "0.06"))
+        max_overlap_words = 0
+        max_overlap_ratio = 0.0
+        try:
+            for dt in uploaded_doc_texts:
+                n, r = _content_overlap_stats(request.text, dt)
+                if n > max_overlap_words:
+                    max_overlap_words = n
+                if r > max_overlap_ratio:
+                    max_overlap_ratio = r
+        except Exception:
+            pass
+
+        show_doc_support = (
+            bool(request.doc_ids)
+            and (doc_relevance >= support_show)
+            and (max_overlap_words >= max(0, min_overlap_words))
+            and (max_overlap_ratio >= max(0.0, min_overlap_ratio))
+        )
+
         inference_service = get_inference_service()
         if request.fast_mode:
             critique = inference_service._get_fallback_critique(request.text)
@@ -1178,6 +1384,34 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                 detail=f"Model inference error: {critique['error']}",
             )
 
+        # Enforce grading_schema and penalize scores when uploaded documents are
+        # unrelated to the argument.
+        critique = _apply_grading_schema(
+            critique,
+            relevance_multiplier=relevance_multiplier,
+            penalize_for_irrelevant_doc=bool(request.doc_ids),
+        )
+
+        if request.doc_ids:
+            # If we're hiding the per-category support section due to low relevance,
+            # explicitly tell the user (and that scores were reduced).
+            if not show_doc_support:
+                warn = str((critique or {}).get("warning") or "").strip()
+                extra = (
+                    f"Uploaded document relevance looks low (~{doc_relevance_percent}%). "
+                    "Document support was hidden and scores were reduced to reflect weak support."
+                )
+                critique["warning"] = (warn + " " + extra).strip() if warn else extra
+            elif relevance_multiplier is not None and relevance_multiplier < 0.85:
+                # Present as a rough percentage for user readability.
+                rel_pct = int(round(doc_relevance * 100))
+                warn = str((critique or {}).get("warning") or "").strip()
+                extra = (
+                    f"Uploaded document relevance looks low (~{rel_pct}%). "
+                    "Scores were reduced to reflect weak document support."
+                )
+                critique["warning"] = (warn + " " + extra).strip() if warn else extra
+
         score = critique.get("overall_score", 0)
         if score >= 80:
             strength_label = "Strong"
@@ -1195,6 +1429,8 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
             "feedback": critique["feedback"],
             "evidence": evidence_items,
             "similar_cases": similar_case_items,
+            "doc_relevance_percent": doc_relevance_percent if request.doc_ids else None,
+            "doc_support_shown": show_doc_support if request.doc_ids else False,
         }
 
         # ── Build numbered-paragraph index from uploaded docs ───────────────
@@ -1233,7 +1469,7 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
         ev_by_id: Dict[str, EvidenceItem] = {e.evidence_id: e for e in all_evidence}
 
         claim_map: Dict[str, Any] = {}
-        if para_index_text.strip():
+        if show_doc_support and (not request.fast_mode) and para_index_text.strip():
             try:
                 claim_map = inference_service.compute_claim_support(
                     breakdown=response_data.get("breakdown", []),
@@ -1327,6 +1563,17 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                 else:
                     bullets.append("Argument citation: (No clear structural heading/signposting sentence detected in the argument.)")
                 item["support_detected"] = bullets
+                item["support_ratio_percent"] = None
+                item["support_ratio_label"] = None
+                item["total_claims"] = None
+                item["supported_claims"] = None
+                item["not_referenced"] = []
+                continue
+
+            # If the uploaded document is unrelated/low-relevance, do not compute or
+            # show the per-category support section.
+            if not show_doc_support:
+                item["support_detected"] = []
                 item["support_ratio_percent"] = None
                 item["support_ratio_label"] = None
                 item["total_claims"] = None
@@ -1441,7 +1688,19 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                     bullets.append("Argument citation: (No clear issue/claim sentence detected in the argument.)")
 
                 item["support_detected"] = bullets
-                # Ratio/claim counts aren't the focus for this category.
+                # Evidence ratio (used for deterministic per-category score adjustments).
+                if uploaded_evidence:
+                    try:
+                        query = (cat_name + " " + (arg_cite or "") + " " + str(item.get("rationale", "") or "")).strip()
+                        pct = int(round(_overlap_ratio(query, best_ev.excerpt) * 100)) if best_ev else 0
+                    except Exception:
+                        pct = 0
+                else:
+                    pct = 0
+                pct = max(0, min(100, int(pct)))
+                item["support_ratio_percent"] = pct
+                item["support_ratio_label"] = _support_label(pct)
+
                 item["total_claims"] = None
                 item["supported_claims"] = None
                 item["not_referenced"] = []
@@ -1452,6 +1711,8 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                 rationale = str(item.get("rationale", "") or "")
                 arg_quote_raw = str(item.get("argument_quote", "") or "").strip()
                 base_query = (cat_name + " " + rationale + " " + arg_quote_raw + " " + request.text).strip()
+
+                pct = 0
 
                 bullets: List[str] = []
 
@@ -1477,6 +1738,12 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                     else:
                         bullets.append("Argument citation: (No clear date/timeline sentence detected in the argument.)")
 
+                    try:
+                        ratios = [_overlap_ratio(base_query, ev.excerpt) for ev in evs] if evs else []
+                        pct = int(round((max(ratios) if ratios else 0.0) * 100))
+                    except Exception:
+                        pct = 0
+
                 elif _is_legal_basis(cat_name):
                     evs = _best_uploaded_evidence(query=base_query, predicate=lambda s: bool(_STATUTE_RE.search(s)), limit=1)
                     if evs:
@@ -1496,6 +1763,11 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                         bullets.append(f"Argument citation: \u201c{arg_qs[0]}\u201d")
                     else:
                         bullets.append("Argument citation: (No clear statutory/legal provision sentence detected in the argument.)")
+
+                    try:
+                        pct = int(round((_overlap_ratio(base_query, evs[0].excerpt) if evs else 0.0) * 100))
+                    except Exception:
+                        pct = 0
 
                 elif _is_evidence_support(cat_name):
                     ev_words = ["report", "deed", "deeds", "contract", "agreement", "witness", "statement", "affidavit", "exhibit", "p2", "p3", "survey", "surveyor"]
@@ -1520,6 +1792,12 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                     else:
                         bullets.append("Argument citation: (No clear evidence-reliance sentence detected in the argument.)")
 
+                    try:
+                        ratios = [_overlap_ratio(base_query, ev.excerpt) for ev in evs] if evs else []
+                        pct = int(round((max(ratios) if ratios else 0.0) * 100))
+                    except Exception:
+                        pct = 0
+
                 elif _is_reasoning_logic(cat_name):
                     # Document citation: a key fact/evidence statement; Argument citation: explicit logical connector.
                     evs = _best_uploaded_evidence(query=base_query, predicate=lambda s: True, limit=1)
@@ -1540,6 +1818,11 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                         bullets.append(f"Argument citation: \u201c{arg_qs[0]}\u201d")
                     else:
                         bullets.append("Argument citation: (No clear logical-connector sentence detected in the argument.)")
+
+                    try:
+                        pct = int(round((_overlap_ratio(base_query, evs[0].excerpt) if evs else 0.0) * 100))
+                    except Exception:
+                        pct = 0
 
                 elif _is_counterarguments(cat_name):
                     evs = _best_uploaded_evidence(query=base_query, predicate=lambda s: True, limit=1)
@@ -1569,6 +1852,11 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                     else:
                         bullets.append("Argument citation: (No clear rebuttal sentence detected in the argument.)")
 
+                    try:
+                        pct = int(round((_overlap_ratio(base_query, evs[0].excerpt) if evs else 0.0) * 100))
+                    except Exception:
+                        pct = 0
+
                 elif _is_remedies(cat_name):
                     evs = _best_uploaded_evidence(query=base_query, predicate=lambda s: True, limit=1)
                     if evs:
@@ -1589,12 +1877,83 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                     else:
                         bullets.append("Argument citation: (No clear remedy/relief sentence detected in the argument.)")
 
+                    try:
+                        pct = int(round((_overlap_ratio(base_query, evs[0].excerpt) if evs else 0.0) * 100))
+                    except Exception:
+                        pct = 0
+
                 item["support_detected"] = bullets
-                item["support_ratio_percent"] = None
-                item["support_ratio_label"] = None
+                pct = max(0, min(100, int(pct)))
+                item["support_ratio_percent"] = pct
+                item["support_ratio_label"] = _support_label(pct)
                 item["total_claims"] = None
                 item["supported_claims"] = None
                 item["not_referenced"] = []
+
+        # ── Option B: Evidence-weighted scoring per category ───────────────
+        # Only apply per-category evidence caps when the uploaded doc is sufficiently
+        # related (i.e., when we also show per-category support to the user).
+        def _support_cap(pct: Optional[int]) -> Optional[int]:
+            if pct is None:
+                return None
+            try:
+                p = int(pct)
+            except Exception:
+                return None
+            p = max(0, min(100, p))
+            if p >= 80:
+                return 5
+            if p >= 60:
+                return 4
+            if p >= 40:
+                return 3
+            if p >= 20:
+                return 2
+            return 1
+
+        if show_doc_support:
+            reductions = 0
+            for item in response_data.get("breakdown", []) or []:
+                key = _schema_key_for_category_name(str(item.get("category") or ""))
+                if key == "structure_professionalism":
+                    continue
+                cap = _support_cap(item.get("support_ratio_percent"))
+                if cap is None:
+                    continue
+                try:
+                    rs = int(item.get("rubric_score", 0))
+                except Exception:
+                    rs = 0
+                rs = max(0, min(5, rs))
+                new_rs = min(rs, cap)
+                if new_rs != rs:
+                    item["rubric_score"] = new_rs
+                    reductions += 1
+
+            if reductions:
+                adjusted = _apply_grading_schema(
+                    {"breakdown": response_data.get("breakdown", [])},
+                    relevance_multiplier=None,
+                    penalize_for_irrelevant_doc=False,
+                )
+                response_data["overall_score"] = int(adjusted.get("overall_score", response_data.get("overall_score", 0)) or 0)
+                response_data["breakdown"] = adjusted.get("breakdown", response_data.get("breakdown", []))
+
+                score = response_data.get("overall_score", 0)
+                if score >= 80:
+                    response_data["strength_label"] = "Strong"
+                elif score >= 60:
+                    response_data["strength_label"] = "Moderate"
+                elif score >= 40:
+                    response_data["strength_label"] = "Weak"
+                else:
+                    response_data["strength_label"] = "Very Weak"
+
+                # Persist the warning on the main critique object so the final response
+                # (which copies from critique["warning"]) keeps this message.
+                warn = str((critique or {}).get("warning") or "").strip()
+                extra = "Category scores were reduced based on detected document support per category."
+                critique["warning"] = (warn + " " + extra).strip() if warn else extra
 
         if "warning" in critique:
             response_data["warning"] = critique["warning"]

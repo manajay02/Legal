@@ -19,6 +19,22 @@ frontend/
 
 ## 🚀 How to Run
 
+### Option 0: Start Everything (Recommended)
+
+From the project root (`Legal/`), run:
+
+```powershell
+cd "d:\Y4S1\Research new\reserch component\Legal"
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+./start_servers.ps1
+```
+
+This starts:
+- Backend: `http://127.0.0.1:8000`
+- Frontend: `http://127.0.0.1:5500`
+
+Note: this script uses the backend virtual environment’s Python, so run backend setup first (see `backend/README.md`).
+
 ### Option 1: Open Directly in Browser
 
 1. **Make sure the backend API is running** on `http://localhost:8000`

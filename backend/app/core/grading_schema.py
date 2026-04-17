@@ -4,8 +4,6 @@ Grading Schema Definition
 
 Defines the rubric for scoring legal arguments across 8 categories.
 
-Author: LegalScoreModel Team
-Date: January 2026
 """
 
 from typing import Dict, List

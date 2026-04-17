@@ -6,11 +6,65 @@ class LegalCriticApp {
         this.init();
     }
 
+    _storageKeys() {
+        return {
+            argumentText: 'legalCritic.lastArgumentText',
+            uploadedDoc: 'legalCritic.lastUploadedDoc'
+        };
+    }
+
+    _loadPersistedState() {
+        const keys = this._storageKeys();
+        try {
+            const savedText = localStorage.getItem(keys.argumentText);
+            if (savedText) {
+                const argumentText = document.getElementById('argumentText');
+                argumentText.value = savedText;
+                UI.updateCharCount(savedText.length);
+            }
+
+            const savedDocRaw = localStorage.getItem(keys.uploadedDoc);
+            if (savedDocRaw) {
+                const savedDoc = JSON.parse(savedDocRaw);
+                if (savedDoc && savedDoc.doc_id) {
+                    this.uploadedSupportDocs = [savedDoc];
+                }
+            }
+        } catch (e) {
+            // If storage is blocked/corrupted, ignore and proceed.
+            console.warn('Failed to load persisted state:', e);
+        }
+    }
+
+    _persistArgumentText(text) {
+        const keys = this._storageKeys();
+        try {
+            localStorage.setItem(keys.argumentText, String(text || ''));
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    _persistUploadedDoc(doc) {
+        const keys = this._storageKeys();
+        try {
+            if (doc && doc.doc_id) {
+                localStorage.setItem(keys.uploadedDoc, JSON.stringify(doc));
+            } else {
+                localStorage.removeItem(keys.uploadedDoc);
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
+
     /**
      * Initialize the application
      */
     async init() {
         this.setupEventListeners();
+        this._loadPersistedState();
+        this.renderSupportDocsList();
         await this.checkAPIStatus();
     }
 
@@ -22,6 +76,7 @@ class LegalCriticApp {
         const argumentText = document.getElementById('argumentText');
         argumentText.addEventListener('input', () => {
             UI.updateCharCount(argumentText.value.length);
+            this._persistArgumentText(argumentText.value);
         });
 
         document.getElementById('analyzeBtn').addEventListener('click', () => {
@@ -150,6 +205,7 @@ class LegalCriticApp {
 
     removeUploadedDoc(index) {
         this.uploadedSupportDocs.splice(index, 1);
+        this._persistUploadedDoc(this.uploadedSupportDocs[0] || null);
         this.renderSupportDocsList();
     }
 
@@ -157,6 +213,7 @@ class LegalCriticApp {
         this.pendingSupportFiles = [];
         this.uploadedSupportDocs = [];
         document.getElementById('supportUploadBtn').disabled = true;
+        this._persistUploadedDoc(null);
         this.renderSupportDocsList();
     }
 
@@ -174,6 +231,7 @@ class LegalCriticApp {
             const res = await API.uploadSupportingDocument(file);
             // Replace (do not accumulate) uploaded docs so analysis uses only ONE current doc.
             this.uploadedSupportDocs = [res];
+            this._persistUploadedDoc(res);
             // Clear pending on success
             this.pendingSupportFiles = [];
         } catch (error) {

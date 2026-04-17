@@ -1,5 +1,5 @@
 // UI Module - Handles all UI updates and rendering
-const UI_BUILD = '20260302';
+const UI_BUILD = '20260414';
 
 const UI = {
     /**
@@ -261,6 +261,7 @@ const UI = {
         const weakCategories = data.breakdown.filter(cat => cat.rubric_score < 3);
         const evidenceMap = UI.buildEvidenceMap(data);
         const hasEvidence = Object.keys(evidenceMap).length > 0;
+        const docSupportShown = (data.doc_support_shown === true);
         // Ordered list of all evidence items for fallback display
         const allEvidenceItems = [...(data.evidence || []), ...(data.similar_cases || [])];
 
@@ -387,10 +388,18 @@ const UI = {
             // Filter out "Argument citation:" bullets — only show document citations
             const docSupport = support.filter(s => !s.startsWith('Argument citation:'));
 
-            const supportHtml = (docSupport.length > 0 || claimCountText)
+            const shouldRenderSupport = docSupportShown && (
+                docSupport.length > 0 ||
+                !!claimCountText ||
+                ratioPct !== null ||
+                notRef.length > 0
+            );
+
+            const supportHtml = shouldRenderSupport
                 ? `<div class="cat-section-block cat-section-support">
                         <p class="ev-section-label cat-section-heading">📄 Document Support Detected</p>
                         ${claimCountText ? `<p class="cat-claim-count">${claimCountText}</p>` : ''}
+                        ${ratioText ? `<p class="cat-support-ratio">${ratioText}</p>` : ''}
                         ${docSupport.length > 0
                             ? `<ul class="cat-bullets cat-support">${docSupport.map(s => `<li>${UI.escapeHtml(s)}</li>`).join('')}</ul>`
                             : `<p class="no-evidence-note">ℹ️ No mapped support detected for this category.</p>`}

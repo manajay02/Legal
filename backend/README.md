@@ -16,8 +16,8 @@ Submit legal arguments and receive:
 
 **❗ IMPORTANT FOR FRONTEND DEVELOPERS:**
 
-- **No JSON files are saved to disk**
-- All responses are returned **directly via HTTP API**
+- Analysis responses are returned **directly via HTTP API**
+- **Supporting document uploads** (via `POST /api/v1/documents/upload`) are persisted on disk under `backend/data/uploaded_docs/` as JSON so they can be referenced later by `doc_id`
 - Your frontend makes HTTP requests and receives JSON responses
 - Perfect for building web apps, mobile apps, or desktop clients
 
@@ -26,7 +26,7 @@ Submit legal arguments and receive:
 Frontend → POST /api/v1/analyze → Backend processes → JSON response → Display results
 ```
 
-No intermediate files. No file system. Pure API communication.
+For basic scoring (`/analyze`, `/upload`), you can treat it as pure request/response.
 
 ---
 
@@ -220,8 +220,11 @@ python test_full_pipeline.py
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/` | API info |
+| `GET` | `/health` | Basic health check |
 | `POST` | `/api/v1/analyze` | Analyze text |
 | `POST` | `/api/v1/upload` | Upload PDF/TXT |
+| `POST` | `/api/v1/documents/upload` | Upload supporting PDF/TXT (persisted) |
+| `POST` | `/api/v1/analyze_grounded` | Analyze text with evidence grounding |
 | `GET` | `/api/v1/health` | Health check |
 | `GET` | `/docs` | Swagger docs |
 
@@ -229,10 +232,10 @@ python test_full_pipeline.py
 
 ## 🔌 Frontend Integration Guide
 
-### ⚠️ IMPORTANT: No JSON Files Are Saved!
+### Notes on persistence
 
-**The API returns JSON responses directly via HTTP.**  
-**No files are created on disk.**
+- The API returns JSON responses directly via HTTP.
+- `POST /api/v1/documents/upload` persists extracted text under `backend/data/uploaded_docs/` so you can reference it later via `doc_id`.
 
 Your frontend should:
 1. **Call the API** via HTTP POST request
@@ -411,7 +414,7 @@ const result = await response.json();
   "filename": "appeal_case_2023.pdf",
   "file_type": "pdf",
   "text_length": 8543,
-  "extracted_text": "The appellant submits..."  // First 10,000 chars
+  "warning": "Text truncated to 10,000 characters"
 }
 ```
 
@@ -446,6 +449,40 @@ function FileUpload() {
     </div>
   );
 }
+
+---
+
+### POST /api/v1/documents/upload (supporting evidence)
+
+Upload a supporting PDF/TXT document, receive a `doc_id`, and then reference it in grounded scoring.
+
+**Request (JavaScript):**
+```javascript
+const formData = new FormData();
+formData.append('file', file);
+
+const res = await fetch('http://localhost:8000/api/v1/documents/upload', {
+  method: 'POST',
+  body: formData
+});
+
+const doc = await res.json();
+// doc.doc_id is used in /api/v1/analyze_grounded
+```
+
+### POST /api/v1/analyze_grounded
+
+Score a typed argument while grounding rationales in uploaded documents (and optionally similar prior judgments in `backend/data/processed_text`).
+
+**Request:**
+```json
+{
+  "text": "...your argument text...",
+  "doc_ids": ["<doc_id_from_documents_upload>"],
+  "include_case_corpus": true,
+  "fast_mode": false
+}
+```
 
 ---
 
@@ -642,7 +679,7 @@ OPENROUTER_MODEL=deepseek/deepseek-chat
 ```env
 INFERENCE_BACKEND=gemini
 GOOGLE_API_KEY=AIzaSyxxxxxx
-GEMINI_MODEL_NAME=gemini-1.5-flash
+GEMINI_MODEL_NAME=gemini-2.5-flash
 ```
 
 **Get API key:** https://aistudio.google.com/
@@ -720,32 +757,12 @@ To retrain:
 
 ## 🐛 Troubleshooting
 
-### "Where are the JSON files saved?"
+### "Where does the backend save data?"
 
-**They aren't!** The API returns JSON responses via HTTP, not files.
+- `POST /api/v1/analyze` and `POST /api/v1/upload` return JSON and **do not** persist analysis outputs to disk.
+- `POST /api/v1/documents/upload` **does** persist extracted text to `backend/data/uploaded_docs/<doc_id>.json` so `doc_id` can be reused in grounded scoring.
 
-```javascript
-// ✅ Correct: Get JSON from API response
-const response = await fetch('/api/v1/analyze', { method: 'POST', ... });
-const jsonData = await response.json();  // This is your JSON
-
-// ❌ Wrong: Looking for files on disk
-// There are no .json files created
-```
-
-If you need to save responses:
-```javascript
-// Frontend saves to localStorage
-localStorage.setItem('lastResult', JSON.stringify(jsonData));
-
-// Or download as file
-const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
-const url = URL.createObjectURL(blob);
-const a = document.createElement('a');
-a.href = url;
-a.download = 'analysis-result.json';
-a.click();
-```
+If you want to persist analysis results, save the JSON in your client (localStorage, a DB, or download as a file).
 
 ### API Won't Start
 

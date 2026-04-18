@@ -1171,6 +1171,21 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                 return "Low"
             return "None"
 
+        def _support_overlap_ratio(query: str, excerpt: str) -> float:
+            """Compute a document-support signal between a query and an excerpt.
+
+            Uses content-words (boilerplate-filtered) but avoids the strict
+            |Q∩E|/|Q| ratio that collapses when the query is long.
+            """
+            qw = _content_words(query)
+            ew = _content_words(excerpt)
+            if not qw or not ew:
+                return 0.0
+            inter = len(qw & ew)
+            r_q = inter / max(1, len(qw))
+            r_e = inter / max(1, len(ew))
+            return max(r_q, r_e)
+
         def _overlap_ratio(query: str, excerpt: str) -> float:
             # IMPORTANT: use content words (filtered) to avoid false positives from
             # generic legal boilerplate shared across unrelated documents.
@@ -1745,7 +1760,7 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                     title = (ev.title or "Supporting document").strip()
                     prefix = f"{title} {loc}".strip()
                     bullets.append(f"{prefix} \u2192 {summary}" if prefix else f"\u2192 {summary}")
-                    ratios.append(_overlap_ratio(query, ev.excerpt))
+                    ratios.append(_support_overlap_ratio(query, ev.excerpt))
 
                 pct = int(round((max(ratios) if ratios else 0.0) * 100))
                 item["support_detected"]      = bullets
@@ -1793,7 +1808,7 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                 if uploaded_evidence:
                     try:
                         query = (cat_name + " " + (arg_cite or "") + " " + str(item.get("rationale", "") or "")).strip()
-                        pct = int(round(_overlap_ratio(query, best_ev.excerpt) * 100)) if best_ev else 0
+                        pct = int(round(_support_overlap_ratio(query, best_ev.excerpt) * 100)) if best_ev else 0
                     except Exception:
                         pct = 0
                 else:
@@ -1811,7 +1826,8 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                _is_reasoning_logic(cat_name) or _is_counterarguments(cat_name) or _is_remedies(cat_name):
                 rationale = str(item.get("rationale", "") or "")
                 arg_quote_raw = str(item.get("argument_quote", "") or "").strip()
-                base_query = (cat_name + " " + rationale + " " + arg_quote_raw + " " + request.text).strip()
+                # Keep the query compact so the support ratio is meaningful.
+                base_query = (cat_name + " " + rationale + " " + arg_quote_raw).strip()
 
                 pct = 0
 
@@ -1840,7 +1856,7 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                         bullets.append("Argument citation: (No clear date/timeline sentence detected in the argument.)")
 
                     try:
-                        ratios = [_overlap_ratio(base_query, ev.excerpt) for ev in evs] if evs else []
+                        ratios = [_support_overlap_ratio(base_query, ev.excerpt) for ev in evs] if evs else []
                         pct = int(round((max(ratios) if ratios else 0.0) * 100))
                     except Exception:
                         pct = 0
@@ -1866,7 +1882,7 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                         bullets.append("Argument citation: (No clear statutory/legal provision sentence detected in the argument.)")
 
                     try:
-                        pct = int(round((_overlap_ratio(base_query, evs[0].excerpt) if evs else 0.0) * 100))
+                        pct = int(round((_support_overlap_ratio(base_query, evs[0].excerpt) if evs else 0.0) * 100))
                     except Exception:
                         pct = 0
 
@@ -1894,7 +1910,7 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                         bullets.append("Argument citation: (No clear evidence-reliance sentence detected in the argument.)")
 
                     try:
-                        ratios = [_overlap_ratio(base_query, ev.excerpt) for ev in evs] if evs else []
+                        ratios = [_support_overlap_ratio(base_query, ev.excerpt) for ev in evs] if evs else []
                         pct = int(round((max(ratios) if ratios else 0.0) * 100))
                     except Exception:
                         pct = 0
@@ -1921,7 +1937,7 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                         bullets.append("Argument citation: (No clear logical-connector sentence detected in the argument.)")
 
                     try:
-                        pct = int(round((_overlap_ratio(base_query, evs[0].excerpt) if evs else 0.0) * 100))
+                        pct = int(round((_support_overlap_ratio(base_query, evs[0].excerpt) if evs else 0.0) * 100))
                     except Exception:
                         pct = 0
 
@@ -1954,7 +1970,7 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                         bullets.append("Argument citation: (No clear rebuttal sentence detected in the argument.)")
 
                     try:
-                        pct = int(round((_overlap_ratio(base_query, evs[0].excerpt) if evs else 0.0) * 100))
+                        pct = int(round((_support_overlap_ratio(base_query, evs[0].excerpt) if evs else 0.0) * 100))
                     except Exception:
                         pct = 0
 
@@ -1979,7 +1995,7 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                         bullets.append("Argument citation: (No clear remedy/relief sentence detected in the argument.)")
 
                     try:
-                        pct = int(round((_overlap_ratio(base_query, evs[0].excerpt) if evs else 0.0) * 100))
+                        pct = int(round((_support_overlap_ratio(base_query, evs[0].excerpt) if evs else 0.0) * 100))
                     except Exception:
                         pct = 0
 
@@ -2002,13 +2018,16 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
             except Exception:
                 return None
             p = max(0, min(100, p))
-            if p >= 80:
+            # With heuristic overlap on short excerpts + paraphrased arguments,
+            # support ratios tend to be much lower than "human intuition".
+            # These tiers aim to prevent systematic over-penalization.
+            if p >= 50:
                 return 5
-            if p >= 60:
+            if p >= 30:
                 return 4
-            if p >= 40:
+            if p >= 15:
                 return 3
-            if p >= 20:
+            if p >= 8:
                 return 2
             return 1
 
@@ -2096,13 +2115,13 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
 
                     # Tiered caps (defaults intentionally strict):
                     # If avg support is under ~30%, overall must be very low.
-                    t1 = float(os.getenv("DOC_GLOBAL_SUPPORT_T1_PCT", "30"))
-                    t2 = float(os.getenv("DOC_GLOBAL_SUPPORT_T2_PCT", "50"))
-                    t3 = float(os.getenv("DOC_GLOBAL_SUPPORT_T3_PCT", "70"))
+                    t1 = float(os.getenv("DOC_GLOBAL_SUPPORT_T1_PCT", "15"))
+                    t2 = float(os.getenv("DOC_GLOBAL_SUPPORT_T2_PCT", "30"))
+                    t3 = float(os.getenv("DOC_GLOBAL_SUPPORT_T3_PCT", "50"))
 
-                    cap1 = int(os.getenv("DOC_GLOBAL_SUPPORT_CAP1_SCORE", "20"))
-                    cap2 = int(os.getenv("DOC_GLOBAL_SUPPORT_CAP2_SCORE", "35"))
-                    cap3 = int(os.getenv("DOC_GLOBAL_SUPPORT_CAP3_SCORE", "60"))
+                    cap1 = int(os.getenv("DOC_GLOBAL_SUPPORT_CAP1_SCORE", "35"))
+                    cap2 = int(os.getenv("DOC_GLOBAL_SUPPORT_CAP2_SCORE", "55"))
+                    cap3 = int(os.getenv("DOC_GLOBAL_SUPPORT_CAP3_SCORE", "75"))
 
                     def _clamp_int(v: int, lo: int, hi: int) -> int:
                         return lo if v < lo else (hi if v > hi else v)

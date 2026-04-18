@@ -373,16 +373,6 @@ const UI = {
             </div>
         `;
 
-        // ── Backend warning (e.g. fallback/template mode) ───────────
-        if (data.warning) {
-            const warningText = UI.toUserFacingWarning(data.warning);
-            html += `
-                <div class="error" style="margin-top:12px;">
-                    ${UI.escapeHtml(warningText)}
-                </div>
-            `;
-        }
-
         // ── File info ───────────────────────────────────────────────
         if (fileInfo) {
             html += `

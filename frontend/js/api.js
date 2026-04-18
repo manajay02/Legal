@@ -53,8 +53,22 @@ const API = {
             clearTimeout(timeoutId);
 
             if (!response.ok) {
-                const message = await response.text();
-                throw new Error(message || `HTTP error! status: ${response.status}`);
+                // FastAPI often returns {"detail": "..."}
+                let detail = '';
+                try {
+                    const err = await response.json();
+                    if (err && typeof err.detail === 'string') detail = err.detail;
+                } catch (e) {
+                    // Ignore JSON parse errors; fall back to text
+                }
+                if (!detail) {
+                    try {
+                        detail = await response.text();
+                    } catch (e) {
+                        detail = '';
+                    }
+                }
+                throw new Error(detail || `HTTP error! status: ${response.status}`);
             }
 
             return await response.json();
@@ -93,8 +107,21 @@ const API = {
             clearTimeout(timeoutId);
 
             if (!response.ok) {
-                const message = await response.text();
-                throw new Error(message || `HTTP error! status: ${response.status}`);
+                let detail = '';
+                try {
+                    const err = await response.json();
+                    if (err && typeof err.detail === 'string') detail = err.detail;
+                } catch (e) {
+                    // Ignore JSON parse errors; fall back to text
+                }
+                if (!detail) {
+                    try {
+                        detail = await response.text();
+                    } catch (e) {
+                        detail = '';
+                    }
+                }
+                throw new Error(detail || `HTTP error! status: ${response.status}`);
             }
 
             return await response.json();

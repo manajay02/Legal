@@ -72,6 +72,58 @@ const UI = {
         `;
     },
 
+    /**
+     * Show a simple in-page popup modal (prettier than alert()).
+     */
+    showPopup(message) {
+        const msg = String(message || '').trim();
+        if (!msg) return;
+
+        let overlay = document.getElementById('uiPopupOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'uiPopupOverlay';
+            overlay.className = 'ui-popup-overlay';
+            overlay.innerHTML = `
+                <div class="ui-popup-card" role="dialog" aria-modal="true" aria-labelledby="uiPopupMessage">
+                    <div class="ui-popup-body">
+                        <div class="ui-popup-message" id="uiPopupMessage"></div>
+                    </div>
+                    <div class="ui-popup-actions">
+                        <button type="button" class="btn-primary ui-popup-ok" id="uiPopupOkBtn">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            // Close on backdrop click
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) UI.hidePopup();
+            });
+            // Close on OK
+            const okBtn = overlay.querySelector('#uiPopupOkBtn');
+            if (okBtn) okBtn.addEventListener('click', () => UI.hidePopup());
+            // Close on Escape
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') UI.hidePopup();
+            });
+        }
+
+        const msgEl = overlay.querySelector('#uiPopupMessage');
+        if (msgEl) msgEl.textContent = msg;
+
+        overlay.classList.add('open');
+
+        // Focus the OK button for keyboard users
+        const okBtn = overlay.querySelector('#uiPopupOkBtn');
+        if (okBtn && typeof okBtn.focus === 'function') okBtn.focus();
+    },
+
+    hidePopup() {
+        const overlay = document.getElementById('uiPopupOverlay');
+        if (overlay) overlay.classList.remove('open');
+    },
+
     /** Build a lookup map: evidence_id → evidence item */
     buildEvidenceMap(data) {
         const map = {};

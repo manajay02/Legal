@@ -186,7 +186,16 @@ class LegalCriticApp {
             UI.displayResults(data, 'textResults');
         } catch (error) {
             console.error('Analysis error:', error);
-            UI.showError('textResults', error.message);
+            const msg = String(error && error.message ? error.message : 'An unexpected error occurred.');
+            const supportMsg = 'Please Upload a Vaid Support document';
+            // Be robust: some error surfaces may include extra text like status/code.
+            if (msg.trim() === supportMsg || msg.toLowerCase().includes(supportMsg.toLowerCase())) {
+                UI.showPopup(supportMsg);
+                const container = document.getElementById('textResults');
+                if (container) container.innerHTML = '';
+            } else {
+                UI.showError('textResults', msg);
+            }
         } finally {
             analyzeBtn.disabled = false;
             analyzeBtn.textContent = 'Analyze Argument';

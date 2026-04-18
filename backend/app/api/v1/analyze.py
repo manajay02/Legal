@@ -1434,6 +1434,16 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
             # do not show support and force the score penalty.
             show_doc_support = False
 
+        # Validation: if the uploaded "support" document cannot produce any
+        # meaningful supporting extract for the argument, do not generate a
+        # critique/score. The frontend will show a popup instructing the user
+        # to upload a valid support document.
+        if request.doc_ids and (not show_doc_support):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Please Upload a Vaid Support document",
+            )
+
         # If the uploaded document is not relevant enough to show per-category support,
         # then the score should also be low. Otherwise, generic legal boilerplate can
         # still yield a high rubric score even when the document is effectively unrelated.

@@ -3,6 +3,8 @@ class LegalCriticApp {
     constructor() {
         this.pendingSupportFiles = [];
         this.uploadedSupportDocs = []; // { doc_id, filename, file_type, text_length }
+        this.isUploadingSupportDoc = false;
+        this._autoUploadQueued = false;
         this.init();
     }
 
@@ -212,8 +214,20 @@ class LegalCriticApp {
         // Single-document mode: keep only ONE pending file (the most recently selected one).
         const chosen = accepted.length > 0 ? accepted[accepted.length - 1] : null;
         this.pendingSupportFiles = chosen ? [chosen] : [];
-        document.getElementById('supportUploadBtn').disabled = (this.pendingSupportFiles.length === 0);
         this.renderSupportDocsList();
+
+        const uploadBtn = document.getElementById('supportUploadBtn');
+        if (uploadBtn) uploadBtn.disabled = (this.pendingSupportFiles.length === 0);
+
+        // Auto-upload immediately on selection/drop.
+        // If an upload is already in progress, queue this selection to upload next.
+        if (this.pendingSupportFiles.length > 0) {
+            if (this.isUploadingSupportDoc) {
+                this._autoUploadQueued = true;
+                return;
+            }
+            this.uploadSupportingDocuments();
+        }
     }
 
     removePendingFile(index) {
@@ -236,6 +250,9 @@ class LegalCriticApp {
 
     async uploadSupportingDocuments() {
         if (!this.pendingSupportFiles || this.pendingSupportFiles.length === 0) return;
+        if (this.isUploadingSupportDoc) return;
+
+        this.isUploadingSupportDoc = true;
 
         const btn = document.getElementById('supportUploadBtn');
         btn.disabled = true;
@@ -243,7 +260,10 @@ class LegalCriticApp {
 
         const failed = [];
         const file = this.pendingSupportFiles[0];
-        if (!file) return;
+        if (!file) {
+            this.isUploadingSupportDoc = false;
+            return;
+        }
         try {
             const res = await API.uploadSupportingDocument(file);
             // Replace (do not accumulate) uploaded docs so analysis uses only ONE current doc.
@@ -261,6 +281,17 @@ class LegalCriticApp {
 
         if (failed.length > 0) {
             alert('Some files failed to upload:\n' + failed.join('\n'));
+        }
+
+        this.isUploadingSupportDoc = false;
+
+        // If the user selected another file while an upload was running,
+        // upload the newest pending file next.
+        if (this._autoUploadQueued) {
+            this._autoUploadQueued = false;
+            if (this.pendingSupportFiles && this.pendingSupportFiles.length > 0) {
+                this.uploadSupportingDocuments();
+            }
         }
     }
 

@@ -85,7 +85,7 @@ const API = {
     },
 
     /**
-     * Upload supporting document (PDF/TXT). Returns { doc_id, filename, file_type, text_length }
+    * Upload supporting document (PDF/TXT/DOCX). Returns { doc_id, filename, file_type, text_length }
      */
     async uploadSupportingDocument(file) {
         const formData = new FormData();

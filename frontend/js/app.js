@@ -206,7 +206,7 @@ class LegalCriticApp {
 
     handleSupportFileSelection(files) {
         if (!files || files.length === 0) return;
-        const validTypes = ['.pdf', '.txt'];
+        const validTypes = ['.pdf', '.txt', '.docx'];
         const accepted = files.filter(f => {
             const ext = '.' + f.name.split('.').pop().toLowerCase();
             return validTypes.includes(ext) && f.size <= CONFIG.MAX_FILE_SIZE;

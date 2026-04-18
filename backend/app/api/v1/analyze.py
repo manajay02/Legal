@@ -410,7 +410,7 @@ class DocumentUploadResponse(BaseModel):
 
     doc_id: str = Field(..., description="Document id to reference during scoring")
     filename: str = Field(..., description="Uploaded filename")
-    file_type: str = Field(..., description="File type (pdf/txt)")
+    file_type: str = Field(..., description="File type (pdf/txt/docx)")
     text_length: int = Field(..., description="Extracted text length in characters")
 
 
@@ -980,19 +980,19 @@ class GroundedAnalyzeResponse(AnalyzeResponse):
     response_model=DocumentUploadResponse,
     status_code=status.HTTP_200_OK,
     summary="Upload a supporting document",
-    description="Upload a PDF/TXT case document to be used as evidence when scoring a typed argument",
+    description="Upload a PDF/TXT/DOCX case document to be used as evidence when scoring a typed argument",
     tags=["Documents"],
 )
 async def upload_supporting_document(
-    file: UploadFile = File(..., description="Supporting PDF/TXT document")
+    file: UploadFile = File(..., description="Supporting PDF/TXT/DOCX document")
 ) -> DocumentUploadResponse:
     filename = file.filename or "unknown"
     file_extension = filename.lower().split(".")[-1] if "." in filename else ""
 
-    if file_extension not in ["pdf", "txt"]:
+    if file_extension not in ["pdf", "txt", "docx"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported file type: .{file_extension}. Supported: .pdf, .txt",
+            detail=f"Unsupported file type: .{file_extension}. Supported: .pdf, .txt, .docx",
         )
 
     content = await file.read()
@@ -1015,6 +1015,19 @@ async def upload_supporting_document(
             max_pages=max_pages,
         )
         file_type = "pdf"
+    elif file_extension == "docx":
+        try:
+            extracted_text = await run_in_threadpool(
+                extract_text_from_docx,
+                content,
+                max_chars=max_chars,
+            )
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Could not read DOCX file. Please upload a valid .docx document.",
+            )
+        file_type = "docx"
     else:
         extracted_text = content.decode("utf-8", errors="ignore")
         file_type = "txt"
@@ -2325,6 +2338,59 @@ def _extract_pdf_fallback(content: bytes, *, max_chars: Optional[int] = None) ->
         pass
 
     return ' '.join(text_parts)
+
+
+def extract_text_from_docx(
+    file_content: bytes,
+    *,
+    max_chars: Optional[int] = None,
+) -> str:
+    """Extract text from a .docx file.
+
+    Uses the `python-docx` library.
+    """
+    try:
+        from docx import Document  # type: ignore
+    except Exception as e:
+        raise RuntimeError("python-docx is required for DOCX uploads") from e
+
+    limit = None
+    if isinstance(max_chars, int) and max_chars > 0:
+        # Cleaning may remove whitespace/newlines.
+        limit = int(max_chars * 1.10) + 2000
+
+    doc = Document(io.BytesIO(file_content))
+
+    parts: List[str] = []
+    total = 0
+
+    def _add(text: str) -> bool:
+        nonlocal total
+        t = (text or "").strip()
+        if not t:
+            return False
+        parts.append(t)
+        total += len(t) + 1
+        return limit is not None and total >= limit
+
+    for p in getattr(doc, "paragraphs", []) or []:
+        if _add(getattr(p, "text", "")):
+            return "\n".join(parts)
+
+    # Include tables if present (common for exhibits/schedules)
+    for table in getattr(doc, "tables", []) or []:
+        for row in getattr(table, "rows", []) or []:
+            cell_texts = []
+            for cell in getattr(row, "cells", []) or []:
+                ct = (getattr(cell, "text", "") or "").strip()
+                if ct:
+                    cell_texts.append(ct)
+            if not cell_texts:
+                continue
+            if _add(" | ".join(cell_texts)):
+                return "\n".join(parts)
+
+    return "\n".join(parts)
 
 
 def extract_text_from_pdf(

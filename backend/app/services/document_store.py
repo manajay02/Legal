@@ -1,7 +1,7 @@
 """Document storage for uploaded case materials.
 
 This module provides a minimal document store used by the API to:
-- accept uploads (PDF/TXT),
+- accept uploads (PDF/TXT/DOCX),
 - persist extracted text to disk, and
 - reference uploaded documents by `doc_id` during argument scoring.
 
@@ -23,7 +23,7 @@ from typing import Dict, Optional, List
 class StoredDocument:
     doc_id: str
     filename: str
-    file_type: str  # 'pdf' | 'txt'
+    file_type: str  # 'pdf' | 'txt' | 'docx'
     text: str
     created_at: float
 

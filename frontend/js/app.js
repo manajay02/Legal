@@ -13,6 +13,16 @@ class LegalCriticApp {
         };
     }
 
+    _clearPersistedState() {
+        const keys = this._storageKeys();
+        try {
+            localStorage.removeItem(keys.argumentText);
+            localStorage.removeItem(keys.uploadedDoc);
+        } catch (e) {
+            // ignore
+        }
+    }
+
     _loadPersistedState() {
         const keys = this._storageKeys();
         try {
@@ -63,7 +73,8 @@ class LegalCriticApp {
      */
     async init() {
         this.setupEventListeners();
-        this._loadPersistedState();
+        // Always start with a clean UI (no auto-restored text or docs).
+        this._clearPersistedState();
         this.renderSupportDocsList();
         await this.checkAPIStatus();
     }
@@ -76,7 +87,6 @@ class LegalCriticApp {
         const argumentText = document.getElementById('argumentText');
         argumentText.addEventListener('input', () => {
             UI.updateCharCount(argumentText.value.length);
-            this._persistArgumentText(argumentText.value);
         });
 
         document.getElementById('analyzeBtn').addEventListener('click', () => {
@@ -205,7 +215,6 @@ class LegalCriticApp {
 
     removeUploadedDoc(index) {
         this.uploadedSupportDocs.splice(index, 1);
-        this._persistUploadedDoc(this.uploadedSupportDocs[0] || null);
         this.renderSupportDocsList();
     }
 
@@ -213,7 +222,6 @@ class LegalCriticApp {
         this.pendingSupportFiles = [];
         this.uploadedSupportDocs = [];
         document.getElementById('supportUploadBtn').disabled = true;
-        this._persistUploadedDoc(null);
         this.renderSupportDocsList();
     }
 
@@ -231,7 +239,6 @@ class LegalCriticApp {
             const res = await API.uploadSupportingDocument(file);
             // Replace (do not accumulate) uploaded docs so analysis uses only ONE current doc.
             this.uploadedSupportDocs = [res];
-            this._persistUploadedDoc(res);
             // Clear pending on success
             this.pendingSupportFiles = [];
         } catch (error) {

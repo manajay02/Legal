@@ -94,13 +94,35 @@ def top_k_tfidf(query: str, chunks: Sequence[str], k: int = 5) -> List[Tuple[int
     # Local import to keep startup light if unused.
     # IMPORTANT: scikit-learn is optional in this repo; fall back to a pure-Python
     # TF-IDF cosine scorer when it's not installed.
+    LEGAL_BOILERPLATE_STOP = {
+        # Common legal boilerplate that appears across many unrelated judgments
+        "court", "courts", "judge", "judges", "justice", "justices",
+        "appellant", "appellants", "respondent", "respondents",
+        "petitioner", "petitioners", "plaintiff", "plaintiffs",
+        "defendant", "defendants",
+        "appeal", "appeals", "revision", "application", "motion",
+        "case", "cases", "matter", "hearing", "trial",
+        "learned", "counsel", "attorney", "attorneys",
+        "section", "sections", "article", "articles",
+        "law", "legal", "evidence", "facts", "issue", "issues",
+        "order", "orders", "judgment", "judgments", "decree", "decrees",
+        "therefore", "whereas", "hereby", "herein", "hereto",
+        "said", "shall", "may", "must", "could", "would", "should",
+    }
+
     try:
+        from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS  # type: ignore
         from sklearn.feature_extraction.text import TfidfVectorizer  # type: ignore
         from sklearn.metrics.pairwise import cosine_similarity  # type: ignore
 
+        # IMPORTANT: plain English stopwords are not enough for legal PDFs.
+        # Add common legal boilerplate terms so unrelated documents don't look
+        # similar just because they share generic legal vocabulary.
+        stop_words = list(set(ENGLISH_STOP_WORDS) | LEGAL_BOILERPLATE_STOP)
+
         vectorizer = TfidfVectorizer(
             lowercase=True,
-            stop_words="english",
+            stop_words=stop_words,
             max_features=50000,
             ngram_range=(1, 2),
         )
@@ -124,6 +146,7 @@ def top_k_tfidf(query: str, chunks: Sequence[str], k: int = 5) -> List[Tuple[int
         "what","which","while","where","who","whom","why","how","a","an","of","to","in","on","at","by",
         "as","is","it","be","or","if","we","you","i","he","she","his","her","its","our","us",
     }
+    stop |= set(LEGAL_BOILERPLATE_STOP)
 
     def tok(s: str) -> List[str]:
         return [t for t in re.findall(r"[a-z]{2,}", (s or "").lower()) if t not in stop]

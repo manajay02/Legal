@@ -1172,10 +1172,12 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
             return "None"
 
         def _overlap_ratio(query: str, excerpt: str) -> float:
-            qw = _words(query)
+            # IMPORTANT: use content words (filtered) to avoid false positives from
+            # generic legal boilerplate shared across unrelated documents.
+            qw = _content_words(query)
             if not qw:
                 return 0.0
-            ew = _words(excerpt)
+            ew = _content_words(excerpt)
             return len(qw & ew) / max(1, len(qw))
 
         # Retrieve top excerpts from each uploaded doc
@@ -1210,10 +1212,18 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
             chunks = [c.text for c in chunk_spans]
             ranked = top_k_tfidf(request.text, chunks, k=tfidf_k_per_doc)
 
-            # Document-level relevance: best matching chunk score.
+            # Document-level relevance: avoid taking the single best chunk score.
+            # For long/generic legal PDFs, a single chunk can accidentally match almost
+            # any argument (boilerplate), which makes unrelated documents look relevant.
+            # Use an average of the top-N chunk scores instead.
             if ranked:
                 try:
-                    doc_relevance = max(doc_relevance, float(ranked[0][1]))
+                    topn = int(os.getenv("DOC_RELEVANCE_TOPN_AVG", "3"))
+                    if topn <= 0:
+                        topn = 1
+                    top_scores = [float(s) for _, s in ranked[: min(topn, len(ranked))]]
+                    if top_scores:
+                        doc_relevance = max(doc_relevance, sum(top_scores) / len(top_scores))
                 except Exception:
                     pass
 
@@ -1306,9 +1316,9 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                 low = 0.0
 
             # Threshold for showing per-category doc support in the UI.
-            # Default to a midpoint between LOW and FULL so relevant docs show
-            # support reliably, while low/irrelevant docs do not.
-            default_support_show = (low + full) / 2.0
+            # Default to FULL (stricter than midpoint) to reduce false positives
+            # where generic legal documents appear "relevant".
+            default_support_show = full
             support_show = float(os.getenv("DOC_SUPPORT_SHOW", str(default_support_show)))
             if support_show <= 0:
                 support_show = default_support_show
@@ -1330,8 +1340,14 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
         # but "legal-ish" documents don't trigger support display.
         min_overlap_words = int(os.getenv("DOC_SUPPORT_MIN_OVERLAP_WORDS", "6"))
         min_overlap_ratio = float(os.getenv("DOC_SUPPORT_MIN_OVERLAP_RATIO", "0.06"))
+        # Separate (more lenient) thresholds for SCORE penalty.
+        # We want to strongly down-score when the uploaded document is clearly unrelated,
+        # but we don't want to hide support (UI) just because the argument paraphrases.
+        penalty_min_overlap_words = int(os.getenv("DOC_PENALTY_MIN_OVERLAP_WORDS", "3"))
+        penalty_min_overlap_ratio = float(os.getenv("DOC_PENALTY_MIN_OVERLAP_RATIO", "0.025"))
         max_overlap_words = 0
         max_overlap_ratio = 0.0
+        penalized_for_low_overlap = False
         try:
             for dt in uploaded_doc_texts:
                 n, r = _content_overlap_stats(request.text, dt)
@@ -1342,12 +1358,81 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
         except Exception:
             pass
 
+        # If the argument and uploaded document barely share any content-words,
+        # treat the document as unrelated for scoring purposes (hard penalty).
+        if request.doc_ids and relevance_multiplier is not None:
+            try:
+                if (
+                    max_overlap_words < max(0, penalty_min_overlap_words)
+                    or max_overlap_ratio < max(0.0, penalty_min_overlap_ratio)
+                ):
+                    relevance_multiplier = 0.0
+                    penalized_for_low_overlap = True
+            except Exception:
+                pass
+
+        # Fix B: require the *retrieved uploaded-doc excerpts* to overlap meaningfully
+        # with the argument. This prevents long/generic legal PDFs from slipping
+        # through relevance gates due to boilerplate or a single lucky chunk.
+        evidence_min_overlap_words = int(os.getenv("DOC_EVIDENCE_MIN_OVERLAP_WORDS", "6"))
+        evidence_min_overlap_ratio = float(os.getenv("DOC_EVIDENCE_MIN_OVERLAP_RATIO", "0.06"))
+        max_evidence_overlap_words = 0
+        max_evidence_overlap_ratio = 0.0
+        penalized_for_low_evidence = False
+        try:
+            uploaded_evs = [ev for ev in evidence_items if getattr(ev, "source", None) == "uploaded_doc"]
+            for ev in uploaded_evs:
+                qw = _content_words(request.text)
+                ew = _content_words(ev.excerpt)
+                inter = len(qw & ew) if qw and ew else 0
+                # Two perspectives:
+                # - inter/|query| (how much of the argument's content-words are covered)
+                # - inter/|excerpt| (how focused the excerpt is on the argument)
+                # Using max(...) makes this robust for long arguments.
+                r_q = inter / max(1, len(qw))
+                r_e = inter / max(1, len(ew))
+                r = max(r_q, r_e)
+                if inter > max_evidence_overlap_words:
+                    max_evidence_overlap_words = inter
+                if r > max_evidence_overlap_ratio:
+                    max_evidence_overlap_ratio = r
+
+            if request.doc_ids and relevance_multiplier is not None:
+                if not uploaded_evs or (
+                    max_evidence_overlap_words < max(0, evidence_min_overlap_words)
+                    or max_evidence_overlap_ratio < max(0.0, evidence_min_overlap_ratio)
+                ):
+                    relevance_multiplier = 0.0
+                    penalized_for_low_evidence = True
+        except Exception:
+            pass
+
         show_doc_support = (
             bool(request.doc_ids)
             and (doc_relevance >= support_show)
             and (max_overlap_words >= max(0, min_overlap_words))
             and (max_overlap_ratio >= max(0.0, min_overlap_ratio))
         )
+
+        if penalized_for_low_evidence:
+            # If we can't find even one excerpt that overlaps the argument,
+            # do not show support and force the score penalty.
+            show_doc_support = False
+
+        # If the uploaded document is not relevant enough to show per-category support,
+        # then the score should also be low. Otherwise, generic legal boilerplate can
+        # still yield a high rubric score even when the document is effectively unrelated.
+        no_support_multiplier = float(os.getenv("DOC_NO_SUPPORT_MAX_MULTIPLIER", "0.2"))
+        if no_support_multiplier < 0:
+            no_support_multiplier = 0.0
+        if no_support_multiplier > 1:
+            no_support_multiplier = 1.0
+
+        clamped_for_no_support = False
+        if request.doc_ids and (relevance_multiplier is not None) and (not show_doc_support):
+            # Keep *some* credit for writing quality, but force the total into a low range.
+            relevance_multiplier = min(float(relevance_multiplier), float(no_support_multiplier))
+            clamped_for_no_support = True
 
         inference_service = get_inference_service()
         if request.fast_mode:
@@ -1397,10 +1482,26 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
             # explicitly tell the user (and that scores were reduced).
             if not show_doc_support:
                 warn = str((critique or {}).get("warning") or "").strip()
-                extra = (
-                    f"Uploaded document relevance looks low (~{doc_relevance_percent}%). "
-                    "Document support was hidden and scores were reduced to reflect weak support."
-                )
+                if penalized_for_low_overlap:
+                    extra = (
+                        "Uploaded document appears unrelated to the argument (very low content overlap). "
+                        "Document support was hidden and scores were reduced to reflect weak support."
+                    )
+                elif penalized_for_low_evidence:
+                    extra = (
+                        "Uploaded document support could not be verified from any retrieved excerpt (evidence overlap guard). "
+                        "Document support was hidden and scores were reduced to reflect weak or unrelated support."
+                    )
+                elif clamped_for_no_support:
+                    extra = (
+                        f"Uploaded document did not show enough support for this argument (~{doc_relevance_percent}% relevance / overlap guard). "
+                        "Document support was hidden and the score was capped low to reflect weak or unrelated support."
+                    )
+                else:
+                    extra = (
+                        f"Uploaded document relevance looks low (~{doc_relevance_percent}%). "
+                        "Document support was hidden and scores were reduced to reflect weak support."
+                    )
                 critique["warning"] = (warn + " " + extra).strip() if warn else extra
             elif relevance_multiplier is not None and relevance_multiplier < 0.85:
                 # Present as a rough percentage for user readability.
@@ -1954,6 +2055,101 @@ async def analyze_argument_grounded(request: GroundedAnalyzeRequest) -> Grounded
                 warn = str((critique or {}).get("warning") or "").strip()
                 extra = "Category scores were reduced based on detected document support per category."
                 critique["warning"] = (warn + " " + extra).strip() if warn else extra
+
+        # ── Fix C: Global clamp when overall document support is low ─────────
+        # Even after per-category caps, a weakly supported document can still
+        # yield a moderate/high total (e.g., many categories capped at 2/5).
+        # If the overall evidence support is low, enforce a low overall score.
+        if show_doc_support:
+            # Be robust: breakdown items may be dicts or pydantic model objects.
+            def _item_get(it: Any, field: str, default: Any = None) -> Any:
+                if isinstance(it, dict):
+                    return it.get(field, default)
+                return getattr(it, field, default)
+
+            try:
+                pcts: List[int] = []
+                for item in response_data.get("breakdown", []) or []:
+                    cat = str(_item_get(item, "category", "") or "")
+                    key = _schema_key_for_category_name(cat)
+                    if key == "structure_professionalism":
+                        continue
+                    # Extra safety in case the key-mapper changes.
+                    if "structure" in cat.lower() and "professional" in cat.lower():
+                        continue
+
+                    pct = _item_get(item, "support_ratio_percent", None)
+                    if pct is None:
+                        continue
+                    try:
+                        p = int(pct)
+                    except Exception:
+                        continue
+                    pcts.append(max(0, min(100, p)))
+
+                min_cats = int(os.getenv("DOC_GLOBAL_SUPPORT_MIN_CATEGORIES", "3"))
+                if min_cats < 1:
+                    min_cats = 1
+
+                if len(pcts) >= min_cats:
+                    avg_pct = sum(pcts) / max(1, len(pcts))
+
+                    # Tiered caps (defaults intentionally strict):
+                    # If avg support is under ~30%, overall must be very low.
+                    t1 = float(os.getenv("DOC_GLOBAL_SUPPORT_T1_PCT", "30"))
+                    t2 = float(os.getenv("DOC_GLOBAL_SUPPORT_T2_PCT", "50"))
+                    t3 = float(os.getenv("DOC_GLOBAL_SUPPORT_T3_PCT", "70"))
+
+                    cap1 = int(os.getenv("DOC_GLOBAL_SUPPORT_CAP1_SCORE", "20"))
+                    cap2 = int(os.getenv("DOC_GLOBAL_SUPPORT_CAP2_SCORE", "35"))
+                    cap3 = int(os.getenv("DOC_GLOBAL_SUPPORT_CAP3_SCORE", "60"))
+
+                    def _clamp_int(v: int, lo: int, hi: int) -> int:
+                        return lo if v < lo else (hi if v > hi else v)
+
+                    cap1 = _clamp_int(cap1, 0, 100)
+                    cap2 = _clamp_int(cap2, 0, 100)
+                    cap3 = _clamp_int(cap3, 0, 100)
+
+                    if avg_pct < t1:
+                        max_allowed = cap1
+                    elif avg_pct < t2:
+                        max_allowed = cap2
+                    elif avg_pct < t3:
+                        max_allowed = cap3
+                    else:
+                        max_allowed = 100
+
+                    current_score = int(response_data.get("overall_score", 0) or 0)
+                    logger.warning(
+                        "Global support clamp: avg_pct=%.2f current=%s cap=%s (min_cats=%s, n=%s)",
+                        float(avg_pct),
+                        int(current_score),
+                        int(max_allowed),
+                        int(min_cats),
+                        int(len(pcts)),
+                    )
+                    if current_score > max_allowed:
+                        response_data["overall_score"] = max_allowed
+                        if max_allowed >= 80:
+                            response_data["strength_label"] = "Strong"
+                        elif max_allowed >= 60:
+                            response_data["strength_label"] = "Moderate"
+                        elif max_allowed >= 40:
+                            response_data["strength_label"] = "Weak"
+                        else:
+                            response_data["strength_label"] = "Very Weak"
+
+                        warn = str((critique or {}).get("warning") or "").strip()
+                        extra = (
+                            f"Overall document support appears low (~{int(round(avg_pct))}%). "
+                            f"Overall score was capped at {max_allowed} to reflect weak or unrelated support."
+                        )
+                        critique["warning"] = (warn + " " + extra).strip() if warn else extra
+            except Exception:
+                # Never break the API response due to clamp logic,
+                # but do log so misconfigurations don't silently disable it.
+                logger.exception("Global support clamp failed")
 
         if "warning" in critique:
             response_data["warning"] = critique["warning"]

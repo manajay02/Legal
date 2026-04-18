@@ -3,15 +3,68 @@ const UI_BUILD = '20260414';
 
 const UI = {
     /**
+     * Heuristic check for technical/internal messages that should not be shown to end users.
+     */
+    isTechnicalMessage(message) {
+        const msg = String(message || '').trim();
+        if (!msg) return false;
+        const ml = msg.toLowerCase();
+
+        // Very long messages are usually technical/debug output.
+        if (msg.length > 180) return true;
+
+        // Common backend/LLM/debug keywords.
+        const technicalNeedles = [
+            'traceback',
+            'stack trace',
+            'exception',
+            'pydantic',
+            'fastapi',
+            'uvicorn',
+            'http error',
+            'status:',
+            'failed to fetch',
+            'cors',
+            'failed to parse',
+            'parse',
+            'json',
+            'grounded',
+            'model response',
+            'llm',
+            'openrouter',
+            'ollama',
+            'internal server error',
+            'server error',
+        ];
+        return technicalNeedles.some(n => ml.includes(n));
+    },
+
+    /** Convert technical errors into a short user-friendly message */
+    toUserFacingError(message) {
+        const msg = String(message || '').trim();
+        if (!msg) return 'Something went wrong. Please try again.';
+        if (!UI.isTechnicalMessage(msg)) return msg;
+        return 'Something went wrong while analyzing your argument. Please try again.';
+    },
+
+    /** Convert technical warnings into a short user-friendly notice */
+    toUserFacingWarning(message) {
+        const msg = String(message || '').trim();
+        if (!msg) return '';
+        if (!UI.isTechnicalMessage(msg)) return msg;
+        return 'Some supporting evidence could not be verified. Results may be less accurate.';
+    },
+
+    /**
      * Update API status indicator
      */
     updateAPIStatus(isOnline) {
         const statusEl = document.getElementById('apiStatus');
         if (isOnline) {
-            statusEl.innerHTML = `✓ API Online <span class="ui-build">(UI ${UI_BUILD})</span>`;
+            statusEl.innerHTML = `API Online <span class="ui-build">(UI ${UI_BUILD})</span>`;
             statusEl.className = 'api-status online';
         } else {
-            statusEl.innerHTML = `✗ API Offline <span class="ui-build">(UI ${UI_BUILD})</span> - Start server with: python -m uvicorn app.main:app --reload`;
+            statusEl.innerHTML = `API Offline <span class="ui-build">(UI ${UI_BUILD})</span>`;
             statusEl.className = 'api-status offline';
         }
     },
@@ -51,23 +104,11 @@ const UI = {
     showError(containerId, message) {
         const container = document.getElementById(containerId);
 
-        const msg = String(message || 'An unexpected error occurred.');
-        const ml = msg.toLowerCase();
-        const showApiHint = (
-            ml.includes('failed to reach api') ||
-            ml.includes('failed to fetch') ||
-            ml.includes('cors') ||
-            ml.includes('connection') ||
-            ml.includes('connection refused') ||
-            ml.includes('http error') ||
-            ml.includes('status: 5') ||
-            ml.includes('status: 4')
-        );
+        const msg = UI.toUserFacingError(message);
 
         container.innerHTML = `
             <div class="error">
-                ❌ ${UI.escapeHtml(msg)}
-                ${showApiHint ? '<br><br>Make sure the API server is running on port 8000.' : ''}
+                ${UI.escapeHtml(msg)}
             </div>
         `;
     },
@@ -268,7 +309,7 @@ const UI = {
      */
     renderInlineQuote(item) {
         const isUploaded = item.source === 'uploaded_doc';
-        const sourceLabel = isUploaded ? '📄 Uploaded Document' : '⚖️ Prior Judgment';
+        const sourceLabel = isUploaded ? 'Uploaded Document' : 'Prior Judgment';
         const raw = item.excerpt || '';
         const excerpt = raw.length > 380 ? raw.slice(0, 380).trimEnd() + '\u2026' : raw;
         const pageHtml = (isUploaded && item.page_estimate)
@@ -291,8 +332,8 @@ const UI = {
     /** Render a single evidence item card */
     renderEvidenceItem(item) {
         const sourceLabel = item.source === 'uploaded_doc'
-            ? '📄 Uploaded Document'
-            : '⚖️ Prior Judgment';
+            ? 'Uploaded Document'
+            : 'Prior Judgment';
         return `
             <div class="ev-item ev-${UI.escapeHtml(item.source)}">
                 <div class="ev-item-header">
@@ -334,9 +375,10 @@ const UI = {
 
         // ── Backend warning (e.g. fallback/template mode) ───────────
         if (data.warning) {
+            const warningText = UI.toUserFacingWarning(data.warning);
             html += `
                 <div class="error" style="margin-top:12px;">
-                    ⚠️ ${UI.escapeHtml(data.warning)}
+                    ${UI.escapeHtml(warningText)}
                 </div>
             `;
         }
@@ -345,8 +387,8 @@ const UI = {
         if (fileInfo) {
             html += `
                 <div class="file-info">
-                    <p><strong>📄 File:</strong> ${UI.escapeHtml(fileInfo.filename)}</p>
-                    <p><strong>📝 Length:</strong> ${fileInfo.text_length.toLocaleString()} characters</p>
+                    <p><strong>File:</strong> ${UI.escapeHtml(fileInfo.filename)}</p>
+                    <p><strong>Length:</strong> ${fileInfo.text_length.toLocaleString()} characters</p>
                 </div>
             `;
         }
@@ -361,7 +403,6 @@ const UI = {
             const percentage = (category.rubric_score / 5) * 100;
             const level = UI.scoreLevel(category.rubric_score);
             const letter = LETTERS[idx] || String(idx + 1);
-            const icon = category.rubric_score >= 4 ? '✅' : (category.rubric_score >= 3 ? 'ℹ️' : '⚠️');
             const citationIds = UI.extractCitationIds(category.rationale);
             const citedItems = citationIds.map(id => evidenceMap[id]).filter(Boolean);
             // Fallback: rank ALL evidence by relevance to THIS category's rationale
@@ -374,7 +415,7 @@ const UI = {
             // Argument quote — what the user wrote relevant to this category
             const aq = (category.argument_quote || '').trim();
             const quoteHtml = aq
-                ? `<div class="cat-arg-quote"><span class="cat-quote-label">📝 Your argument says:</span> \u201c${UI.escapeHtml(aq)}\u201d</div>`
+                ? `<div class="cat-arg-quote"><span class="cat-quote-label">Your argument says:</span> \u201c${UI.escapeHtml(aq)}\u201d</div>`
                 : '';
 
             // Judgment quote — from uploaded document
@@ -382,15 +423,15 @@ const UI = {
             const jqIsNoExtract = jq.toLowerCase().startsWith('no supporting extract');
             const judgmentQuoteHtml = jq
                 ? (jqIsNoExtract
-                    ? `<p class="no-evidence-note">⚖️ ${UI.escapeHtml(jq)}</p>`
-                    : `<div class="cat-judgment-quote"><span class="cat-quote-label">⚖️ Source document says:</span> \u201c${UI.escapeHtml(jq)}\u201d</div>`)
+                    ? `<p class="no-evidence-note">${UI.escapeHtml(jq)}</p>`
+                    : `<div class="cat-judgment-quote"><span class="cat-quote-label">Source document says:</span> \u201c${UI.escapeHtml(jq)}\u201d</div>`)
                 : '';
 
             // Strengths — what was done well
             const strengths = Array.isArray(category.strengths) ? category.strengths : [];
             const strengthsHtml = strengths.length
                 ? `<div class="cat-section-block cat-section-strengths">
-                        <p class="ev-section-label cat-section-heading">✅ What you did well</p>
+                        <p class="ev-section-label cat-section-heading">What you did well</p>
                         <ul class="cat-bullets cat-strengths">${
                             strengths.map(s => `<li>${UI.escapeHtml(s)}</li>`).join('')
                         }</ul>
@@ -401,7 +442,7 @@ const UI = {
             const gaps = Array.isArray(category.gaps) ? category.gaps : [];
             const gapsHtml = gaps.length
                 ? `<div class="cat-section-block cat-section-gaps">
-                        <p class="ev-section-label cat-section-heading">❌ What cost you points</p>
+                        <p class="ev-section-label cat-section-heading">What cost you points</p>
                         <ul class="cat-bullets cat-gaps">${
                             gaps.map(g => `<li>${UI.escapeHtml(g)}</li>`).join('')
                         }</ul>
@@ -432,7 +473,7 @@ const UI = {
             const notRef = Array.isArray(category.not_referenced) ? category.not_referenced.filter(Boolean) : [];
             const notRefHtml = notRef.length
                 ? `<div class="cat-not-referenced">
-                       <p class="cat-not-ref-heading">⚠️ Not referenced in judgment:</p>
+                       <p class="cat-not-ref-heading">Not referenced in judgment:</p>
                        <ul class="cat-bullets cat-not-ref-list">${notRef.map(n => `<li>${UI.escapeHtml(n)}</li>`).join('')}</ul>
                    </div>`
                 : '';
@@ -449,12 +490,12 @@ const UI = {
 
             const supportHtml = shouldRenderSupport
                 ? `<div class="cat-section-block cat-section-support">
-                        <p class="ev-section-label cat-section-heading">📄 Document Support Detected</p>
+                        <p class="ev-section-label cat-section-heading">Document Support Detected</p>
                         ${claimCountText ? `<p class="cat-claim-count">${claimCountText}</p>` : ''}
                         ${ratioText ? `<p class="cat-support-ratio">${ratioText}</p>` : ''}
                         ${docSupport.length > 0
                             ? `<ul class="cat-bullets cat-support">${docSupport.map(s => `<li>${UI.escapeHtml(s)}</li>`).join('')}</ul>`
-                            : `<p class="no-evidence-note">ℹ️ No mapped support detected for this category.</p>`}
+                            : `<p class="no-evidence-note">No mapped support detected for this category.</p>`}
                         ${notRefHtml}
                    </div>`
                 : '';
@@ -481,7 +522,7 @@ const UI = {
                             <div class="category-bar-fill" style="width: ${percentage}%"></div>
                         </div>
                         <div class="cat-reason-section">
-                            <p class="ev-section-label cat-section-heading">📋 Why you got this score</p>
+                            <p class="ev-section-label cat-section-heading">Why you got this score</p>
                             ${quoteHtml}
                             ${judgmentQuoteHtml}
                             <div class="category-rationale">${UI.highlightCitations(category.rationale)}</div>
@@ -500,7 +541,7 @@ const UI = {
         if (data.feedback && data.feedback.length > 0) {
             html += `
                 <div class="feedback-section">
-                    <h3>💡 Suggestions for Improvement</h3>
+                    <h3>Suggestions for Improvement</h3>
                     <ul>
                         ${data.feedback.map(s => `<li>${UI.escapeHtml(s)}</li>`).join('')}
                     </ul>
@@ -512,7 +553,7 @@ const UI = {
         if (weakCategories.length > 0) {
             html += `
                 <div class="weaknesses-section">
-                    <h3>⚠️ Areas Needing Attention</h3>
+                    <h3>Areas Needing Attention</h3>
                     <ul>
                         ${weakCategories.map(cat => `
                             <li><strong>${UI.escapeHtml(cat.category)}:</strong>

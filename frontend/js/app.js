@@ -323,9 +323,8 @@ class LegalCriticApp {
         uploaded.forEach((d, i) => {
             html += `
                 <div class="doc-row">
-                    <span class="doc-row-icon">📄</span>
                     <span class="doc-row-name" title="${UI.escapeHtml(d.filename)}">${UI.escapeHtml(d.filename)}</span>
-                    <span class="doc-row-badge uploaded">✔ Uploaded</span>
+                    <span class="doc-row-badge uploaded">Uploaded</span>
                     <span class="doc-row-id" title="${UI.escapeHtml(d.doc_id)}">${UI.escapeHtml(d.doc_id.substring(0, 8))}&hellip;</span>
                     <button class="btn-remove-doc" title="Remove" onclick="window._app.removeUploadedDoc(${i})">&times;</button>
                 </div>`;
@@ -335,7 +334,6 @@ class LegalCriticApp {
         pending.forEach((f, i) => {
             html += `
                 <div class="doc-row pending">
-                    <span class="doc-row-icon">⏳</span>
                     <span class="doc-row-name" title="${UI.escapeHtml(f.name)}">${UI.escapeHtml(f.name)}</span>
                     <span class="doc-row-badge pending">Pending</span>
                     <button class="btn-remove-doc" title="Remove" onclick="window._app.removePendingFile(${i})">&times;</button>

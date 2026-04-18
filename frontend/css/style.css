@@ -568,7 +568,7 @@ body {
     line-height: 1.6;
 }
 
-/* Small label inside quote blocks: "📝 Your argument says:" */
+/* Small label inside quote blocks: "Your argument says:" */
 .cat-quote-label {
     display: block;
     font-style: normal;
@@ -580,7 +580,7 @@ body {
     margin-bottom: 3px;
 }
 
-/* Section heading inside cards: ✅ What you did well / ❌ What cost you points */
+/* Section heading inside cards: What you did well / What cost you points */
 .cat-section-heading {
     font-size: 0.78em !important;
     font-weight: 700 !important;
@@ -613,7 +613,7 @@ body {
 .cat-section-support .cat-section-heading { color: #1565c0; }
 
 .cat-support li::before {
-    content: "📌 ";
+    content: "• ";
     color: #1565c0;
     font-weight: 700;
 }
@@ -649,7 +649,7 @@ body {
 }
 
 .cat-not-ref-list li::before {
-    content: "⚠️ ";
+    content: "• ";
 }
 
 .cat-section-strengths .cat-section-heading { color: #2e7d32; }
@@ -679,13 +679,13 @@ body {
 }
 
 .cat-strengths li::before {
-    content: "✔ ";
+    content: "• ";
     color: #2e7d32;
     font-weight: 700;
 }
 
 .cat-gaps li::before {
-    content: "✘ ";
+    content: "• ";
     color: #b71c1c;
     font-weight: 700;
 }
@@ -730,7 +730,7 @@ body {
 }
 
 .feedback-section li:before {
-    content: "💡 ";
+    content: "• ";
     margin-right: 10px;
 }
 
@@ -764,7 +764,7 @@ body {
 }
 
 .weaknesses-section li:before {
-    content: "⚠️ ";
+    content: "• ";
     margin-right: 10px;
 }
 

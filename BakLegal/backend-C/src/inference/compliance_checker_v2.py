@@ -451,7 +451,415 @@ CATEGORY_LAW_MAPPING = {
         "section": "General",
         "rule": "Standard contract clause governed by general contract principles."
     },
+    
+    # ========== PROPERTY SALE & TRANSFER DOMAIN ==========
+    "property_parties": {
+        "act": "Prevention of Frauds Ordinance / Registration of Documents Ordinance",
+        "section": "Section 2 / Section 2",
+        "rule": "Buyer and seller must be clearly identified with legal addresses and IDs"
+    },
+    "property_description": {
+        "act": "Registration of Documents Ordinance",
+        "section": "Section 2",
+        "rule": "Property must be clearly described with extent, boundaries, title number"
+    },
+    "property_title": {
+        "act": "Prevention of Frauds Ordinance / Registration of Documents Ordinance",
+        "section": "Section 2 / Section 2",
+        "rule": "Seller must prove clear title and right to sell property"
+    },
+    "property_price": {
+        "act": "Prevention of Frauds Ordinance",
+        "section": "Section 2",
+        "rule": "Purchase price must be explicitly stated in writing"
+    },
+    "property_payment_terms": {
+        "act": "Prevention of Frauds Ordinance",
+        "section": "Section 2",
+        "rule": "Payment schedule and terms must be clearly specified"
+    },
+    "property_possession": {
+        "act": "Prevention of Frauds Ordinance",
+        "section": "Section 2",
+        "rule": "Possession transfer date must be specified in deed"
+    },
+    "property_land_search": {
+        "act": "Registration of Documents Ordinance",
+        "section": "Section 2",
+        "rule": "Land search certificate must confirm no adverse claims"
+    },
+    "property_encumbrance": {
+        "act": "Registration of Documents Ordinance",
+        "section": "Section 2",
+        "rule": "Encumbrance certificate must confirm property free from mortgages/liens"
+    },
+    "property_deed_registration": {
+        "act": "Registration of Documents Ordinance",
+        "section": "Section 2",
+        "rule": "Sale deed must be registered at Land Registry"
+    },
+    "property_warranty": {
+        "act": "Prevention of Frauds Ordinance",
+        "section": "Section 2",
+        "rule": "Seller warrants property is free from defects and legal issues"
+    },
+    "property_survey_plan": {
+        "act": "Registration of Documents Ordinance",
+        "section": "Section 2",
+        "rule": "Survey plan showing boundaries and extent must be attached"
+    },
+    "property_tax_arrears": {
+        "act": "Prevention of Frauds Ordinance",
+        "section": "Section 2",
+        "rule": "All property tax and rate arrears must be settled before transfer"
+    },
+    "property_chattels": {
+        "act": "Prevention of Frauds Ordinance",
+        "section": "Section 2",
+        "rule": "Chattels and fixtures included/excluded must be listed separately"
+    },
+    "property_conditions_precedent": {
+        "act": "Prevention of Frauds Ordinance",
+        "section": "Section 2",
+        "rule": "Conditions precedent like survey and financing must be specified"
+    },
+    "property_transfer_dispute": {
+        "act": "Prevention of Frauds Ordinance / Registration of Documents Ordinance",
+        "section": "Section 2 / Section 2",
+        "rule": "Property disputes shall be resolved through courts"
+    },
+    
+    # ========== CONSUMER PROTECTION AGREEMENTS DOMAIN ==========
+    "consumer_protection_terms": {
+        "act": "Consumer Affairs Authority Act / Unfair Contract Terms Act",
+        "section": "Section 10 / Section 2",
+        "rule": "Terms and conditions must be fair, clear, and not unconscionable"
+    },
+    "consumer_identification": {
+        "act": "Consumer Affairs Authority Act",
+        "section": "Section 10",
+        "rule": "Consumer and supplier must be clearly identified"
+    },
+    "consumer_goods_description": {
+        "act": "Consumer Affairs Authority Act / Unfair Contract Terms Act",
+        "section": "Section 18 / Section 2",
+        "rule": "Goods/services must be accurately described with specifications"
+    },
+    "consumer_price": {
+        "act": "Consumer Affairs Authority Act",
+        "section": "Section 18",
+        "rule": "Price must be transparent and clearly displayed before purchase"
+    },
+    "consumer_quality": {
+        "act": "Consumer Affairs Authority Act / Unfair Contract Terms Act",
+        "section": "Section 10 / Section 2",
+        "rule": "Goods must be of merchantable quality and fit for purpose"
+    },
+    "consumer_warranty": {
+        "act": "Consumer Affairs Authority Act",
+        "section": "Section 10",
+        "rule": "Warranty or guarantee terms must be clearly stated"
+    },
+    "consumer_returns_refunds": {
+        "act": "Consumer Affairs Authority Act",
+        "section": "Section 18",
+        "rule": "Return and refund policy must be clearly communicated"
+    },
+    "consumer_cooling_off": {
+        "act": "Consumer Affairs Authority Act / Unfair Contract Terms Act",
+        "section": "Section 18 / Section 2",
+        "rule": "Consumer has right to cancel within specified cooling-off period"
+    },
+    "consumer_payment_security": {
+        "act": "Consumer Affairs Authority Act",
+        "section": "Section 10",
+        "rule": "Payment methods must be secure and consumer information protected"
+    },
+    "consumer_complaints": {
+        "act": "Consumer Affairs Authority Act",
+        "section": "Section 10",
+        "rule": "Supplier must establish mechanism for consumer complaints"
+    },
+    "consumer_unfair_terms": {
+        "act": "Unfair Contract Terms Act",
+        "section": "Section 2",
+        "rule": "Unfair exclusion clauses or penalties are void and unenforceable"
+    },
+    "consumer_liability_exclusion": {
+        "act": "Unfair Contract Terms Act",
+        "section": "Section 2",
+        "rule": "Exclusion of liability for death/injury due to negligence is void"
+    },
+    
+    # ========== MICROFINANCE & INFORMAL LENDING DOMAIN ==========
+    "microfinance_parties": {
+        "act": "Microfinance Act",
+        "section": "Section 2",
+        "rule": "Microfinance institution and borrower must be clearly identified"
+    },
+    "microfinance_loan_amount": {
+        "act": "Microfinance Act",
+        "section": "Section 24",
+        "rule": "Loan principal amount must be clearly specified in writing"
+    },
+    "microfinance_interest": {
+        "act": "Microfinance Act",
+        "section": "Section 24",
+        "rule": "Interest rate must be transparent and not excessive"
+    },
+    "microfinance_repayment": {
+        "act": "Microfinance Act",
+        "section": "Section 24",
+        "rule": "Repayment schedule must be clearly specified"
+    },
+    "microfinance_collateral": {
+        "act": "Microfinance Act",
+        "section": "Section 24",
+        "rule": "Collateral requirements (if any) must be documented"
+    },
+    "microfinance_terms": {
+        "act": "Microfinance Act",
+        "section": "Section 24",
+        "rule": "Loan terms and conditions must be clearly communicated"
+    },
+    "microfinance_default": {
+        "act": "Microfinance Act",
+        "section": "Section 24",
+        "rule": "Default consequences must be clearly specified"
+    },
+    "microfinance_disclosure": {
+        "act": "Microfinance Act",
+        "section": "Section 24",
+        "rule": "All fees, charges, and effective interest rate must be disclosed"
+    },
+    "microfinance_dispute": {
+        "act": "Microfinance Act",
+        "section": "Section 24",
+        "rule": "Dispute resolution mechanism must be accessible and fair"
+    },
+    "microfinance_fair_lending": {
+        "act": "Microfinance Act",
+        "section": "Section 24",
+        "rule": "Microfinance institution must follow fair lending practices"
+    },
+    
+    # ========== PAWN / SECURITY AGREEMENTS DOMAIN ==========
+    "pawn_parties": {
+        "act": "Pawnbrokers Ordinance",
+        "section": "Section 2",
+        "rule": "Pawnbroker and pawner must be clearly identified"
+    },
+    "pawn_goods_description": {
+        "act": "Pawnbrokers Ordinance",
+        "section": "Section 15",
+        "rule": "Goods offered as pawn must be clearly described and valued"
+    },
+    "pawn_loan_amount": {
+        "act": "Pawnbrokers Ordinance",
+        "section": "Section 15",
+        "rule": "Loan amount must be clearly specified in pawn ticket"
+    },
+    "pawn_interest_rate": {
+        "act": "Pawnbrokers Ordinance",
+        "section": "Section 15",
+        "rule": "Interest rate on pawn loan must be clearly stated and reasonable"
+    },
+    "pawn_ticket": {
+        "act": "Pawnbrokers Ordinance",
+        "section": "Section 15",
+        "rule": "Pawn ticket must be issued and given to pawner immediately"
+    },
+    "pawn_storage": {
+        "act": "Pawnbrokers Ordinance",
+        "section": "Section 15",
+        "rule": "Pawnbroker responsible for safe storage of pledged goods"
+    },
+    "pawn_redemption": {
+        "act": "Pawnbrokers Ordinance",
+        "section": "Section 15",
+        "rule": "Pawner has right to redeem goods within redemption period"
+    },
+    "pawn_period": {
+        "act": "Pawnbrokers Ordinance",
+        "section": "Section 15",
+        "rule": "Pawn period and redemption timeline must be specified"
+    },
+    "pawn_forfeiture": {
+        "act": "Pawnbrokers Ordinance",
+        "section": "Section 15",
+        "rule": "Conditions for forfeiture of pledged goods must be clear"
+    },
+    "pawn_sale": {
+        "act": "Pawnbrokers Ordinance",
+        "section": "Section 15",
+        "rule": "Pawnbroker may sell unredeemed goods after specified period"
+    },
+    
+    # ========== BUSINESS & PARTNERSHIP AGREEMENTS DOMAIN ==========
+    "partnership_parties": {
+        "act": "Partnership Ordinance",
+        "section": "Section 4",
+        "rule": "All partners must be clearly identified with full details"
+    },
+    "partnership_capital": {
+        "act": "Partnership Ordinance",
+        "section": "Section 9",
+        "rule": "Capital contribution of each partner must be specified in writing"
+    },
+    "partnership_profit_sharing": {
+        "act": "Partnership Ordinance",
+        "section": "Section 13",
+        "rule": "Profit and loss sharing ratio must be agreed and documented"
+    },
+    "partnership_management": {
+        "act": "Partnership Ordinance",
+        "section": "Section 24",
+        "rule": "Management rights and decision-making procedures must be defined"
+    },
+    "partnership_voting": {
+        "act": "Partnership Ordinance",
+        "section": "Section 24",
+        "rule": "Voting rights of partners must be clearly specified"
+    },
+    "partnership_new_member": {
+        "act": "Partnership Ordinance",
+        "section": "Section 30",
+        "rule": "Admission of new partners requires consent of all existing partners"
+    },
+    "partnership_withdrawal": {
+        "act": "Partnership Ordinance",
+        "section": "Section 32",
+        "rule": "Partner withdrawal or retirement notice period must be specified"
+    },
+    "partnership_death": {
+        "act": "Partnership Ordinance",
+        "section": "Section 33",
+        "rule": "Rights of deceased partner's representatives must be specified"
+    },
+    "partnership_dissolution": {
+        "act": "Partnership Ordinance",
+        "section": "Section 42",
+        "rule": "Dissolution terms, notice, and winding-up procedures must be specified"
+    },
+    "partnership_liability": {
+        "act": "Partnership Ordinance",
+        "section": "Section 9",
+        "rule": "Each partner is jointly and severally liable for partnership debts"
+    },
+    "partnership_accounting": {
+        "act": "Partnership Ordinance",
+        "section": "Section 25",
+        "rule": "Partnership books must be maintained and accessible to partners"
+    },
+    "partnership_confidentiality": {
+        "act": "Partnership Ordinance / Common Law",
+        "section": "Section 28 / General",
+        "rule": "Partners must maintain confidentiality of partnership business"
+    },
+    "partnership_non_compete": {
+        "act": "Common Law",
+        "section": "Restraint of Trade Doctrine",
+        "rule": "Partner cannot compete with partnership during partnership term"
+    },
+    "partnership_dispute": {
+        "act": "Partnership Ordinance / Common Law",
+        "section": "Section 39 / General",
+        "rule": "Partnership disputes shall be resolved through arbitration or courts"
+    },
+    "business_sale_goods": {
+        "act": "Sale of Goods Ordinance",
+        "section": "Section 2",
+        "rule": "Goods sold must be of merchantable quality and fit for purpose"
+    },
+    "business_title": {
+        "act": "Sale of Goods Ordinance",
+        "section": "Section 13",
+        "rule": "Seller must have right to sell and goods must be free from encumbrances"
+    },
+    
+    # ========== ELECTRONIC / DIGITAL AGREEMENTS DOMAIN ==========
+    "electronic_contract_validity": {
+        "act": "Electronic Transactions Act",
+        "section": "Section 4",
+        "rule": "Electronic contracts are valid and enforceable with electronic signature"
+    },
+    "electronic_offer_acceptance": {
+        "act": "Electronic Transactions Act",
+        "section": "Section 5",
+        "rule": "Electronic offer and acceptance are valid and binding"
+    },
+    "electronic_attribution": {
+        "act": "Electronic Transactions Act",
+        "section": "Section 7",
+        "rule": "Electronic message must be properly attributed to sender"
+    },
+    "electronic_time_place": {
+        "act": "Electronic Transactions Act",
+        "section": "Section 8",
+        "rule": "Time and place of electronic contract formation must be specified"
+    },
+    "electronic_digital_signature": {
+        "act": "Electronic Transactions Act",
+        "section": "Section 22",
+        "rule": "Digital signatures must meet security standards and be verifiable"
+    },
+    "electronic_retention": {
+        "act": "Electronic Transactions Act",
+        "section": "Section 10",
+        "rule": "Electronic records must be retained for 5 or more years"
+    },
+    "ecommerce_terms_conditions": {
+        "act": "Electronic Transactions Act / Consumer Affairs Authority Act",
+        "section": "Section 4 / Section 10",
+        "rule": "Terms and conditions must be displayed before purchase confirmation"
+    },
+    "ecommerce_product_description": {
+        "act": "Electronic Transactions Act / Sale of Goods Ordinance",
+        "section": "Section 4 / Section 13",
+        "rule": "Products must be accurately described with images and specifications"
+    },
+    "ecommerce_price": {
+        "act": "Electronic Transactions Act / Consumer Affairs Authority Act",
+        "section": "Section 4 / Section 18",
+        "rule": "Price must be clearly displayed and accurate before purchase"
+    },
+    "ecommerce_payment_security": {
+        "act": "Electronic Transactions Act",
+        "section": "Section 22",
+        "rule": "Payment must be secure and encrypted (SSL/TLS minimum)"
+    },
+    "ecommerce_delivery": {
+        "act": "Electronic Transactions Act / Sale of Goods Ordinance",
+        "section": "Section 4 / Section 32",
+        "rule": "Delivery terms and estimated date must be clearly specified"
+    },
+    "ecommerce_returns": {
+        "act": "Electronic Transactions Act / Consumer Affairs Authority Act",
+        "section": "Section 4 / Section 18",
+        "rule": "Return and refund policy with 14+ day cooling-off period"
+    },
+    "ecommerce_consumer_dispute": {
+        "act": "Electronic Transactions Act / Consumer Affairs Authority Act",
+        "section": "Section 28 / Section 10",
+        "rule": "Consumer complaints mechanism must be established and accessible"
+    },
+    "ecommerce_confidentiality": {
+        "act": "Electronic Transactions Act",
+        "section": "Section 25",
+        "rule": "Consumer data must be encrypted and confidential"
+    },
+    "ecommerce_fraud_protection": {
+        "act": "Electronic Transactions Act / Prevention of Frauds Ordinance",
+        "section": "Section 22 / Section 2",
+        "rule": "Fraud prevention measures must be implemented and maintained"
+    },
+    "ecommerce_privacy_data": {
+        "act": "Electronic Transactions Act",
+        "section": "Section 25",
+        "rule": "Privacy policy must disclose data collection and protection measures"
+    },
 }
+
 
 
 # ==============================
@@ -622,6 +1030,144 @@ CLAUSE_CATEGORIES = {
         "keywords": ["entire agreement", "entire understanding", "supersedes", "prior discussions"],
         "laws": ["Finance Leasing Act"]
     },
+    # PROPERTY SALE & TRANSFER DOMAIN
+    "property_parties": {
+        "keywords": ["buyer", "seller", "purchaser", "vendor", "party", "parties"],
+        "laws": ["Prevention of Frauds Ordinance", "Registration of Documents Ordinance"]
+    },
+    "property_description": {
+        "keywords": ["property", "land", "extent", "boundaries", "title number", "title deed"],
+        "laws": ["Registration of Documents Ordinance"]
+    },
+    "property_title": {
+        "keywords": ["title", "clear title", "free from encumbrances", "ownership", "registered"],
+        "laws": ["Prevention of Frauds Ordinance", "Registration of Documents Ordinance"]
+    },
+    "property_price": {
+        "keywords": ["price", "purchase price", "consideration", "rupees", "lkr"],
+        "laws": ["Prevention of Frauds Ordinance"]
+    },
+    "property_possession": {
+        "keywords": ["possession", "handover", "transfer possession", "delivery date"],
+        "laws": ["Prevention of Frauds Ordinance"]
+    },
+    "property_deed_registration": {
+        "keywords": ["deed", "registered", "land registry", "registration"],
+        "laws": ["Registration of Documents Ordinance"]
+    },
+    # CONSUMER PROTECTION DOMAIN
+    "consumer_protection_terms": {
+        "keywords": ["consumer", "purchaser", "buyer", "terms", "conditions", "unfair"],
+        "laws": ["Consumer Affairs Authority Act", "Unfair Contract Terms Act"]
+    },
+    "consumer_quality": {
+        "keywords": ["quality", "merchantable", "defect", "standard", "fitness"],
+        "laws": ["Consumer Affairs Authority Act"]
+    },
+    "consumer_warranty": {
+        "keywords": ["warranty", "guarantee", "warrants", "warranted"],
+        "laws": ["Consumer Affairs Authority Act"]
+    },
+    "consumer_returns_refunds": {
+        "keywords": ["return", "refund", "cooling off", "cancel", "cancellation"],
+        "laws": ["Consumer Affairs Authority Act"]
+    },
+    "consumer_complaints": {
+        "keywords": ["complaint", "complaints mechanism", "grievance", "dispute"],
+        "laws": ["Consumer Affairs Authority Act"]
+    },
+    # MICROFINANCE DOMAIN
+    "microfinance_parties": {
+        "keywords": ["microfinance", "mfi", "borrower", "lender", "institution"],
+        "laws": ["Microfinance Act"]
+    },
+    "microfinance_loan_amount": {
+        "keywords": ["loan", "amount", "principal", "lkr"],
+        "laws": ["Microfinance Act"]
+    },
+    "microfinance_interest": {
+        "keywords": ["interest", "rate", "per annum", "percentage"],
+        "laws": ["Microfinance Act"]
+    },
+    "microfinance_repayment": {
+        "keywords": ["repayment", "repay", "schedule", "installment"],
+        "laws": ["Microfinance Act"]
+    },
+    "microfinance_disclosure": {
+        "keywords": ["disclose", "disclosure", "fees", "charges", "transparent"],
+        "laws": ["Microfinance Act"]
+    },
+    # PAWN DOMAIN
+    "pawn_parties": {
+        "keywords": ["pawnbroker", "pawner", "pledgor", "pledge"],
+        "laws": ["Pawnbrokers Ordinance"]
+    },
+    "pawn_goods": {
+        "keywords": ["pawn", "goods", "article", "pledge", "pledged"],
+        "laws": ["Pawnbrokers Ordinance"]
+    },
+    "pawn_ticket": {
+        "keywords": ["pawn ticket", "ticket", "receipt", "issued"],
+        "laws": ["Pawnbrokers Ordinance"]
+    },
+    "pawn_redemption": {
+        "keywords": ["redemption", "redeem", "redeeming", "redemption period"],
+        "laws": ["Pawnbrokers Ordinance"]
+    },
+    "pawn_interest": {
+        "keywords": ["interest", "rate", "charge", "fee"],
+        "laws": ["Pawnbrokers Ordinance"]
+    },
+    # PARTNERSHIP DOMAIN
+    "partnership_parties": {
+        "keywords": ["partner", "partnership", "partners", "parties"],
+        "laws": ["Partnership Ordinance"]
+    },
+    "partnership_capital": {
+        "keywords": ["capital", "contribution", "contributed", "invest"],
+        "laws": ["Partnership Ordinance"]
+    },
+    "partnership_profit": {
+        "keywords": ["profit", "loss", "sharing", "ratio", "share"],
+        "laws": ["Partnership Ordinance"]
+    },
+    "partnership_management": {
+        "keywords": ["management", "manage", "decision", "control"],
+        "laws": ["Partnership Ordinance"]
+    },
+    "partnership_dissolution": {
+        "keywords": ["dissolution", "dissolve", "winding up", "terminate"],
+        "laws": ["Partnership Ordinance"]
+    },
+    "business_sale_goods": {
+        "keywords": ["sale", "goods", "merchandise", "products"],
+        "laws": ["Sale of Goods Ordinance"]
+    },
+    # ELECTRONIC DOMAIN
+    "electronic_contract": {
+        "keywords": ["electronic", "e-commerce", "online", "digital", "signature", "digital signature"],
+        "laws": ["Electronic Transactions Act"]
+    },
+    "ecommerce_terms": {
+        "keywords": ["terms", "conditions", "display", "before purchase"],
+        "laws": ["Electronic Transactions Act"]
+    },
+    "ecommerce_product": {
+        "keywords": ["product", "description", "specifications", "image"],
+        "laws": ["Electronic Transactions Act"]
+    },
+    "ecommerce_payment": {
+        "keywords": ["payment", "secure", "encrypted", "ssl", "credit card"],
+        "laws": ["Electronic Transactions Act"]
+    },
+    "ecommerce_delivery": {
+        "keywords": ["delivery", "shipping", "dispatch", "date"],
+        "laws": ["Electronic Transactions Act"]
+    },
+    "ecommerce_privacy": {
+        "keywords": ["privacy", "data", "personal", "confidential"],
+        "laws": ["Electronic Transactions Act"]
+    },
 }
 
 
@@ -636,7 +1182,18 @@ def classify_clause(clause_text, domain=None):
         "employment": ["salary", "epf_etf", "working_hours", "leave", "termination", "maternity"],
         "finance_leasing": ["lease_term", "lease_rental", "lease_payment", "late_payment_charge", 
                             "early_termination", "repossession", "vehicle_maintenance", "vehicle_insurance",
-                            "lease_assignment", "lessor_liability", "lease_dispute", "lease_governing_law"]
+                            "lease_assignment", "lessor_liability", "lease_dispute", "lease_governing_law"],
+        "property": ["property_parties", "property_description", "property_title", "property_price",
+                    "property_possession", "property_deed_registration"],
+        "consumer_protection": ["consumer_protection_terms", "consumer_quality", "consumer_warranty",
+                               "consumer_returns_refunds", "consumer_complaints"],
+        "microfinance": ["microfinance_parties", "microfinance_loan_amount", "microfinance_interest",
+                        "microfinance_repayment", "microfinance_disclosure"],
+        "pawn": ["pawn_parties", "pawn_goods", "pawn_ticket", "pawn_redemption", "pawn_interest"],
+        "partnership": ["partnership_parties", "partnership_capital", "partnership_profit",
+                       "partnership_management", "partnership_dissolution", "business_sale_goods"],
+        "electronic": ["electronic_contract", "ecommerce_terms", "ecommerce_product",
+                      "ecommerce_payment", "ecommerce_delivery", "ecommerce_privacy"]
     }
     
     # Check domain-specific categories first
@@ -726,6 +1283,33 @@ def detect_domain(text):
                            "partnership firm", "partnership business", "capital contribution",
                            "profit ratio", "loss ratio", "dissolution", "winding up"]
     
+    # Property keywords
+    property_keywords = ["property sale", "sale agreement", "indenture", "title deed",
+                        "land", "extent", "boundaries", "title number", "registered title",
+                        "deed", "land registry", "clear title", "ownership",
+                        "buyer", "seller", "purchaser", "vendor", "conveyance",
+                        "consideration", "delivery", "possession"]
+    
+    # Consumer Protection keywords
+    consumer_protection_keywords = ["consumer protection", "consumer affairs", "consumer act",
+                                   "unfair terms", "unfair contract", "quality standards",
+                                   "defect", "warranty", "guarantee", "cooling off",
+                                   "return", "refund", "complaint mechanism"]
+    
+    # Microfinance keywords
+    microfinance_keywords = ["microfinance", "mfi", "micro finance", "microfinance institution",
+                            "microfinance borrower", "microfinance loan", "microfinance act",
+                            "disclosure", "transparent", "small loan"]
+    
+    # Pawn keywords
+    pawn_keywords = ["pawn", "pawnbroker", "pledge", "pledgor", "redemption",
+                    "pawn ticket", "pawner", "pawnbrokers ordinance"]
+    
+    # Electronic/E-commerce keywords
+    electronic_keywords = ["electronic", "e-commerce", "online purchase", "digital",
+                          "digital signature", "encrypted", "secure payment", "website",
+                          "online transaction", "electronic transaction"]
+    
     # Strong indicators that override general scoring - CHECK IN PRIORITY ORDER
     if "partnership agreement" in text_lower or "partnership deed" in text_lower:
         return "partnership"
@@ -747,12 +1331,37 @@ def detect_domain(text):
     if "employment agreement" in text_lower or "employment contract" in text_lower:
         return "employment"
     
+    # Check for property domain
+    if "property sale" in text_lower or "sale agreement" in text_lower or "indenture" in text_lower:
+        return "property"
+    
+    # Check for consumer protection domain
+    if "consumer affairs" in text_lower or "consumer protection act" in text_lower or "unfair contract terms" in text_lower:
+        return "consumer_protection"
+    
+    # Check for microfinance domain
+    if "microfinance" in text_lower or "mfi" in text_lower:
+        return "microfinance"
+    
+    # Check for pawn domain
+    if "pawn" in text_lower or "pledge" in text_lower and "pawnbroker" in text_lower:
+        return "pawn"
+    
+    # Check for electronic domain
+    if "electronic transaction" in text_lower or "e-commerce" in text_lower or "online purchase" in text_lower:
+        return "electronic"
+    
     # Calculate scores
     employment_score = sum(1 for kw in employment_keywords if kw in text_lower)
     finance_leasing_score = sum(1 for kw in finance_leasing_keywords if kw in text_lower)
     rental_score = sum(1 for kw in rental_keywords if kw in text_lower)
     consumer_score = sum(1 for kw in consumer_keywords if kw in text_lower)
     partnership_score = sum(1 for kw in partnership_keywords if kw in text_lower)
+    property_score = sum(1 for kw in property_keywords if kw in text_lower)
+    consumer_protection_score = sum(1 for kw in consumer_protection_keywords if kw in text_lower)
+    microfinance_score = sum(1 for kw in microfinance_keywords if kw in text_lower)
+    pawn_score = sum(1 for kw in pawn_keywords if kw in text_lower)
+    electronic_score = sum(1 for kw in electronic_keywords if kw in text_lower)
     
     # Boost finance_leasing if "lessor" and "lessee" appear with vehicle/equipment terms
     if ("lessor" in text_lower and "lessee" in text_lower):
@@ -765,7 +1374,12 @@ def detect_domain(text):
         "finance_leasing": finance_leasing_score,
         "rental": rental_score, 
         "consumer": consumer_score,
-        "partnership": partnership_score
+        "partnership": partnership_score,
+        "property": property_score,
+        "consumer_protection": consumer_protection_score,
+        "microfinance": microfinance_score,
+        "pawn": pawn_score,
+        "electronic": electronic_score
     }
     max_domain = max(scores, key=scores.get)
     

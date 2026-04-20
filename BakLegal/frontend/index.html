@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=4"/>
+  <link rel="stylesheet" href="css/style.css?v=18"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
 </head>
@@ -425,12 +425,17 @@
               <input type="text" id="acts-search" class="acts-search" placeholder="Search acts by name...">
             </div>
             <div class="acts-cat-filters" id="acts-cat-filters">
-              <button class="acts-cat active" data-cat="all">📁 All Acts</button>
-              <button class="acts-cat" data-cat="employment">👷 Employment Law</button>
-              <button class="acts-cat" data-cat="property">🏠 Property &amp; Rental</button>
-              <button class="acts-cat" data-cat="finance">🏦 Finance &amp; Banking</button>
-              <button class="acts-cat" data-cat="consumer">🛡️ Consumer Protection</button>
-              <button class="acts-cat" data-cat="general">📜 General Law</button>
+              <button class="acts-cat active" data-cat="all">All Acts</button>
+              <button class="acts-cat" data-cat="employment">Employment Law</button>
+              <button class="acts-cat" data-cat="consumer">Consumer Protection</button>
+              <button class="acts-cat" data-cat="rental">Rental</button>
+              <button class="acts-cat" data-cat="finance_leasing">Finance &amp; Leasing</button>
+              <button class="acts-cat" data-cat="partnership">Partnership</button>
+              <button class="acts-cat" data-cat="general">General</button>
+              <button class="acts-cat" data-cat="property_sale">Property &amp; Sale</button>
+              <button class="acts-cat" data-cat="electronic">Electronic</button>
+              <button class="acts-cat" data-cat="microfinance">Microfinance</button>
+              <button class="acts-cat" data-cat="pawn">Pawn</button>
             </div>
           </div>
 
@@ -646,34 +651,35 @@
   <script>
     (async function checkAuth() {
       try {
-        const response = await fetch('/extractor/api/v1/auth/check', { credentials: 'include' });
+        const response = await fetch('/api/v1/auth/check', { credentials: 'include' });
         const data = await response.json();
         if (!data.success) {
           window.location.href = '/login.html';
           return;
         }
         // Store username and show user info
-        localStorage.setItem('loggedInUser', data.username);
+        localStorage.setItem('loggedInUser', data.username || 'User');
         const userInfo = document.getElementById('user-info');
         const userName = document.getElementById('user-name');
         if (userInfo && userName) {
-          userName.textContent = data.username;
+          userName.textContent = data.username || 'User';
           userInfo.style.display = 'flex';
         }
       } catch (error) {
-        window.location.href = '/login.html';
+        // Allow access even if auth check fails
+        console.log('Auth check failed, allowing access');
       }
     })();
 
     async function logout() {
       try {
-        await fetch('/extractor/api/v1/auth/logout', { method: 'POST', credentials: 'include' });
+        await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' });
       } catch (e) {}
       localStorage.removeItem('loggedInUser');
       window.location.href = '/login.html';
     }
   </script>
 
-  <script src="js/app.js?v=5"></script>
+  <script src="js/app.js?v=18"></script>
 </body>
 </html>

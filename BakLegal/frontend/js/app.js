@@ -1516,12 +1516,11 @@ function cmpRenderResultPage(data) {
   const present  = data.present_mandatory || [];
   const missing  = data.missing_mandatory || [];
   const clauses  = data.clauses           || [];
-  const score    = data.compliance_score != null
-    ? data.compliance_score
-    : (present.length / Math.max(present.length + missing.length, 1) * 100);
-
   const entailment    = clauses.filter(c => c.prediction === "entailment");
   const contradiction = clauses.filter(c => c.prediction === "contradiction");
+  
+  // Calculate real legal compliance score based on actual clause analysis
+  const score = (entailment.length / Math.max(clauses.length, 1)) * 100;
   const docType       = data.document_type || data.domain || "Legal Document";
   const dtLabel       = docType.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) + " Contract";
 
@@ -1544,31 +1543,22 @@ function cmpRenderResultPage(data) {
   // Summary cards
   document.getElementById("cmp-summary-grid").innerHTML = `
     <div class="cmp-sum-card cmp-sum-total">
-      <div class="cmp-sum-icon">📄</div>
       <div class="cmp-sum-num">${clauses.length}</div>
       <div class="cmp-sum-label">Total Clauses</div>
-      <div class="cmp-sum-link" onclick="cmpFilterClauses('all')">View All →</div>
     </div>
     <div class="cmp-sum-card cmp-sum-compliant">
-      <div class="cmp-sum-icon">✅</div>
       <div class="cmp-sum-num">${entailment.length}</div>
       <div class="cmp-sum-label">Compliant</div>
       <div class="cmp-sum-pct">${((entailment.length / Math.max(clauses.length, 1)) * 100).toFixed(1)}%</div>
-      <div class="cmp-sum-bar"><div class="cmp-sum-bar-fill" style="width:${(entailment.length / Math.max(clauses.length, 1)) * 100}%;background:#2e7d32"></div></div>
-      <div class="cmp-sum-link" onclick="cmpFilterClauses('entailment')" style="color:#2e7d32">View Details →</div>
     </div>
     <div class="cmp-sum-card cmp-sum-violation">
-      <div class="cmp-sum-icon">❌</div>
       <div class="cmp-sum-num" style="color:#b71c1c">${contradiction.length}</div>
       <div class="cmp-sum-label">Non-Compliant</div>
       <div class="cmp-sum-pct" style="color:#b71c1c">${((contradiction.length / Math.max(clauses.length, 1)) * 100).toFixed(1)}%</div>
-      <div class="cmp-sum-link" onclick="cmpFilterClauses('contradiction')" style="color:#b71c1c">View Issues →</div>
     </div>
     <div class="cmp-sum-card cmp-sum-missing">
-      <div class="cmp-sum-icon">📋</div>
       <div class="cmp-sum-num" style="color:#e65100">${missing.length}</div>
       <div class="cmp-sum-label">Missing Clauses</div>
-      <div class="cmp-sum-link" onclick="document.getElementById('cmp-missing-section')?.scrollIntoView({behavior:'smooth'})" style="color:#e65100">View Missing →</div>
     </div>
   `;
 
@@ -1598,9 +1588,9 @@ function cmpRenderResultPage(data) {
 
   // Clause filters
   document.getElementById("cmp-clause-filters").innerHTML = `
-    <button class="cmp-cfilt active" data-cfilt="all">All (${clauses.length})</button>
-    <button class="cmp-cfilt" data-cfilt="entailment">Entailment (${entailment.length})</button>
-    <button class="cmp-cfilt" data-cfilt="contradiction">Contradiction (${contradiction.length})</button>
+    <button class="cmp-cfilt active" data-cfilt="all" style="font-size:1rem">All (${clauses.length})</button>
+    <button class="cmp-cfilt" data-cfilt="entailment" style="font-size:1rem">Entailment (${entailment.length})</button>
+    <button class="cmp-cfilt" data-cfilt="contradiction" style="font-size:1rem">Contradiction (${contradiction.length})</button>
   `;
   document.querySelectorAll(".cmp-cfilt").forEach(btn => {
     btn.addEventListener("click", () => cmpFilterClauses(btn.dataset.cfilt));
@@ -1648,23 +1638,23 @@ function cmpRenderClauses(clauses) {
         <span class="cmp-cl-expand" onclick="this.closest('.cmp-clause-card').classList.toggle('expanded')">▾</span>
       </div>
       <div class="cmp-cl-preview">
-        <span class="cmp-cl-field-label">📄 CONTRACT CLAUSE</span>
+        <span class="cmp-cl-field-label">CONTRACT CLAUSE</span>
         <div class="cmp-cl-clause-text">"${(c.clause || "").replace(/"/g, '&quot;')}"</div>
       </div>
       <div class="cmp-cl-details">
         <div class="cmp-cl-meta-row">
           <div class="cmp-cl-meta-item">
-            <span class="cmp-cl-meta-label">📋 LAW REFERENCE</span>
+            <span class="cmp-cl-meta-label">LAW REFERENCE</span>
             <span class="cmp-cl-meta-value">${c.law_reference || "—"}</span>
           </div>
           <div class="cmp-cl-meta-item">
-            <span class="cmp-cl-meta-label">✓ STATUS</span>
-            <span class="cmp-cl-meta-value">${statusDot} ${statusText}</span>
+            <span class="cmp-cl-meta-label">STATUS</span>
+            <span class="cmp-cl-meta-value">${statusText}</span>
           </div>
         </div>
 
         <div class="cmp-cl-conf-row">
-          <span class="cmp-cl-field-label">📊 CONFIDENCE SCORE</span>
+          <span class="cmp-cl-field-label">CONFIDENCE SCORE</span>
           <div class="cmp-cl-conf-track">
             <div class="cmp-cl-conf-fill" style="width:${confPct}%;background:${confColor}"></div>
             <span class="cmp-cl-conf-pct">${confPct.toFixed(1)}%</span>
@@ -1877,8 +1867,6 @@ async function cmpLoadHistory() {
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem">
           <div style="flex:1;min-width:0">
             <strong style="font-size:.93rem">📄 ${a.filename || "Unnamed"}</strong>
-            <div style="font-size:.82rem;color:var(--muted);margin-top:.15rem">${a.document_type || ""} ${a.domain ? "· " + a.domain : ""}</div>
-            <div style="font-size:.78rem;color:var(--muted)">${a.analyzed_at ? new Date(a.analyzed_at).toLocaleString() : ""}</div>
           </div>
           <div style="display:flex;align-items:center;gap:.6rem;flex-shrink:0">
             <span style="font-size:.82rem;font-weight:700;color:#fff;background:${scColor};padding:.2rem .6rem;border-radius:99px">${sc.toFixed(0)}%</span>
@@ -1947,13 +1935,44 @@ document.getElementById("btn-cmp-refresh")?.addEventListener("click", cmpLoadHis
 /* ── Load Acts Library ───────────────────────────────────────────────────── */
 /* ── Acts Library — auto-load, search & category filter ─────────────────── */
 (function initActsLibrary() {
+    // 10 Domains Supported
   const ACT_CATEGORIES = {
-    employment: ['Employees Provident', 'Employees Trust', 'EMPLOYMENT OF WOMEN', 'Industrial Disputes',
-      'Maternity Benefits', 'Minimum Wages', 'Wages Boards', 'Payment Of Gratuity',
-      'Shop and Office', 'Termination of Employment'],
-    property:   ['Rent', 'Registration of Documents', 'Prevention of Frauds', 'Hire Purchase', 'SALE OF GOODS'],
-    finance:    ['Consumer Credit', 'Finance Leasing', 'Microfinance', 'PAWNBROKERS', 'Electronic Transactions', 'Debt Recovery'],
-    consumer:   ['Consumer Affairs Authority', 'UNFAIR CONTRACT'],
+    // 1. Employment Law Domain - ALL employment related acts
+    employment: ['Industrial Disputes', 'Industrial-Disputes-Act-Consolidated-2024',
+      'Shop and Office', 'Shop-and-Office-Employees-Consolidated-2024',
+      'Termination of Employment', 'Termination-of-Employment-of-Workmen-Consolidated-2024',
+      'Maternity Benefits', 'Maternity-Benefits-Consolidated-2024',
+      'Payment Of Gratuity', 'Employees Provident', 'Employees-Provident-Fund-Consolidated-2024',
+      'Employees Trust', 'Employees-Trust-Fund-Act-Consolidated-2024',
+      'EMPLOYMENT OF WOMEN', 'Minimum Wages', 'Wages Boards'],
+    
+    // 2. Consumer Protection Domain
+    consumer: ['Consumer Affairs Authority', 'Consumer Credit', 'UNFAIR CONTRACT', 'UNFAIR_CONTRACT_TERMS_ACT', 'Money Lending'],
+    
+    // 3. Rental Domain
+    rental: ['Rent', 'Rental', 'Registration of Documents', 'Registration-of-Documents-Consolidated-2024'],
+    
+    // 4. Finance Leasing Domain
+    finance_leasing: ['Finance Leasing', 'Finance-Leasing', 'Hire Purchase', 'Hire-Purchase', 'Lease'],
+    
+    // 5. Partnership Domain
+    partnership: ['Partnership', 'Partnership-Ordinance', 'Partner', 'Joint Venture'],
+    
+    // 6. General Domain
+    general: ['Prevention of Frauds', 'Prevention-of-Frauds-Consolidated-2024', 'Contracts', 'Fraud'],
+    
+    // 7. Property & Land Sale Domain
+    property_sale: ['SALE OF GOODS', 'Sale of Goods', 'Registration of Documents', 'Registration-of-Documents-Consolidated-2024',
+      'Prevention of Frauds', 'Prevention-of-Frauds-Consolidated-2024'],
+    
+    // 8. Electronic Domain
+    electronic: ['Electronic Transactions', 'Electronic-Transactions-Consolidated-2024', 'Digital', 'E-commerce', 'E-signature'],
+    
+    // 9. Microfinance Domain
+    microfinance: ['Microfinance', 'Microcredit', 'Small Loans', 'Money Lending'],
+    
+    // 10. Pawn Domain
+    pawn: ['PAWNBROKERS', 'Pawn', 'Pledge', 'Pawning']
   };
 
   function categorize(filename) {
@@ -1963,7 +1982,19 @@ document.getElementById("btn-cmp-refresh")?.addEventListener("click", cmpLoadHis
     }
     return 'general';
   }
-  const catLabels = { all:'All Acts', employment:'Employment Law', property:'Property & Rental', finance:'Finance & Banking', consumer:'Consumer Protection', general:'General Law' };
+  const catLabels = {
+    all: 'All Acts',
+    employment: 'Employment Law',
+    consumer: 'Consumer Protection',
+    rental: 'Rental',
+    finance_leasing: 'Finance & Leasing',
+    partnership: 'Partnership',
+    general: 'General',
+    property_sale: 'Property & Sale',
+    electronic: 'Electronic',
+    microfinance: 'Microfinance',
+    pawn: 'Pawn'
+  };
 
   let allActs = [];
   let loaded = false;
@@ -1989,16 +2020,15 @@ document.getElementById("btn-cmp-refresh")?.addEventListener("click", cmpLoadHis
     const listEl = document.getElementById('cmp-acts-list');
     countEl.innerHTML = `<strong>${acts.length}</strong> Acts Available`;
     if (!acts.length) { listEl.innerHTML = '<p style="color:var(--muted)">No acts match your search.</p>'; return; }
-    const catIcons = { employment:'👷', property:'🏠', finance:'🏦', consumer:'🛡️', general:'📜' };
+    
+   
     listEl.innerHTML = acts.map(a => {
       const displayName = a.filename.replace(/\.pdf$/i, '').replace(/-/g, ' ');
       const catLabel = catLabels[a.category] || 'General Law';
-      const catIcon = catIcons[a.category] || '📜';
       return `
       <div class="acts-card">
         <div class="acts-card-top">
-          <div class="acts-card-icon">📄</div>
-          <span class="acts-card-cat acts-cat-${a.category}">${catIcon} ${catLabel}</span>
+          <span class="acts-card-cat acts-cat-${a.category}">${catLabel}</span>
         </div>
         <div class="acts-card-title">${displayName}</div>
         <div class="acts-card-type">PDF Document</div>

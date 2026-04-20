@@ -966,7 +966,7 @@ input[type="file"]:hover { border-color: var(--primary); background: #f2f7ff; }
 }
 .cmp-upload-header-icon {
   width: 48px; height: 48px; border-radius: 14px;
-  background: linear-gradient(135deg, #1565c0, #1e88e5);
+  background: var(--primary);
   display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: #fff;
 }
 .cmp-upload-header h3 { font-size: 1.15rem; font-weight: 700; margin: 0; }
@@ -1044,10 +1044,10 @@ input[type="file"]:hover { border-color: var(--primary); background: #f2f7ff; }
   width: 100%; padding: .85rem; border: none; border-radius: 10px; font-size: 1rem;
   font-weight: 600; cursor: pointer; color: #fff; display: flex; align-items: center;
   justify-content: center; gap: .5rem; margin-top: 1.25rem;
-  background: linear-gradient(135deg, #0d47a1, #1e88e5);
+  background: var(--primary);
   transition: transform .15s, box-shadow .2s;
 }
-.cmp-analyze-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(30,136,229,.3); }
+.cmp-analyze-btn:hover { transform: translateY(-1px); background: var(--primary-light); box-shadow: 0 4px 12px rgba(26,58,92,.3); }
 .cmp-analyze-btn .dot {
   width: 8px; height: 8px; border-radius: 50%; background: #4ade80; display: inline-block;
 }
@@ -1081,21 +1081,21 @@ input[type="file"]:hover { border-color: var(--primary); background: #f2f7ff; }
 
 /* ── Hero banner ─────────────────────────────────────────────────────────── */
 .cmp-hero {
-  background: linear-gradient(135deg, #0d47a1, #1e88e5); border-radius: 16px;
-  padding: 2rem 2.5rem; color: #fff; text-align: center; margin-bottom: 1.5rem;
-  position: relative; overflow: hidden;
+  background: #f8f9fb; border-radius: 16px;
+  padding: 2rem 2.5rem; color: #1e2d3d; text-align: center; margin-bottom: 1.5rem;
+  position: relative; overflow: hidden; border: 1px solid #d8e1ec;
 }
 .cmp-hero::before {
   content: ""; position: absolute; inset: 0;
-  background: radial-gradient(circle at 20% 80%, rgba(255,255,255,.08) 0%, transparent 60%);
+  background: radial-gradient(circle at 20% 80%, rgba(26,58,92,.03) 0%, transparent 60%);
 }
 .cmp-hero-badge {
   display: inline-block; padding: .3rem .85rem; border-radius: 99px;
-  background: rgba(255,255,255,.15); font-size: .78rem; font-weight: 600;
-  letter-spacing: .3px; margin-bottom: .75rem; backdrop-filter: blur(4px);
+  background: #e3f2fd; font-size: .78rem; font-weight: 600;
+  letter-spacing: .3px; margin-bottom: .75rem; color: #1a3a5c;
 }
-.cmp-hero-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 .3rem; }
-.cmp-hero-sub   { font-size: .88rem; opacity: .8; margin: 0 0 1.5rem; }
+.cmp-hero-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 .3rem; color: #1e2d3d; }
+.cmp-hero-sub   { font-size: .88rem; opacity: .7; margin: 0 0 1.5rem; color: #6b7c93; }
 
 .cmp-hero-score {
   display: flex; align-items: center; justify-content: center;
@@ -1103,12 +1103,12 @@ input[type="file"]:hover { border-color: var(--primary); background: #f2f7ff; }
 }
 .cmp-hero-score svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .cmp-hero-score-text { position: relative; text-align: center; z-index: 1; }
-.cmp-hero-pct  { font-size: 2rem; font-weight: 800; display: block; line-height: 1; }
-.cmp-hero-label { font-size: .78rem; opacity: .8; text-transform: uppercase; letter-spacing: .5px; display: block; margin-top: .15rem; }
+.cmp-hero-pct  { font-size: 2.5rem; font-weight: 800; display: block; line-height: 1; color: #1a3a5c; }
+.cmp-hero-label { font-size: .78rem; opacity: .7; text-transform: uppercase; letter-spacing: .5px; display: block; margin-top: .15rem; color: #6b7c93; }
 
 /* ── Analysis Summary heading ────────────────────────────────────────────── */
 .cmp-section-heading {
-  font-size: 1.05rem; font-weight: 700; margin-bottom: .75rem;
+  font-size: 1.25rem; font-weight: 700; margin-bottom: .75rem; color: #1e2d3d;
 }
 
 /* ── Summary grid ────────────────────────────────────────────────────────── */
@@ -1126,17 +1126,14 @@ input[type="file"]:hover { border-color: var(--primary); background: #f2f7ff; }
 .cmp-sum-compliant  { border-left: 4px solid #2e7d32; }
 .cmp-sum-violation  { border-left: 4px solid #b71c1c; }
 .cmp-sum-missing    { border-left: 4px solid #e65100; }
-.cmp-sum-icon  { font-size: 1.3rem; margin-bottom: .3rem; }
-.cmp-sum-num   { font-size: 1.8rem; font-weight: 800; line-height: 1.1; }
-.cmp-sum-label { font-size: .8rem; color: var(--muted); margin-top: .15rem; }
-.cmp-sum-pct   { font-size: .82rem; font-weight: 600; margin-top: .25rem; }
-.cmp-sum-bar   { height: 4px; border-radius: 2px; background: #e0e0e0; margin-top: .35rem; overflow: hidden; }
-.cmp-sum-bar-fill { height: 100%; border-radius: 2px; transition: width .8s ease-out; }
-.cmp-sum-link  {
-  font-size: .78rem; font-weight: 500; color: var(--info); margin-top: auto;
-  padding-top: .45rem; cursor: pointer;
-}
-.cmp-sum-link:hover { text-decoration: underline; }
+.cmp-sum-icon  { display: none; }
+.cmp-sum-num   { font-size: 2.2rem; font-weight: 800; line-height: 1.1; }
+.cmp-sum-label { font-size: .95rem; color: var(--muted); margin-top: .2rem; font-weight: 600; }
+.cmp-sum-pct   { font-size: .95rem; font-weight: 600; margin-top: .3rem; }
+.cmp-sum-bar   { display: none; }
+.cmp-sum-bar-fill { display: none; }
+.cmp-sum-link  { display: none; }
+.cmp-sum-link:hover { display: none; }
 
 /* ── Action row (Mandatory / Download) ───────────────────────────────────── */
 .cmp-action-row {
@@ -1170,13 +1167,13 @@ input[type="file"]:hover { border-color: var(--primary); background: #f2f7ff; }
 }
 .cmp-cfilt {
   padding: .45rem 1rem; border-radius: 8px; border: 1px solid var(--border);
-  background: var(--surface); font-size: .82rem; font-weight: 500; cursor: pointer;
+  background: var(--surface); font-size: 1rem; font-weight: 500; cursor: pointer;
   transition: all .2s; color: var(--text);
 }
 .cmp-cfilt.active {
-  background: var(--info); color: #fff; border-color: var(--info);
+  background: var(--primary); color: #fff; border-color: var(--primary);
 }
-.cmp-cfilt:not(.active):hover { border-color: var(--info); }
+.cmp-cfilt:not(.active):hover { border-color: var(--primary); color: var(--primary); }
 
 /* ── Clause cards ────────────────────────────────────────────────────────── */
 .cmp-clause-card {
@@ -1216,12 +1213,12 @@ input[type="file"]:hover { border-color: var(--primary); background: #f2f7ff; }
 }
 .cmp-clause-card.expanded .cmp-cl-details { display: block; }
 .cmp-cl-field-label {
-  font-size: .72rem; font-weight: 600; color: var(--muted); text-transform: uppercase;
+  font-size: .85rem; font-weight: 600; color: var(--text); text-transform: uppercase;
   letter-spacing: .5px; display: block; margin-bottom: .3rem;
 }
 .cmp-cl-clause-text {
-  font-size: .92rem; color: var(--text); line-height: 1.6; margin-bottom: .5rem;
-  font-style: italic;
+  font-size: 1rem; color: var(--text); line-height: 1.7; margin-bottom: .5rem;
+  font-style: italic; font-weight: 500;
 }
 
 /* ── Meta row (law reference + status) ───────────────────────────────────── */
@@ -1230,10 +1227,10 @@ input[type="file"]:hover { border-color: var(--primary); background: #f2f7ff; }
 }
 .cmp-cl-meta-item { }
 .cmp-cl-meta-label {
-  font-size: .68rem; font-weight: 600; color: var(--muted); text-transform: uppercase;
+  font-size: .8rem; font-weight: 600; color: var(--text); text-transform: uppercase;
   letter-spacing: .4px; display: block; margin-bottom: .15rem;
 }
-.cmp-cl-meta-value { font-size: .88rem; font-weight: 500; }
+.cmp-cl-meta-value { font-size: .95rem; font-weight: 500; }
 
 /* ── Confidence bar ──────────────────────────────────────────────────────── */
 .cmp-cl-conf-row { margin-bottom: .85rem; }
@@ -1271,7 +1268,7 @@ input[type="file"]:hover { border-color: var(--primary); background: #f2f7ff; }
    ═══════════════════════════════════════════════════════════════════════════ */
 .cmp-mandatory-section { margin-top: 2rem; }
 .cmp-mandatory-banner {
-  background: linear-gradient(135deg, #0d47a1, #1e88e5);
+  background: var(--primary);
   border-radius: 16px; padding: 1.5rem 1.8rem; color: #fff;
 }
 .cmp-mandatory-header {
@@ -1337,10 +1334,10 @@ input[type="file"]:hover { border-color: var(--primary); background: #f2f7ff; }
 .cmp-back-results-btn:hover { border-color: var(--primary); color: var(--primary); }
 .cmp-analyze-another-btn {
   padding: .6rem 1.5rem; border-radius: 8px; border: none;
-  background: linear-gradient(135deg, #0d47a1, #1e88e5); color: #fff;
-  font-size: .88rem; font-weight: 600; cursor: pointer; transition: transform .15s;
+  background: var(--primary); color: #1f1e66;
+  font-size: .88rem; font-weight: 600; cursor: pointer; transition: transform .15s, background .15s;
 }
-.cmp-analyze-another-btn:hover { transform: translateY(-1px); }
+.cmp-analyze-another-btn:hover { transform: translateY(-1px); background: var(--primary-light); }
 
 @media (max-width: 600px) {
   .cmp-mandatory-grid { grid-template-columns: 1fr 1fr; }
@@ -1351,7 +1348,7 @@ input[type="file"]:hover { border-color: var(--primary); background: #f2f7ff; }
    ACTS LIBRARY — REDESIGNED
    ═══════════════════════════════════════════════════════════════════════════ */
 .acts-hero {
-  background: linear-gradient(135deg, #0d47a1, #1e88e5); border-radius: 16px;
+  background: var(--primary); border-radius: 16px;
   padding: 2.25rem 2.5rem; text-align: center; color: #fff; margin-bottom: 1.25rem;
   position: relative; overflow: hidden;
 }
@@ -1389,8 +1386,8 @@ input[type="file"]:hover { border-color: var(--primary); background: #f2f7ff; }
   background: var(--surface); font-size: .78rem; font-weight: 500; cursor: pointer;
   transition: all .2s; color: var(--text); white-space: nowrap;
 }
-.acts-cat.active { background: var(--info); color: #fff; border-color: var(--info); }
-.acts-cat:not(.active):hover { border-color: var(--info); color: var(--info); }
+.acts-cat.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.acts-cat:not(.active):hover { border-color: var(--primary); color: var(--primary); }
 
 .acts-count {
   font-size: .88rem; color: var(--text); margin-bottom: .85rem;
@@ -1409,18 +1406,23 @@ input[type="file"]:hover { border-color: var(--primary); background: #f2f7ff; }
 }
 .acts-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); border-color: #90caf9; }
 .acts-card-top {
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: .65rem;
+  display: flex; align-items: center; justify-content: flex-end; margin-bottom: .65rem;
 }
-.acts-card-icon { font-size: 1.4rem; }
+.acts-card-icon { display: none; }
 .acts-card-cat {
-  padding: .22rem .65rem; border-radius: 99px; font-size: .68rem; font-weight: 600;
+  padding: .22rem .65rem; border-radius: 99px; font-size: .75rem; font-weight: 600;
   white-space: nowrap;
 }
-.acts-cat-employment { background: #dbeafe; color: #1e40af; }
-.acts-cat-property   { background: #dcfce7; color: #166534; }
-.acts-cat-finance    { background: #fef3c7; color: #92400e; }
-.acts-cat-consumer   { background: #fde8e8; color: #9b1c1c; }
-.acts-cat-general    { background: #e5e7eb; color: #374151; }
+.acts-cat-employment { background: #f0f0f0; color: #6b7c93; }
+.acts-cat-consumer   { background: #f0f0f0; color: #6b7c93; }
+.acts-cat-rental     { background: #f0f0f0; color: #6b7c93; }
+.acts-cat-finance_leasing { background: #f0f0f0; color: #6b7c93; }
+.acts-cat-partnership { background: #f0f0f0; color: #6b7c93; }
+.acts-cat-general    { background: #f0f0f0; color: #6b7c93; }
+.acts-cat-property_sale { background: #f0f0f0; color: #6b7c93; }
+.acts-cat-electronic { background: #f0f0f0; color: #6b7c93; }
+.acts-cat-microfinance { background: #f0f0f0; color: #6b7c93; }
+.acts-cat-pawn       { background: #f0f0f0; color: #6b7c93; }
 
 .acts-card-title {
   font-size: .88rem; font-weight: 600; color: var(--text); margin-bottom: .3rem;
@@ -1431,11 +1433,11 @@ input[type="file"]:hover { border-color: var(--primary); background: #f2f7ff; }
 }
 .acts-card-btn {
   display: block; text-align: center; padding: .55rem; border-radius: 8px;
-  background: linear-gradient(135deg, #0d47a1, #1e88e5); color: #fff;
+  background: #1a3a5c; color: #fff;
   font-size: .82rem; font-weight: 600; text-decoration: none; transition: transform .15s, box-shadow .15s;
   margin-top: auto;
 }
-.acts-card-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(30,136,229,.25); }
+.acts-card-btn:hover { transform: translateY(-1px); background: #243d54; box-shadow: 0 4px 12px rgba(26,58,92,.3); }
 
 @media (max-width: 900px) {
   .acts-grid { grid-template-columns: repeat(2, 1fr); }

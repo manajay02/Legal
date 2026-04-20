@@ -1,0 +1,6 @@
+﻿{
+    "overall":  50,
+    "rationale0":  "The legal issue is introduced but the specific claim is not stated with enough precision for a court to act on it. The argument does not name the exact legal right being asserted or the specific relief being sought, which costs points under this criterion. To reach 4/5 the argument must open with a single sentence that names the cause of action, the parties, and the specific legal right violated.",
+    "warning":  "AI service unavailable â using structured template analysis. Configure valid API keys in .env for full AI critique.",
+    "quote0":  "Random non-legal text about pasta and sauce."
+}

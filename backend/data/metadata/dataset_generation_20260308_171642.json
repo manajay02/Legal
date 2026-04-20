@@ -1,0 +1,11 @@
+{
+  "generation_date": "2026-03-08T17:23:47.752386",
+  "teacher_model": "deepseek/deepseek-chat",
+  "temperature": 0.7,
+  "total_files_processed": 5,
+  "successful_examples": 5,
+  "failed_files": [],
+  "total_time_seconds": 424.913938999176,
+  "average_time_per_file": 84.98278779983521,
+  "output_file": "D:\\Y4S1\\Research new\\reserch component\\Legal\\backend\\data\\training_data\\train_20260308_171642.jsonl"
+}

@@ -1,0 +1,13 @@
+torch
+transformers
+datasets
+scikit-learn
+pandas
+numpy
+pdfplumber
+pytesseract
+spacy
+sentencepiece
+motor
+pymongo
+python-dotenv

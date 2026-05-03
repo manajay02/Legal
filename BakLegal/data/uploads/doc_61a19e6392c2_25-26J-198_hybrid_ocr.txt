@@ -1,0 +1,350 @@
+--- Page 1 ---
+IT4010 Research Project  2025 July
+Topic Assessment Form
+Project ID:
+25-26J-198
+1. Topic (12 words max)
+Civil Legal Document Summarization in Sri Lanka
+2. Research group the project belongs to
+Co EAI - Centre of Excellence for AI
+3. Specialization of the project belongs to
+Information Technology (IT)
+4. If a continuation of a previous project:
+Project ID 25-26J-198
+Year 2025
+5. Brief description of the research problem including references (200  500 words
+max)  references not included in word count.
+As of today, the legal domain provides a large volume of documents including wills,
+co ntracts, business documents and legal opinions. These documents are complex, highly
+fo rmal, specific, and harder to understand. In this situation, it takes lot of time to extract
+re levant information quickly. Legal industry becomes increasingly digitalize, the
+ch allenge of understanding and discovery has become more critical than ever.
+One of the main problems is that methods used in document review are traditional
+manual methods. It is not scalable. Lawyers, judges, and researchers spend lot of time
+reading these lengthy documents to find outcomes relevant to their cases. Especially
+they may also make various errors while reading in a limited amount of time or
+documents is large.
+Automatic legal summarization aims to answer this problem by using natural language
+processing (NLP) and machine learning (ML) techniques to generate correct summarize
+outcomes. But this will face some problems. In legal documents includes complex
+sentences and specialized vocabulary. Furthermore, it is essential to protect the legal
+authenticity of those documents, as misinterpretation can have a major impact.
+In summary, the core problem in legal summarization is creating documents are
+trustworthy, can work large amount of data sets and provide correct outcomes. These
+systems must also understand the complex language used in legal documents.
+
+--- Page 2 ---
+IT4010 Research Project  2025 July
+Topic Assessment Form
+References:
+1. M. Koniari et al., Evaluation of Automatic Legal Text Summarization Techniques
+for Greek Judgements, Information, MDPI, 2023.
+2. S. D. Kavila et al., An Automatic Legal Document Summarization and Search
+Using Hybrid System, Advances in Intelligent Systems and Computing, vol. 199,
+pp. 229236, 2012.
+3. D. Anand and R. Wagh, Effective Deep Learning Approaches for Summarization
+of Legal Texts, Journal of King Saud University  Computer and Information
+Sciences, vol. 34, no. 5, pp. 21412150, 2022.
+4. S. D. Kavila, V. Puli, G. S. V. P. Raju, and R. Bandaru, An Automatic Legal
+Document Summarization and Search Using Hybrid System, Advances in
+Intelligent Systems and Computing, vol. 199, pp. 229236, 2013.
+5. M. Akter et al., Advancements in Natural Language Processing: Implications for
+Legal Summarization, International Journal of Innovative Trends in Information
+Technology, Apr. 2024.
+6. M. Koniari et al., Evaluation of Automatic Legal Text Summarization Techniques
+for Greek Court Judgments, Information, vol. 14, no. 4, Art. 250, 2023.
+7. D. Jain, M. D. Borah, and A. Biswas, Summarization of Legal Documents: Where
+Are We Now and the Way Forward, Computer Science Review, vol. 40, Art.
+100388, 2021.
+8. S. Liu et al., Low-Resource Court Judgment Summarization for Common Law
+Systems, Information Processing & Management, vol. 61, Art. 103796, 2024.
+9. T. Turan and E. U. Kkslle, Summarization, Prediction, and Analysis of Turkish
+Constitutional Court Decisions with Explainable Artificial Intelligence and a Hybrid
+NLP Method, IEEE Access, 2025.
+10. W. S. El-Kassas et al., Multi-Task Deep Learning for Legal Document Translation,
+Summarization and Multi-Label Classification, Proceedings of the AICCC
+Conference, ACM, 2018.
+11. S. Sharma and P. P. Singh, Advancing Legal Document Summarization:
+Introducing an Approach Using a Recursive Summarization Algorithm, SN
+Computer Science, Springer, 2024.
+12. X. Wang and Y. C. Wu, Empowering Legal Justice with AI: A Reinforcement
+Learning SAC-VAE Framework for Advanced Legal Text Summarization, PLOS ONE,
+2024.
+13. Y. Sun, F. Yang, X. Wang, and H. Dong, Automatic Generation of Draft
+Procuratorial Suggestions Based on an Extractive Summarization Method:
+BERTSLCA, Mathematical Problems in Engineering, Hindawi (Wiley), 2021.
+
+--- Page 3 ---
+IT4010 Research Project  2025 July
+Topic Assessment Form
+6. Brief description of the nature of the solution including a conceptual diagram (250
+words max)
+The proposed system is a legal document smart analysis platform that seeks to
+help individuals better understand and analyze legal documents. It helps both professionals
+and non-experts through the use of artificial intelligence to simplify complicated legal
+content.
+Automatic summarization is one of the system's core elements, which distills lengthy legal
+documents into brief, readable summaries of important facts, issues, and conclusions. This
+allows users to grasp the case's key points instantly without being required to read the
+entire document.
+The system includes a chatbot that allows users to navigate the document using natural
+language. The user may ask questions, ask for explanations, or seek information on a
+particular section. This makes usability better and provides a more friendly experience.
+A rgument scoring is another important aspect that analyzes the quality and coherence of
+legal arguments presented in the document. It provides users with a sense of the quality of
+legal reasoning used in the case.
+The platform also includes an interactive dashboard with a timeline generator. This
+tool takes significant procedural events like filings, hearings, and judgments and puts them
+in chronological order. This graphical timeline enables the user to get an immediate feel
+for the case flow.
+A ll these four features, summarization, chatbot interaction, argument scoring, and the
+timeline dashboard, form a full solution for legal research, learning, and well-informed
+decision-making.
+
+--- Page 4 ---
+IT4010 Research Project  2025 July
+Topic Assessment Form
+Conceptual Diagram:
+
+--- Page 5 ---
+IT4010 Research Project  2025 July
+Topic Assessment Form
+7. Brief description of specialized domain expertise, knowledge, and data requirements
+(300 words max)
+Legal expertise
+Researchers must collaborate with legal experts who work with the law to understand
+case judgments and government rules. This helps in training tools and models to
+produce accurate system outputs. They also identify key terms, clauses, and obligations
+in documents, ensuring no critical information is missed.
+Natural Language Processing (NLP) & Machine Learning (ML)
+The system uses Natural Language Processing (NLP) and Machine Learning (ML) to train
+and understand legal documents. It summarizes complex legal texts by identifying key
+details and converting them into clear, brief summaries, keeping the original meaning.
+Features like summarization, chatbot, and argument analysis are powered by ML
+models such as BERT and Legal-BERT, fine-tuned for the unique language and structure
+of legal texts to ensure accurate, reliable results.
+Conversational AI and System Integration
+To build the chat feature, developers need to understand how chatbots work and how
+to handle natural language questions because the system must understand what the
+user is asking and respond correctly using the information from legal documents.
+Without this knowledge, the chatbot wouldnt be able to interpret questions or give
+accurate answers from the uploaded files.
+User Experience and Interface Design
+Designing an easy-to-use interface for users like legal professionals, law students, and
+the public is important. The interface should show summaries, chatbot answers, and
+argument analysis clearly and simply, making complex legal information easy to
+understand and interact with.
+Data Requirements and Annotation
+Having good and useful legal data is very important to making this project successful.
+For example, public court judgments, case law databases, and legal texts with notes or
+labels. To train the system well, may also need special labels for things like argument
+strength, important people or terms, and summary quality. This might involve working
+with legal experts or law students to add those labels correctly.
+
+--- Page 6 ---
+IT4010 Research Project  2025 July
+Topic Assessment Form
+8. Objectives and Novelty
+Main Objective:
+The main objective is automatically generating short and clear summaries of complex legal documents such as judgements
+and contracts. It identifies key parts like facts, legal issues, decisions then generate summary using NLP techniques. The
+summarization function helps reduce the time and effort required to review lengthy legal texts. And this will help lawyers,
+students and the public to quickly understand the main message of the case.
+Member Name Sub Objective Tasks Novelty
+with Registration
+Jayawardhana M C Legal Summarizer First upload or enter a legal document This system designed for the legal
+IT22361868 (judgment, contract) domain.
+Text preprocessing: Remove footnotes, It identifies and summarizes all legal
+headlines irrelevant symbols and split documents such as judges decisions
+text into sentences and paragraphs. and arguments.
+Identify the key factors.
+It uses special models for trained
+Use models to find the most important data. Not normal texts.
+sentences. Can use models like BERT.
+It will create short and clear
+Use pre-trained models to rewrite summaries.
+content into a shorter. Can use BART or
+Legal BERT. And the system helps users to
+quickly understand the complex legal
+After, improve grammar and documents.
+readability.
+Finally, Display the output.
+
+--- Page 7 ---
+IT4010 Research Project  2025 July
+Topic Assessment Form
+Optionally users can adjust the output It will be useful to lawyers, students
+and download or read it. and any other people who need legal
+information.
+P.R Reid Chat Assistance Identify common user queries and The chatbot enhances the system by
+IT22575944 define the chatbots scope, focusing on introducing an interactive,
+questions related to case facts, legal conversational interface that allows
+terms, arguments, and decisions. users to query legal documents using
+natural language. Unlike traditional
+Design and implement a clean, user- static tools, it provides context
+friendly chat interface that integrates aware responses and direct
+seamlessly with the main application. document navigation, making
+complex legal content more
+Apply natural language processing to accessible and easier to explore.
+interpret user input, detect intent, and
+map queries to the appropriate content
+within the legal document.
+Integrate the chatbot with both the
+summarization output and structured
+document data to ensure accurate and
+relevant responses.
+
+--- Page 8 ---
+IT4010 Research Project  2025 July
+Topic Assessment Form
+Implement response generation using
+pre-trained language models capable of
+producing context-aware, legally
+accurate answers.
+Enable navigation functionality that
+allows the chatbot to highlight or
+redirect users to specific sections of the
+document based on their queries.
+Conduct testing using legal documents,
+evaluate the accuracy and clarity of
+responses, and refine the chatbot based
+on user feedback.
+Manoli G D C Legal Timeline Define the types of legal events to The Legal Timeline Generator
+IT22352958 Generator extract (e.g., case filing, hearings, bail simplifies complex legal documents
+decisions, appeals, judgments, etc.) by automatically extracting and
+based on standard legal procedural presenting key case events (such as
+flows. filing dates, hearings, bail orders, and
+final decisions) in chronological
+Build a system to read and clean legal order.
+documents from files like PDFs or Word
+documents, or plain text.
+
+--- Page 9 ---
+IT4010 Research Project  2025 July
+Topic Assessment Form
+Apply Natural Language Processing This feature is especially helpful for
+(NLP) techniques to detect date users who need a quick and clear
+mentions, event related sentences, and overview of a cases procedural
+legal action verbs. history without having to read
+through lengthy documents.
+Use Named Entity Recognition (NER),
+keyword matching, or a machine It is particularly useful for students,
+learning based classifier to identify and lawyers, and researchers who want
+classify relevant legal events. to analyze or compare legal case
+timelines. This kind of visual and
+Arrange all detected events in interactive timeline tool is rarely
+chronological order by checking and available in existing legal analysis
+comparing their associated dates. platforms, making it a valuable and
+innovative component of the system.
+Create a user-friendly visual timeline
+interface (e.g., vertical/horizontal scroll
+timeline) that displays date-tagged legal
+events.
+Enable expandable timeline events that,
+when clicked, reveal context-specific
+snippets from the document.
+Evaluate the system using diverse real-
+world legal documents and validate
+event detection accuracy, date
+extraction and timeline clarity.
+
+--- Page 10 ---
+IT4010 Research Project  2025 July
+Topic Assessment Form
+DAYARATHNE Argument Strength Set rules for scoring legal arguments The Argument Strength Scorer looks
+R.D.T.N Scorer based on how well the argument uses closely at the arguments in a legal
+IT22578396 legal sources and laws, how clearly the case and measures how strong each
+arguments are written, how relevant one is. It compares the arguments
+they are to the case, and how much from both sides to see which is
+they influenced the final decision. better.
+Develop a system to recognize and It uses things like how many legal
+extract arguments from both sides in sources are used, how clearly the
+legal documents. argument is written, and how much
+the argument helped decide the
+Apply argument mining techniques (find case.
+key points, reasons, and evidence) and
+semantic analysis (looks at the meaning This is helpful for students and new
+and clarity of the words) to assess lawyers because it teaches them
+argument structure and strength. what makes an argument strong,
+something most other legal tools
+Use machine learning models to score dont show.
+arguments based on defined criteria
+and legal impact.
+Design an easy-to-understand interface
+that shows the argument scores clearly,
+so users can quickly compare which
+side made stronger points.
+
+--- Page 11 ---
+IT4010 Research Project  2025 July
+Topic Assessment Form
+9. Individual component description of how it is complied with the specialization.
+Member Name with Description
+Registration No
+Jayawardhana M C This project applies core information technology concepts to solve real world
+IT22361868 legal problems using techniques. There are NLP to analyze these documents
+and machine learning to summarize main parts in legal documents. There is
+also a user interface. This will be a collection of AI, data science and software
+engineering, making it highly relevant to IT specialization.
+P.R Reid The Chatbot Assistance component matches the Information Technology
+IT22575944 specialization as it makes use of fundamental IT abilities like language
+processing, interface design, and system integration. the Chatbot Assistance
+component aligns with the Information Technology specialization. By allowing
+users to ask questions and receive precise, understandable answers, it
+facilitates user interaction with legal documents.
+Manoli G D C This is applies core Information Technology concepts to solve real-world legal
+IT22352958 problems by developing a Legal Timeline Generator. It uses Natural Language
+Processing (NLP) to extract important events and dates from legal documents
+and machine learning to classify the types of events. The extracted
+information is presented in a user-friendly visual timeline, making complex
+legal case flows easier to understand. This component combines AI, data
+science, and software engineering, making it highly relevant to the IT
+specialization.
+DAYARATHNE The Argument Strength Scorer uses key Information Technology concepts like
+R.D.T.N natural language processing (NLP), machine learning, and text analysis to
+IT22578396 understand and rate legal arguments. It looks at things like how arguments are
+written, which sources they cite, and whether they helped win the case. This
+helps make legal analysis easier using smart computer tools.
+
+--- Page 12 ---
+IT4010 Research Project  2025 July
+Topic Assessment Form
+10. Supervisors details
+Title First Name Last Name Signature
+Supervisor Ms Lochana Rajamanthri
+Co-Supervisor
+External Supervisor
+Summary of external supervisors (if any) experience and expertise
+
+--- Page 13 ---
+IT4010 Research Project  2025 July
+Topic Assessment Form
+This part is to be filled by the Topic Screening Staff members.
+a) Does the chosen research topic possess a comprehensive scope suitable for a
+final-year project?
+Yes No
+b) Does the proposed topic exhibit novelty?
+Yes No
+c) Do you believe they have the capability to successfully execute the proposed
+project?
+Yes No
+d) Do the proposed sub-objectives reflect the students' areas of specialization?
+Yes No
+e) Supervisor's Evaluation and Recommendation for the Research topic:
+
+--- Page 14 ---
+IT4010 Research Project  2025 July
+Topic Assessment Form
+Acceptable: Mark/Select as necessary
+Topic Assessment Accepted
+Topic Assessment Accepted with minor changes*
+Topic Assessment to be Resubmitted with major changes*
+Topic Assessment Rejected. Topic must be changed
+* Detailed comments given below
+Comments
+Staff Members Name Signature
+*Important:
+1. According to the comments given by the evaluator, make the necessary
+modifications and get the approval by the Evaluator.
+2. If the project topic is rejected, identify a new topic, and request the RP
+Team for a new topic assessment.

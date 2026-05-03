@@ -1,0 +1,32 @@
+{
+  "generation_date": "2026-03-09T01:10:52.026072",
+  "teacher_model": "deepseek/deepseek-chat",
+  "temperature": 0.7,
+  "total_files_processed": 20,
+  "successful_examples": 0,
+  "failed_files": [
+    "182 - 2014 n (1).pdf",
+    "19. CA PHC 149-19 Judgement (Final).pdf",
+    "21- 30052023-CA-PHC-0140 2017.pdf",
+    "299-19.pdf",
+    "652-23.pdf",
+    "BAIL ORDER CPA-0143-22.pdf",
+    "BAIL ORDER-BAL-0094-22.pdf",
+    "BAIL ORDER-BAL-0123-22.pdf",
+    "BAL - 0033 - 22.pdf",
+    "BAL - 0052 - 22.pdf",
+    "BAL - 0061 - 22.pdf",
+    "BAL - 0062 - 22.pdf",
+    "BAL 0058 - 22.pdf",
+    "BAL-0008-24 - 27.11.2024.pdf",
+    "BAL-0029-24 - 20.11.2024.pdf",
+    "BAL-0065-23 -06.12.2024.pdf",
+    "BAL-0079-24 - 29.08.2024.pdf",
+    "BAL-0102-24 - 10.12.2024.pdf",
+    "BAL-0137-24 - 29.11.2024.pdf",
+    "BAL-0231-24 - 18.12.2024.pdf"
+  ],
+  "total_time_seconds": 169.35715198516846,
+  "average_time_per_file": 8.467857599258423,
+  "output_file": null
+}

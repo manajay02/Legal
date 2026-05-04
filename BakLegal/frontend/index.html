@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=24"/>
+  <link rel="stylesheet" href="css/style.css?v=33"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
 </head>
@@ -456,6 +456,10 @@
 
         <!-- Acts Library -->
         <div class="tab-content" id="cmp-acts">
+          <!-- Back to Summary (visible only after an analysis) -->
+          <div id="acts-back-bar" style="display:flex;justify-content:flex-end;margin-bottom:.85rem">
+            <button id="btn-acts-back-summary" class="cmp-back-btn" style="display:none">&#8592; Back to Summary</button>
+          </div>
           <!-- Search & Filters -->
           <div class="acts-controls">
             <div class="acts-search-wrap">
@@ -491,7 +495,13 @@
           <!-- Top action bar -->
           <div class="cmp-top-actions">
             <button class="cmp-back-btn" id="btn-cmp-new">&larr; Analyze New Document</button>
-            <button class="btn-primary cmp-download-btn" id="btn-cmp-download">Download Report &#9662;</button>
+            <div style="position:relative;display:inline-block">
+              <button class="btn-primary cmp-download-btn" id="btn-cmp-download">Download Report &#9662;</button>
+              <div id="cmp-download-menu" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);min-width:170px;z-index:999;overflow:hidden">
+                <button id="btn-cmp-dl-pdf" style="display:block;width:100%;text-align:left;padding:.65rem 1.1rem;background:none;border:none;cursor:pointer;font-size:.88rem;color:#1a3a5c;border-bottom:1px solid #f3f4f6">Download as PDF</button>
+                <button id="btn-cmp-dl-txt" style="display:block;width:100%;text-align:left;padding:.65rem 1.1rem;background:none;border:none;cursor:pointer;font-size:.88rem;color:#1a3a5c">Download as TXT</button>
+              </div>
+            </div>
           </div>
 
           <!-- Hero banner -->
@@ -527,13 +537,19 @@
 
         <!-- â”€â”€ DETAIL PAGE (shown when a summary card is clicked) â”€â”€ -->
         <div id="cmp-detail-page" style="display:none">
-
+          <!-- Tab bar mirrored on detail page -->
+          <div class="tabs" id="cmp-detail-tabs">
+            <button class="tab" data-dtab="cmp-check">Check Document</button>
+            <button class="tab" data-dtab="cmp-history">History</button>
+            <button class="tab" data-dtab="cmp-acts">Acts Library</button>
+          </div>
           <div class="cmp-top-actions">
             <button class="cmp-back-btn" id="btn-cmp-back-summary">&#8592; Back to Summary</button>
             <button class="cmp-analyze-another-btn" id="btn-cmp-new2">Analyze Another Document</button>
           </div>
 
-          <!-- Clause list (Total / Compliant / Non-Compliant) -->
+          <!-- Mini summary strip (same 4 cards, active card highlighted) -->
+          <div class="cmp-summary-grid" id="cmp-detail-summary-strip" style="margin-bottom:1.5rem"></div>
           <div class="cmp-clause-section" id="cmp-detail-clause-section">
             <h3 class="cmp-section-heading" id="cmp-detail-title">&#x1F4CB; Clauses</h3>
             <div id="cmp-clause-list"></div>
@@ -728,7 +744,7 @@
     }
   </script>
 
-  <script src="js/app.js?v=39"></script>
+  <script src="js/app.js?v=47"></script>
 </body>
 </html>
 

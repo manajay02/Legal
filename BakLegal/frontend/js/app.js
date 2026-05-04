@@ -1915,30 +1915,81 @@ function cmpStatus(el, html, type = "info") {
 
 /* ── Run Compliance Check ────────────────────────────────────────────────── */
 document.getElementById("btn-cmp-check")?.addEventListener("click", async () => {
-  const pdfFile  = document.getElementById("cmp-pdf").files[0];
+  // Detect which input tab is active — ignore the other input to avoid stale state
+  const isTextMode = document.getElementById("cmp-itab-text")?.classList.contains("active");
+  const pdfFile  = isTextMode ? null : document.getElementById("cmp-pdf").files[0];
   const text     = document.getElementById("cmp-text").value.trim();
   const statusEl = document.getElementById("cmp-check-status");
 
+  // Helper: show inline validation message and scroll to it
+  function cmpValidationMsg(title, body) {
+    statusEl.innerHTML = `
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:1rem 1.2rem;">
+        <div style="font-weight:700;font-size:1rem;color:#b91c1c;margin-bottom:.35rem">${title}</div>
+        <div style="font-size:.88rem;color:#7f1d1d;line-height:1.6">${body}</div>
+      </div>`;
+    statusEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
   if (!pdfFile && !text) {
-    Swal.fire({ icon: 'warning', title: 'No Document Provided', text: 'Please upload a PDF or paste your document text before analyzing.', confirmButtonColor: '#1a3a5c' });
+    cmpValidationMsg(
+      'No Document Provided',
+      'Please upload a PDF, TXT or DOCX file, or paste your contract text before analyzing.'
+    );
     return;
   }
 
   // File-type validation
-  if (pdfFile && !pdfFile.name.toLowerCase().endsWith(".pdf")) {
-    Swal.fire({ icon: 'warning', title: 'Invalid File Type', text: 'Only PDF files are supported. Please upload a .pdf document.', confirmButtonColor: '#1a3a5c' });
+  if (pdfFile && !pdfFile.name.toLowerCase().match(/\.(pdf|txt|docx)$/)) {
+    cmpValidationMsg(
+      'Invalid File Type',
+      'Only <strong>PDF</strong>, <strong>TXT</strong> and <strong>DOCX</strong> files are supported. Please upload a valid file.'
+    );
     return;
   }
 
-  // Text content validation — must look like a legal/contract document
+  // Text content validation — pre-screen before sending to server
   if (!pdfFile && text) {
-    const legalKeywords = ['contract', 'agreement', 'party', 'parties', 'clause', 'terms', 'conditions',
-      'whereas', 'hereby', 'obligation', 'liability', 'jurisdiction', 'witness', 'signed',
-      'indemnify', 'warranty', 'breach', 'termination', 'payment', 'consideration', 'shall'];
     const lower = text.toLowerCase();
-    const matched = legalKeywords.filter(k => lower.includes(k));
-    if (matched.length < 2) {
-      Swal.fire({ icon: 'warning', title: 'Not a Legal Document', text: 'The text you entered does not appear to be a legal or contract document. Please paste the actual contract or agreement text.', confirmButtonColor: '#1a3a5c' });
+
+    // Strong rejection: clearly a court judgment
+    const judgmentSignals = [
+      'plaintiff', 'defendant', 'appellant', 'respondent', 'petitioner',
+      'court of appeal', 'supreme court', 'high court', 'district court',
+      'magistrate court', 'labour tribunal',
+      'held that', 'court held', 'judgment', 'judgement', 'case no',
+      'counsel for', 'learned counsel', 'cross-examination',
+      'remanded', 'acquitted', 'convicted', 'appeal is dismissed', 'appeal is allowed',
+      'habeas corpus', 'certiorari', 'mandamus',
+      'in the matter of', 'ratio decidendi'
+    ];
+    const judgmentHits = judgmentSignals.filter(k => lower.includes(k));
+    if (judgmentHits.length >= 3) {
+      cmpValidationMsg(
+        'This is not a valid document',
+        'This does not appear to be a contract or agreement document — it looks like a <strong>court judgment or case law</strong>.<br>Please upload a valid contract or agreement document.'
+      );
+      return;
+    }
+
+    // Weak rejection: not enough contract signals
+    const contractSignals = [
+      'agreement', 'this agreement', 'contract', 'this contract', 'deed',
+      'party', 'parties', 'whereas', 'hereby agrees', 'now therefore',
+      'employer', 'employee', 'landlord', 'tenant', 'lessor', 'lessee',
+      'borrower', 'lender', 'hereinafter', 'in witness whereof',
+      'salary', 'rent', 'deposit', 'termination', 'notice period',
+      'either party', 'both parties', 'signed by', 'executed on',
+      'epf', 'etf', 'gratuity', 'annual leave', 'probationary',
+      'confidentiality', 'non-disclosure', 'governing law',
+      'arbitration', 'dispute resolution', 'force majeure'
+    ];
+    const contractHits = contractSignals.filter(k => lower.includes(k));
+    if (contractHits.length < 3) {
+      cmpValidationMsg(
+        'This is not a valid document',
+        'This does not appear to be a contract or agreement document.<br>Please upload a valid contract or agreement document.'
+      );
       return;
     }
   }
@@ -1949,9 +2000,24 @@ document.getElementById("btn-cmp-check")?.addEventListener("click", async () => 
   try {
     let res;
     if (pdfFile) {
-      const fd = new FormData();
-      fd.append("file", pdfFile);
-      res = await fetch(`${CMP_API}/upload-pdf`, { method: "POST", body: fd });
+      if (pdfFile.name.toLowerCase().endsWith('.txt')) {
+        // Read TXT file client-side and send to /check endpoint
+        const txtContent = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result);
+          reader.onerror = () => reject(new Error('Failed to read file'));
+          reader.readAsText(pdfFile);
+        });
+        res = await fetch(`${CMP_API}/check`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contract_text: txtContent })
+        });
+      } else {
+        const fd = new FormData();
+        fd.append('file', pdfFile);
+        res = await fetch(`${CMP_API}/upload-pdf`, { method: 'POST', body: fd });
+      }
     } else {
       res = await fetch(`${CMP_API}/check`, {
         method: "POST",
@@ -1963,14 +2029,7 @@ document.getElementById("btn-cmp-check")?.addEventListener("click", async () => 
       const errBody = await res.json().catch(() => ({}));
       // HTTP 400 = document type rejection from the gate
       if (res.status === 400 && errBody.detail && errBody.detail.valid === false) {
-        cmpStatus(statusEl,
-          `<div style="display:flex;align-items:flex-start;gap:.75rem">`
-          + `<span style="font-size:1.5rem;line-height:1"></span>`
-          + `<div>`
-          + `<strong style="font-size:1rem">This document cannot be analyzed</strong><br>`
-          + `<span style="font-size:.88rem;opacity:.85">${errBody.detail.reason}</span>`
-          + `</div></div>`,
-          "error");
+        cmpValidationMsg('This is not a valid document', 'This does not appear to be a contract or agreement document.<br>Please upload a valid contract or agreement document.');
         cmpHideSpinner();
         return;
       }
@@ -1980,14 +2039,7 @@ document.getElementById("btn-cmp-check")?.addEventListener("click", async () => 
 
     // Legacy fallback: valid:false in 200 response
     if (data.valid === false) {
-      cmpStatus(statusEl,
-        `<div style="display:flex;align-items:flex-start;gap:.75rem">`
-        + `<span style="font-size:1.5rem;line-height:1"> </span>`
-        + `<div>`
-        + `<strong style="font-size:1rem">This document cannot be analyzed</strong><br>`
-        + `<span style="font-size:.88rem;opacity:.85">${data.reason}</span>`
-        + `</div></div>`,
-        "error");
+      cmpValidationMsg('This is not a valid document', 'This does not appear to be a contract or agreement document.<br>Please upload a valid contract or agreement document.');
       cmpHideSpinner();
       return;
     }
@@ -2086,7 +2138,7 @@ function cmpRenderResultPage(data) {
   actionRow.innerHTML = `
     <div class="cmp-action-card" data-action="missing">
       <div class="cmp-action-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/><polyline points="9 9 10 9"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a3a5c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/><polyline points="9 9 10 9"/></svg>
       </div>
       <div class="cmp-action-info">
         <strong>Mandatory Clauses</strong>
@@ -2100,7 +2152,7 @@ function cmpRenderResultPage(data) {
     </div>
     <div class="cmp-action-card" data-action="acts">
       <div class="cmp-action-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a3a5c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       </div>
       <div class="cmp-action-info">
         <strong>Download Acts</strong>
@@ -2160,7 +2212,6 @@ function cmpRenderClauses(clauses) {
         <span class="cmp-cl-expand" onclick="this.closest('.cmp-clause-card').classList.toggle('expanded')">▾</span>
       </div>
       <div class="cmp-cl-preview">
-        <span class="cmp-cl-field-label">CONTRACT CLAUSE</span>
         <div class="cmp-cl-clause-text">"${(c.clause || "").replace(/"/g, '&quot;')}"</div>
       </div>
       <div class="cmp-cl-details">
@@ -2231,21 +2282,46 @@ function cmpRenderMandatory(present, missing) {
 }
 
 /* ── Back to upload ──────────────────────────────────────────────────────── */
-function cmpBackToUpload() {
+function cmpBackToUpload(targetTab) {
   document.getElementById("cmp-results").style.display = "none";
   document.getElementById("cmp-main-page").style.display = "block";
   document.getElementById("cmp-detail-page").style.display = "none";
   document.getElementById("compliance-card").style.display = "";
+  // Always switch to the requested tab (default: Check Document)
+  const tabId = targetTab || "cmp-check";
+  const tabBtn = document.querySelector(`[data-ctab="${tabId}"]`);
+  if (tabBtn) tabBtn.click();
 }
 document.getElementById("btn-cmp-back-summary")?.addEventListener("click", cmpShowMainPage);
-document.getElementById("btn-cmp-new")?.addEventListener("click", cmpBackToUpload);
-document.getElementById("btn-cmp-new2")?.addEventListener("click", cmpBackToUpload);
+document.getElementById("btn-cmp-new")?.addEventListener("click", () => cmpBackToUpload("cmp-check"));
+document.getElementById("btn-cmp-new2")?.addEventListener("click", () => cmpBackToUpload("cmp-check"));
+
+/* ── Detail page tab bar — navigate back and switch tab ──────────────────── */
+document.querySelectorAll("#cmp-detail-tabs .tab").forEach(btn => {
+  btn.addEventListener("click", () => cmpBackToUpload(btn.dataset.dtab));
+});
 
 function cmpGoToActsLibrary() {
   document.getElementById("cmp-results").style.display = "none";
   document.getElementById("compliance-card").style.display = "";
   document.querySelector('[data-ctab="cmp-acts"]')?.click();
+  // Show the Back to Summary button since we came from results
+  const backBtn = document.getElementById("btn-acts-back-summary");
+  if (backBtn) backBtn.style.display = "";
 }
+
+/* ── Acts Library → Back to Summary ────────────────────────────────────── */
+document.getElementById("btn-acts-back-summary")?.addEventListener("click", () => {
+  if (!window._cmpData) return;
+  document.getElementById("compliance-card").style.display = "none";
+  document.getElementById("cmp-results").style.display = "block";
+  document.getElementById("cmp-main-page").style.display = "block";
+  document.getElementById("cmp-detail-page").style.display = "none";
+  // Hide the button again
+  const backBtn = document.getElementById("btn-acts-back-summary");
+  if (backBtn) backBtn.style.display = "none";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
 
 /* ── Show clause detail sub-page ─────────────────────────────────────────── */
 function cmpShowClausePage(type) {
@@ -2257,6 +2333,46 @@ function cmpShowClausePage(type) {
 
   document.getElementById("cmp-main-page").style.display = "none";
   document.getElementById("cmp-detail-page").style.display = "block";
+
+  // ── Build mini summary strip ──────────────────────────────────────────
+  const strip = document.getElementById("cmp-detail-summary-strip");
+  if (strip) {
+    const total = clauses.length;
+    const eLen  = entailment.length;
+    const cLen  = contradiction.length;
+    const mLen  = missing.length;
+    const maxC  = Math.max(total, 1);
+    strip.innerHTML = `
+      <div class="cmp-sum-card cmp-sum-total cmp-sum-clickable${type === 'total' ? ' cmp-sum-active' : ''}" data-dpage="total">
+        <div class="cmp-sum-num">${total}</div>
+        <div class="cmp-sum-label">Total Clauses</div>
+        <div class="cmp-sum-view-link">${type === 'total' ? 'Viewing →' : 'View all →'}</div>
+      </div>
+      <div class="cmp-sum-card cmp-sum-compliant cmp-sum-clickable${type === 'compliant' ? ' cmp-sum-active' : ''}" data-dpage="compliant">
+        <div class="cmp-sum-num">${eLen}</div>
+        <div class="cmp-sum-label">Compliant</div>
+        <div class="cmp-sum-pct" style="color:#2e7d32">${((eLen / maxC) * 100).toFixed(1)}%</div>
+        <div class="cmp-sum-view-link" style="color:#2e7d32">${type === 'compliant' ? 'Viewing →' : 'View →'}</div>
+      </div>
+      <div class="cmp-sum-card cmp-sum-violation cmp-sum-clickable${type === 'noncompliant' ? ' cmp-sum-active' : ''}" data-dpage="noncompliant">
+        <div class="cmp-sum-num" style="color:#b71c1c">${cLen}</div>
+        <div class="cmp-sum-label">Non-Compliant</div>
+        <div class="cmp-sum-pct" style="color:#b71c1c">${((cLen / maxC) * 100).toFixed(1)}%</div>
+        <div class="cmp-sum-view-link" style="color:#b71c1c">${type === 'noncompliant' ? 'Viewing →' : 'View →'}</div>
+      </div>
+      <div class="cmp-sum-card cmp-sum-missing cmp-sum-clickable${type === 'missing' ? ' cmp-sum-active' : ''}" data-dpage="missing">
+        <div class="cmp-sum-num" style="color:#e65100">${mLen}</div>
+        <div class="cmp-sum-label">Missing Clauses</div>
+        <div class="cmp-sum-view-link" style="color:#e65100">${type === 'missing' ? 'Viewing →' : 'View →'}</div>
+      </div>
+    `;
+    strip.querySelectorAll("[data-dpage]").forEach(card => {
+      if (!card.classList.contains("cmp-sum-active")) {
+        card.addEventListener("click", () => cmpShowClausePage(card.dataset.dpage));
+      }
+    });
+  }
+  // ─────────────────────────────────────────────────────────────────────
 
   const clauseSection    = document.getElementById("cmp-detail-clause-section");
   const mandatorySection = document.getElementById("cmp-mandatory-section");
@@ -2293,22 +2409,88 @@ function cmpShowMainPage() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-/* ── Download report as JSON ─────────────────────────────────────────────── */
-document.getElementById("btn-cmp-download")?.addEventListener("click", async () => {
+/* ── Download report dropdown toggle ────────────────────────────────────── */
+document.getElementById("btn-cmp-download")?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  const menu = document.getElementById("cmp-download-menu");
+  if (!menu) return;
+  menu.style.display = menu.style.display === "none" ? "block" : "none";
+});
+document.addEventListener("click", () => {
+  const menu = document.getElementById("cmp-download-menu");
+  if (menu) menu.style.display = "none";
+});
+document.getElementById("btn-cmp-dl-pdf")?.addEventListener("click", () => cmpGenerateReport("pdf"));
+document.getElementById("btn-cmp-dl-txt")?.addEventListener("click", () => cmpGenerateReport("txt"));
+
+async function cmpGenerateReport(format) {
   const data = window._cmpData;
   if (!data) return;
   const btn = document.getElementById("btn-cmp-download");
-  btn.disabled = true; btn.textContent = " Generating PDF…";
+  const menu = document.getElementById("cmp-download-menu");
+  if (menu) menu.style.display = "none";
+  btn.disabled = true; btn.textContent = format === "pdf" ? "⏳ Generating PDF…" : "⏳ Generating TXT…";
 
-  /* Build a clean, simple HTML report from the data (avoids SVG/canvas issues) */
   const clauses = data.clauses || [];
   const present = data.present_mandatory || [];
   const missing = data.missing_mandatory || [];
+  const score = (present.length + missing.length) > 0
+    ? Math.round(present.length / (present.length + missing.length) * 100) : 0;
+
+  // ── TXT: build text file and download, then return early
+  if (format === "txt") {
+    const total = clauses.length;
+    const lines = [
+      "COMPLIANCE ANALYSIS REPORT",
+      "Generated by LexVision — " + new Date().toLocaleString(),
+      "=====================================================",
+      "",
+      `Compliance Score: ${score}%`,
+      `Total Clauses: ${total}`,
+      `Compliant: ${clauses.filter(c => c.prediction === 'entailment').length}`,
+      `Violations: ${clauses.filter(c => c.prediction === 'contradiction').length}`,
+      `Missing Mandatory Clauses: ${missing.length}`,
+      "",
+      "=====================================================",
+      "DETAILED CLAUSE ANALYSIS",
+      "=====================================================",
+      "",
+      ...clauses.map((c, i) => [
+        `Clause ${i + 1}: ${c.prediction === 'entailment' ? 'COMPLIANT' : 'VIOLATION'}`,
+        `Text: ${c.clause || ''}`,
+        c.law_reference ? `Law Reference: ${c.law_reference}` : null,
+        c.recommendation ? `Recommendation: ${c.recommendation}` : null,
+        `Confidence: ${c.confidence || 0}%`,
+        ""
+      ].filter(Boolean).join("\n")),
+      "=====================================================",
+      "PRESENT MANDATORY CLAUSES",
+      "=====================================================",
+      "",
+      ...present.map(p => `✓ ${p.clause || ''}${p.legal_basis ? ' — ' + p.legal_basis : ''}`),
+      "",
+      "=====================================================",
+      "MISSING MANDATORY CLAUSES",
+      "=====================================================",
+      "",
+      ...missing.map(m => `✗ ${m.clause || ''}${m.legal_basis ? ' — ' + m.legal_basis : ''}`)
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `compliance_report_${data.analysis_id || "report"}.txt`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    btn.disabled = false; btn.textContent = "Download Report ▾";
+    return;
+  }
+
+  // ── PDF: build HTML report
   const total = clauses.length;
   const compliant = clauses.filter(c => c.prediction === 'entailment').length;
   const violations = clauses.filter(c => c.prediction === 'contradiction').length;
-  const score = (present.length + missing.length) > 0
-    ? Math.round(present.length / (present.length + missing.length) * 100) : 0;
+
+  /* Build a clean, simple HTML report from the data (avoids SVG/canvas issues) */
 
   const reportHTML = `
     <div style="font-family:Arial,Helvetica,sans-serif;color:#1a1a2e;padding:20px;max-width:780px;margin:0 auto">
@@ -2415,9 +2597,9 @@ document.getElementById("btn-cmp-download")?.addEventListener("click", async () 
     } catch (_) { Swal.fire({ icon: 'error', title: 'PDF Failed', text: 'Could not generate PDF. Please try again.', confirmButtonColor: '#1a3a5c' }); }
   } finally {
     document.body.removeChild(container);
-    btn.disabled = false; btn.textContent = 'Download Report';
+    btn.disabled = false; btn.textContent = 'Download Report ▾';
   }
-});
+}
 
 /* ── Load history ────────────────────────────────────────────────────────── */
 async function cmpLoadHistory() {

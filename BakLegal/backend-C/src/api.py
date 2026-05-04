@@ -4,6 +4,12 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from src.inference.compliance_checker_v2 import check_compliance
 import pymupdf as fitz  # PyMuPDF 1.24+ uses pymupdf instead of fitz
+try:
+    import docx as python_docx
+    import io as _io
+except ImportError:
+    python_docx = None
+    _io = None
 import io
 import json
 import re
@@ -132,120 +138,222 @@ def _row_to_dict(row: sqlite3.Row) -> dict:
 # Document Type Validation
 # ----------------------------
 def validate_document_is_contract(text: str) -> dict:
-    """Validate that the uploaded document is a contract/agreement, not a court judgment or other document.
+    """Validate that the uploaded document is a contract/agreement only.
+    Rejects court judgments, case law, legislation, academic papers, news,
+    and any generic text with insufficient contract indicators.
     Returns {"valid": True/False, "reason": str, "detected_type": str}
     """
     text_lower = text.lower()
+    text_stripped = text.strip()
 
-    # --- Court Judgment / Case Law indicators ---
+    # --- Minimum length check ---
+    if len(text_stripped) < 100:
+        return {
+            "valid": False,
+            "reason": "The document is too short to analyze. Please upload a complete contract or agreement.",
+            "detected_type": "too_short"
+        }
+
+    # ── 1. COURT JUDGMENT / CASE LAW ──────────────────────────────────────
     judgment_keywords = [
         "court of appeal", "supreme court", "high court", "district court",
         "magistrate court", "magistrate's court", "labour tribunal",
         "before the hon", "before his lordship", "before her ladyship",
+        "before his honour", "before her honour",
         "judgment", "judgement", "verdict", "ruling of the court",
         "case no", "case number", "sc appeal", "ca appeal", "hc appeal",
         "plaintiff", "defendant", "appellant", "respondent",
-        "petitioner", "accused", "prosecution",
-        "order of the court", "court order", "decree",
+        "petitioner", "accused", "prosecution", "complainant",
+        "order of the court", "court order", "decree nisi", "decree absolute",
         "it is hereby ordered", "this court finds", "court hereby",
         "i affirm", "i dismiss", "appeal is allowed", "appeal is dismissed",
         "cross-appeal", "writ of", "habeas corpus", "certiorari",
-        "mandamus", "quo warranto",
+        "mandamus", "quo warranto", "interlocutory",
         "learned counsel", "counsel for the", "appearing for",
-        "submissions of", "argued that",
+        "submissions of", "argued that", "my lord", "my lady",
         "ratio decidendi", "obiter dicta", "stare decisis",
         "held that", "court held", "tribunal held",
-        "remanded", "set aside", "quashed",
+        "remanded", "set aside", "quashed", "acquitted", "convicted",
         "in the matter of", "in re ",
         "witness testified", "cross-examination", "examination-in-chief",
-        "evidence act", "civil procedure code", "criminal procedure code",
-        "v/s", " vs ", " versus ",
+        "deponent", "affidavit sworn",
+        "civil procedure code", "criminal procedure code",
+        "v/s", " versus ", " vs. ",
+        "matter number", "case filed",
     ]
 
     # --- Strong Contract / Agreement indicators ---
     contract_keywords = [
-        "agreement", "contract", "deed", "memorandum of understanding",
-        "terms and conditions", "party of the first part", "party of the second part",
+        "agreement", "this agreement", "this contract", "this deed",
+        "memorandum of understanding", "terms and conditions",
+        "party of the first part", "party of the second part",
         "hereby agrees", "mutually agreed", "agreed as follows",
+        "hereinafter referred to", "hereinafter called",
         "whereas", "now therefore", "in witness whereof",
         "shall be bound", "binding on both parties",
         "employment agreement", "employment contract", "service agreement",
         "tenancy agreement", "rental agreement", "lease agreement",
         "loan agreement", "partnership agreement", "partnership deed",
-        "finance lease", "leasing agreement", "sale agreement",
-        "non-disclosure agreement", "confidentiality agreement",
+        "finance lease", "leasing agreement", "sale and purchase agreement",
+        "non-disclosure agreement", "confidentiality agreement", "nda",
         "employer", "employee", "landlord", "tenant",
-        "lessor", "lessee", "borrower", "lender",
-        "salary", "rent", "deposit", "termination clause",
-        "notice period", "probation", "working hours",
-        "epf", "etf", "gratuity", "maternity leave",
-        "parties hereto", "executed on", "signed on",
-        "the company shall", "the employee shall",
+        "lessor", "lessee", "borrower", "lender", "mortgagor", "mortgagee",
+        "salary", "monthly rent", "security deposit", "termination clause",
+        "notice period", "probationary period", "working hours",
+        "epf", "etf", "gratuity", "maternity leave", "annual leave",
+        "parties hereto", "executed on", "signed by both parties",
+        "the company shall", "the employee shall", "the tenant shall",
+        "the landlord shall", "the borrower shall", "the lender shall",
+        "either party", "both parties", "party agrees",
+        "effective date", "commencement date",
+        "governing law", "jurisdiction clause",
+        "dispute resolution", "arbitration clause",
+        "penalty clause", "liquidated damages",
+        "intellectual property", "confidentiality clause",
+        "force majeure",
     ]
 
     judgment_score = sum(1 for kw in judgment_keywords if kw in text_lower)
     contract_score = sum(1 for kw in contract_keywords if kw in text_lower)
 
-    # Strong judgment patterns (regex) - very specific to court docs
+    # Regex patterns that are unmistakably court/case documents
     judgment_patterns = [
-        r"case\s*no\.?\s*[:\-]?\s*[a-z0-9/]+",
-        r"s\.?c\.?\s*(appeal|application)",
+        r"case\s*no\.?\s*[:\-]?\s*[a-z0-9/\-]+",
+        r"s\.?c\.?\s*(appeal|application|fr)",
         r"c\.?a\.?\s*(appeal|application)",
-        r"(plaintiff|defendant)[\s\-]+(appellant|respondent)",
-        r"before\s+(the\s+)?hon",
-        r"\bv[s/]\.?\s",
-        r"court\s+(of\s+appeal|hereby|held|order)",
+        r"h\.?c\.?\s*(case|no|appeal)",
+        r"(plaintiff|defendant)\s+(vs?\.?|versus)\s+",
+        r"before\s+(the\s+)?(hon|honourable|honourable)",
+        r"court\s+(of\s+appeal|hereby|held|finds|orders)",
         r"(his|her)\s+(lordship|ladyship|honour)",
+        r"in\s+the\s+(supreme|high|district|magistrate|appeal)\s+court",
+        r"bench\s+(of|comprising)",
+        r"(for\s+the\s+)?(plaintiff|defendant|appellant|respondent|petitioner)",
+        r"(i|we)\s+dismiss\s+the\s+(appeal|application|petition)",
+        r"(i|we)\s+allow\s+the\s+(appeal|application|petition)",
+        r"judgment\s+of\s+the\s+court",
+        r"\d{1,2}[\s/\-]\d{1,2}[\s/\-]\d{2,4}\s+(judgment|order)",
     ]
     for pat in judgment_patterns:
         if re.search(pat, text_lower):
-            judgment_score += 3  # Strong boost for regex matches
+            judgment_score += 4
 
-    # If the document is clearly a judgment
-    if judgment_score >= 5 and judgment_score > contract_score:
+    # ── GATE 1: Clearly a court judgment ──────────────────────────────────
+    if judgment_score >= 4:
         return {
             "valid": False,
-            "reason": "This document appears to be a court judgment or case law document, not a contract or agreement. "
-                     "This system is designed to analyze contracts and agreements (employment, rental, consumer, finance leasing, partnership) "
-                     "for compliance with Sri Lankan statutes. Please upload a contract or agreement instead.",
+            "reason": (
+                "This document appears to be a court judgment or case law — not a contract or agreement.\n\n"
+                "The Compliance Checker is designed exclusively for contracts and agreements such as:\n"
+                "• Employment Contracts  • Rental / Tenancy Agreements\n"
+                "• Loan / Finance Leasing Agreements  • Partnership Agreements\n"
+                "• Consumer Protection Agreements  • Microfinance / Pawn Agreements\n\n"
+                "Court judgments, case reports, and tribunal orders cannot be analyzed here."
+            ),
             "detected_type": "court_judgment"
         }
 
-    # --- Other non-contract documents ---
-    other_doc_keywords = {
-        "legislation": ["parliament", "gazette", "enacted by", "bill no", "act no", "ordinance no",
-                        "be it enacted", "amendment to", "legislative", "parliamentary"],
-        "academic_paper": ["abstract", "methodology", "literature review", "bibliography",
-                          "references", "hypothesis", "research findings", "conclusion",
-                          "peer review", "journal of", "vol.", "doi:"],
-        "news_article": ["breaking news", "reported by", "according to sources",
-                        "press release", "media statement", "news desk"],
+    # ── 2. OTHER NON-CONTRACT DOCUMENT TYPES ──────────────────────────────
+    other_doc_types = {
+        "legislation": {
+            "keywords": [
+                "parliament", "gazette", "enacted by", "bill no", "act no", "ordinance no",
+                "be it enacted", "amendment to", "legislative", "parliamentary",
+                "minister of", "cabinet", "government of sri lanka", "national assembly",
+                "statutory", "regulation no", "schedule to the act",
+            ],
+            "label": "a legislative or statutory instrument (Act/Regulation/Gazette)",
+            "threshold": 3,
+        },
+        "police_report": {
+            "keywords": [
+                "police station", "officer in charge", "b report", "information report",
+                "first information report", "fir", "arrested", "charge sheet",
+                "remanded in custody", "police constable", "sub inspector",
+                "detective", "crime investigation", "ois report",
+            ],
+            "label": "a police report or crime investigation document",
+            "threshold": 3,
+        },
+        "medical_document": {
+            "keywords": [
+                "diagnosis", "treatment", "prescription", "patient name", "ward",
+                "doctor", "physician", "hospital", "clinical", "medical history",
+                "blood pressure", "dosage", "symptoms", "examination findings",
+                "discharge summary", "radiology",
+            ],
+            "label": "a medical or clinical document",
+            "threshold": 4,
+        },
+        "academic_paper": {
+            "keywords": [
+                "abstract", "methodology", "literature review", "bibliography",
+                "hypothesis", "research findings", "peer review", "journal of",
+                "doi:", "vol.", "issue no", "citation", "et al.", "ibid",
+            ],
+            "label": "an academic or research paper",
+            "threshold": 4,
+        },
+        "news_or_media": {
+            "keywords": [
+                "breaking news", "reported by", "according to sources",
+                "press release", "media statement", "news desk", "journalist",
+                "editorial", "headline", "publication date", "byline",
+            ],
+            "label": "a news article, press release, or media document",
+            "threshold": 3,
+        },
+        "government_circular": {
+            "keywords": [
+                "circular no", "ministry of", "department of", "director general",
+                "secretary to the ministry", "government circular", "public notice",
+                "gazette extraordinary", "all heads of departments",
+            ],
+            "label": "a government circular or administrative notice",
+            "threshold": 3,
+        },
     }
 
-    for doc_type, keywords in other_doc_keywords.items():
-        other_score = sum(1 for kw in keywords if kw in text_lower)
-        if other_score >= 4 and other_score > contract_score:
-            type_labels = {
-                "legislation": "a legislative/statutory document",
-                "academic_paper": "an academic or research paper",
-                "news_article": "a news article or press release",
-            }
+    for doc_type, cfg in other_doc_types.items():
+        score = sum(1 for kw in cfg["keywords"] if kw in text_lower)
+        if score >= cfg["threshold"] and score > contract_score:
             return {
                 "valid": False,
-                "reason": f"This document appears to be {type_labels[doc_type]}, not a contract or agreement. "
-                         "This system is designed to analyze contracts and agreements for compliance with Sri Lankan statutes. "
-                         "Please upload a contract or agreement instead.",
+                "reason": (
+                    f"This document appears to be {cfg['label']} — not a contract or agreement.\n\n"
+                    "The Compliance Checker only analyzes contracts and agreements such as:\n"
+                    "• Employment Contracts  • Rental / Tenancy Agreements\n"
+                    "• Loan / Finance Leasing Agreements  • Partnership Agreements\n"
+                    "• Consumer Protection Agreements  • Microfinance / Pawn Agreements\n\n"
+                    "Please upload a valid contract or agreement."
+                ),
                 "detected_type": doc_type
             }
 
-    # If very little contract-like content found and text is substantial
-    if len(text.strip()) > 200 and contract_score == 0 and judgment_score == 0:
+    # ── GATE 2: Positive contract gate — must have enough contract signals ──
+    # Even if no other type was detected, text must look like a real contract
+    if contract_score < 3:
+        if len(text_stripped) < 500:
+            return {
+                "valid": False,
+                "reason": (
+                    "This document is too short or does not contain enough contract-related content to analyze.\n\n"
+                    "Please upload a complete contract or agreement."
+                ),
+                "detected_type": "insufficient_content"
+            }
         return {
             "valid": False,
-            "reason": "This document does not appear to be a contract or agreement. "
-                     "No contract-related terms were detected. Please upload a valid contract or agreement "
-                     "(employment, rental, consumer, finance leasing, or partnership).",
-            "detected_type": "unknown"
+            "reason": (
+                "This document does not appear to be a contract or agreement.\n\n"
+                "No contract-specific terms were found (e.g. parties, agreement clauses, obligations, "
+                "signatures, commencement date).\n\n"
+                "This system only analyzes contracts and agreements such as:\n"
+                "• Employment Contracts  • Rental / Tenancy Agreements\n"
+                "• Loan / Finance Leasing Agreements  • Partnership Agreements\n"
+                "• Consumer Protection Agreements  • Microfinance / Pawn Agreements"
+            ),
+            "detected_type": "not_a_contract"
         }
 
     return {"valid": True, "reason": "", "detected_type": "contract"}
@@ -288,12 +396,27 @@ def check_contract(request: ContractRequest):
 # ----------------------------
 @app.post("/upload-pdf")
 async def upload_pdf(file: UploadFile = File(...)):
-    pdf_bytes = await file.read()
-    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-    full_text = ""
-    for page in doc:
-        full_text += page.get_text()
-    doc.close()
+    file_bytes = await file.read()
+    filename_lower = (file.filename or "").lower()
+
+    if filename_lower.endswith(".docx"):
+        if python_docx is None:
+            raise HTTPException(status_code=400, detail="DOCX support unavailable on this server.")
+        try:
+            doc_x = python_docx.Document(_io.BytesIO(file_bytes))
+            full_text = "\n".join(para.text for para in doc_x.paragraphs)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid DOCX file. Please upload a valid .docx document.")
+    else:
+        try:
+            doc = fitz.open(stream=file_bytes, filetype="pdf")
+        except Exception:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=400, detail="Uploaded file is not a valid PDF. Please upload a PDF file or use the text check endpoint.")
+        full_text = ""
+        for page in doc:
+            full_text += page.get_text()
+        doc.close()
 
     # Validate document type before running compliance check
     validation = validate_document_is_contract(full_text)

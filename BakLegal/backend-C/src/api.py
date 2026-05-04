@@ -102,7 +102,12 @@ def _save_analysis(filename: str, document_type: str, result: dict, text_snippet
     analysis_id = str(uuid.uuid4())
     present = result.get("present_mandatory", [])
     missing = result.get("missing_mandatory", [])
-    score = len(present) / max(len(present) + len(missing), 1) * 100
+    clauses = result.get("clauses", [])
+    # Combined score: 60% clause compliance + 40% mandatory clause presence
+    entailment_count = sum(1 for c in clauses if c.get("prediction") == "entailment")
+    clause_ratio    = entailment_count / max(len(clauses), 1)
+    mandatory_ratio = len(present) / max(len(present) + len(missing), 1)
+    score = (clause_ratio * 0.6 + mandatory_ratio * 0.4) * 100
     conn = _get_conn()
     conn.execute(
         "INSERT INTO analyses (id, filename, document_type, domain, analyzed_at, compliance_score, text_snippet, clauses, present_mandatory, missing_mandatory) VALUES (?,?,?,?,?,?,?,?,?,?)",

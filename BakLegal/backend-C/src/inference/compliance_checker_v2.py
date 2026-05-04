@@ -892,7 +892,7 @@ CLAUSE_CATEGORIES = {
         "laws": ["Employees' Provident Fund Act", "Employees' Trust Fund Act"]
     },
     "working_hours": {
-        "keywords": ["working hours", "hours of work", "8 hours", "45 hours", "overtime", "rest", "meal"],
+        "keywords": ["working hours", "hours of work", "8 hours", "45 hours", "overtime", "rest day", "rest period", "meal break"],
         "laws": ["Shop and Office Employees Act"]
     },
     "leave": {
@@ -1179,7 +1179,7 @@ def classify_clause(clause_text, domain=None):
     domain_priority = {
         "rental": ["rent", "tenancy", "eviction", "security_deposit", "maintenance", "subletting"],
         "consumer": ["loan", "interest", "repayment", "sale", "warranty", "hire_purchase"],
-        "employment": ["salary", "epf_etf", "working_hours", "leave", "termination", "maternity"],
+        "employment": ["salary", "epf_etf", "termination", "maternity", "leave", "working_hours"],
         "finance_leasing": ["lease_term", "lease_rental", "lease_payment", "late_payment_charge", 
                             "early_termination", "repossession", "vehicle_maintenance", "vehicle_insurance",
                             "lease_assignment", "lessor_liability", "lease_dispute", "lease_governing_law"],

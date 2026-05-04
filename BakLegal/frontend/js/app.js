@@ -2077,11 +2077,14 @@ function cmpRenderResultPage(data) {
   const entailment    = clauses.filter(c => c.prediction === "entailment");
   const contradiction = clauses.filter(c => c.prediction === "contradiction");
 
-  // Calculate real legal compliance score based on actual clause analysis
-  const score = (entailment.length / Math.max(clauses.length, 1)) * 100;
-
   const present = data.present_mandatory || [];
   const missing = data.missing_mandatory || [];
+
+  // Combined score: 60% clause compliance + 40% mandatory clause presence
+  const clauseRatio    = entailment.length / Math.max(clauses.length, 1);
+  const mandatoryRatio = present.length / Math.max(present.length + missing.length, 1);
+  const score          = (clauseRatio * 0.6 + mandatoryRatio * 0.4) * 100;
+  window._cmpScore = score; // store globally for detail-page strip
   const docType       = data.document_type || data.domain || "Legal Document";
   const dtLabel       = docType.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) + " Contract";
 
@@ -2114,7 +2117,7 @@ function cmpRenderResultPage(data) {
     <div class="cmp-sum-card cmp-sum-compliant cmp-sum-clickable" data-clause-page="compliant">
       <div class="cmp-sum-num">${entailment.length}</div>
       <div class="cmp-sum-label">Compliant</div>
-      <div class="cmp-sum-pct">${((entailment.length / Math.max(clauses.length, 1)) * 100).toFixed(1)}%</div>
+      <div class="cmp-sum-pct">${score.toFixed(1)}%</div>
       <div class="cmp-sum-view-link" style="color:#2e7d32">View →</div>
     </div>
     <div class="cmp-sum-card cmp-sum-violation cmp-sum-clickable" data-clause-page="noncompliant">
@@ -2173,6 +2176,7 @@ function cmpRenderResultPage(data) {
   window._cmpPresent = present;
   window._cmpMissing = missing;
   window._cmpData = data;
+  window._cmpDomain = (data.document_type || data.domain || "").toLowerCase();
 
   // Ensure main page visible, detail page hidden
   document.getElementById("cmp-main-page").style.display = "block";
@@ -2190,6 +2194,337 @@ function cmpFilterClauses(type) {
 }
 
 /* ── Render clause cards ─────────────────────────────────────────────────── */
+/* ── All-domain category lookup (from MANDATORY_CLAUSES in compliance_checker_v2.py) ── */
+// CMP_DOMAIN_CATS: keyed by MANDATORY_CLAUSES ids — one entry per domain
+// These are the exact ids used in present_mandatory / missing_mandatory from the API
+const CMP_DOMAIN_CATS = {
+  // 1. Employment (14 mandatory)
+  "Employment": {
+    salary:                  "Salary / Compensation",
+    working_hours:           "Working Hours",
+    epf:                     "EPF Contributions",
+    etf:                     "ETF Contributions",
+    leave_policy:            "Leave Policy",
+    termination:             "Termination Clause",
+    probation:               "Probation Period",
+    job_description:         "Job Description",
+    maternity:               "Maternity Benefits",
+    overtime:                "Overtime Provisions",
+    gratuity:                "Gratuity Entitlement",
+    notice_period:           "Notice Period & Severance",
+    minimum_wage:            "Minimum Wages",
+    employee_identification: "Employee Name & Job Title"
+  },
+  // 2. Rental / Lease (8 mandatory)
+  "Rental / Lease": {
+    parties:             "Parties Names & Addresses",
+    property_description:"Description of Property",
+    rent_amount:         "Rent Amount & Payment Method",
+    duration:            "Duration of Tenancy",
+    security_deposit:    "Security Deposit",
+    termination_notice:  "Termination / Notice Period",
+    rights_obligations:  "Rights & Obligations",
+    registration:        "Registration of Agreement"
+  },
+  // 3. Finance Leasing (6 mandatory)
+  "Finance Leasing": {
+    lease_rental:       "Lease Rental Amount",
+    lease_term:         "Lease Term / Period",
+    asset_description:  "Equipment / Vehicle Description",
+    insurance:          "Insurance Requirements",
+    repossession:       "Repossession Rights",
+    ownership_transfer: "Ownership Transfer"
+  },
+  // 4. Consumer / Loan (12 mandatory)
+  "Consumer / Loan": {
+    loan_amount:            "Loan / Principal Amount",
+    interest_rate:          "Interest Rate & Calculation",
+    repayment_schedule:     "Repayment Schedule",
+    borrower_rights:        "Borrower Rights",
+    late_payment_penalty:   "Penalty for Late Payment",
+    debt_recovery:          "Debt Recovery Procedures",
+    assignment_of_debt:     "Assignment of Debt",
+    written_modifications:  "Written Modifications Only",
+    electronic_validity:    "Electronic Communications",
+    limitation_of_liability:"Limitation of Liability",
+    signatures:             "Signatures of Parties",
+    sale_delivery_terms:    "Sale / Delivery of Goods Terms"
+  },
+  // 5. Property Sale (7 mandatory)
+  "Property Sale": {
+    property_parties:    "Parties (Buyer & Seller)",
+    property_description:"Property Description",
+    purchase_price:      "Purchase Price & Payment Terms",
+    title_clear:         "Clear Title & Ownership",
+    possession_date:     "Date of Possession",
+    stamp_duty:          "Stamp Duty & Registration",
+    signatures_witnesses:"Signatures & Witnesses"
+  },
+  // 6. Partnership (7 mandatory)
+  "Partnership": {
+    partners:             "Partners Names & Capital",
+    profit_sharing:       "Profit / Loss Sharing Ratio",
+    duties:               "Duties & Responsibilities",
+    decision_making:      "Decision-Making Authority",
+    partnership_duration: "Duration of Partnership",
+    dissolution:          "Termination / Dissolution Terms",
+    partner_signatures:   "Signatures of All Partners"
+  },
+  // 7. Consumer Protection (7 mandatory)
+  "Consumer Protection": {
+    parties_cp:          "Parties Identification",
+    goods_description:   "Description of Goods / Services",
+    price_disclosure:    "Price Disclosure",
+    warranty_guarantee:  "Warranty & Guarantee",
+    return_refund:       "Return & Refund Policy",
+    complaint_mechanism: "Complaint Mechanism",
+    unfair_terms:        "No Unfair Contract Terms"
+  },
+  // 8. Microfinance (7 mandatory)
+  "Microfinance": {
+    borrower_mfi:    "Borrower & Lender Identification",
+    loan_amount_mfi: "Loan Amount",
+    interest_rate_mfi:"Interest Rate Disclosure",
+    repayment_mfi:   "Repayment Terms",
+    disclosure_mfi:  "Full Disclosure",
+    no_coercion_mfi: "Voluntary & No Coercion",
+    signatures_mfi:  "Signatures"
+  },
+  // 9. Pawn / Pledge (7 mandatory)
+  "Pawn / Pledge": {
+    pledgor_pledgee: "Pledgor & Pawnbroker Identification",
+    pledge_item:     "Description of Pledged Item",
+    loan_amount_pawn:"Loan Amount",
+    interest_pawn:   "Interest Rate",
+    redemption:      "Redemption Terms",
+    forfeiture:      "Forfeiture & Sale Rights",
+    pawn_ticket:     "Pawn Ticket Issued"
+  },
+  // 10. Electronic (8 mandatory)
+  "Electronic": {
+    parties_elec:        "Parties Identification",
+    service_description: "Description of Goods / Services",
+    price_elec:          "Price & Payment Terms",
+    electronic_signature:"Electronic Signature Validity",
+    delivery_terms_elec: "Delivery Terms",
+    return_policy_elec:  "Return & Refund Policy",
+    data_privacy:        "Data Privacy & Security",
+    dispute_elec:        "Dispute Resolution"
+  },
+  // General
+  "General": {
+    parties:    "Parties Identification",
+    terms:      "Terms & Conditions",
+    signatures: "Signatures"
+  }
+};
+
+// Maps MANDATORY_CLAUSES id → actual classifier category ids (from CLAUSE_CATEGORIES)
+// Needed because the dropdown uses mandatory ids but clause cards use classifier ids
+const CMP_MANDATORY_FILTER_MAP = {
+  // Employment
+  salary:                  ["salary"],
+  working_hours:           ["working_hours"],
+  epf:                     ["epf_etf", "epf"],
+  etf:                     ["epf_etf", "etf"],
+  leave_policy:            ["leave", "annual_leave"],
+  termination:             ["termination", "termination_notice", "instant_dismissal", "retrenchment"],
+  probation:               ["probation"],
+  job_description:         ["assignment_of_duties", "commencement", "identification"],
+  maternity:               ["maternity"],
+  overtime:                ["working_hours", "overtime"],
+  gratuity:                ["gratuity"],
+  notice_period:           ["termination_notice", "termination"],
+  minimum_wage:            ["minimum_wage", "salary"],
+  employee_identification: ["identification", "commencement"],
+  // Rental
+  parties:                 ["rent", "tenancy", "identification"],
+  property_description:    ["tenancy", "rent"],
+  rent_amount:             ["rent", "lease_rental"],
+  duration:                ["tenancy", "lease_term"],
+  security_deposit:        ["security_deposit"],
+  termination_notice:      ["termination", "eviction", "notice_eviction"],
+  rights_obligations:      ["tenant_rights", "maintenance", "essential_services"],
+  registration:            ["lease_registration", "property_deed_registration"],
+  // Finance Leasing
+  lease_rental:            ["lease_rental", "lease_payment"],
+  lease_term:              ["lease_term"],
+  asset_description:       ["vehicle_maintenance", "vehicle_insurance"],
+  insurance:               ["vehicle_insurance"],
+  repossession:            ["repossession"],
+  ownership_transfer:      ["lease_assignment", "property_title"],
+  // Consumer / Loan
+  loan_amount:             ["loan"],
+  interest_rate:           ["interest", "excessive_interest", "compound_interest"],
+  repayment_schedule:      ["repayment"],
+  borrower_rights:         ["early_settlement", "cooling_off", "disclosure"],
+  late_payment_penalty:    ["late_payment_charge", "unfair_terms"],
+  debt_recovery:           ["loan", "unfair_terms"],
+  assignment_of_debt:      ["lease_assignment", "general"],
+  written_modifications:   ["general"],
+  electronic_validity:     ["electronic_contract", "electronic_contract_validity"],
+  limitation_of_liability: ["unfair_terms", "lessor_liability"],
+  signatures:              ["administrative"],
+  sale_delivery_terms:     ["sale", "ecommerce_delivery"],
+  // Property Sale
+  property_parties:        ["property_parties"],
+  purchase_price:          ["property_price", "property_payment_terms"],
+  title_clear:             ["property_title"],
+  possession_date:         ["property_possession"],
+  stamp_duty:              ["property_deed_registration"],
+  signatures_witnesses:    ["administrative"],
+  // Partnership
+  partners:                ["partnership_parties", "partnership_capital"],
+  profit_sharing:          ["partnership_profit", "partnership_profit_sharing"],
+  duties:                  ["partnership_management"],
+  decision_making:         ["partnership_voting", "partnership_management"],
+  partnership_duration:    ["tenancy", "general"],
+  dissolution:             ["partnership_dissolution"],
+  partner_signatures:      ["administrative"],
+  // Consumer Protection
+  parties_cp:              ["consumer_protection_terms", "identification"],
+  goods_description:       ["consumer_quality", "sale", "ecommerce_product"],
+  price_disclosure:        ["consumer_protection_terms", "ecommerce_price"],
+  warranty_guarantee:      ["consumer_warranty", "warranty"],
+  return_refund:           ["consumer_returns_refunds", "ecommerce_returns"],
+  complaint_mechanism:     ["consumer_complaints", "ecommerce_consumer_dispute"],
+  unfair_terms:            ["unfair_terms"],
+  // Microfinance
+  borrower_mfi:            ["microfinance_parties"],
+  loan_amount_mfi:         ["microfinance_loan_amount", "loan"],
+  interest_rate_mfi:       ["microfinance_interest", "interest"],
+  repayment_mfi:           ["microfinance_repayment", "repayment"],
+  disclosure_mfi:          ["microfinance_disclosure", "disclosure"],
+  no_coercion_mfi:         ["administrative", "general"],
+  signatures_mfi:          ["administrative"],
+  // Pawn / Pledge
+  pledgor_pledgee:         ["pawn_parties"],
+  pledge_item:             ["pawn_goods"],
+  loan_amount_pawn:        ["pawn_interest", "loan"],
+  interest_pawn:           ["pawn_interest", "interest"],
+  redemption:              ["pawn_redemption"],
+  forfeiture:              ["pawn_goods", "unfair_terms"],
+  pawn_ticket:             ["pawn_ticket"],
+  // Electronic
+  parties_elec:            ["electronic_contract", "identification"],
+  service_description:     ["ecommerce_product", "ecommerce_product_description"],
+  price_elec:              ["ecommerce_price", "ecommerce_payment", "ecommerce_payment_security"],
+  electronic_signature:    ["electronic_digital_signature", "electronic_contract", "electronic_contract_validity"],
+  delivery_terms_elec:     ["ecommerce_delivery"],
+  return_policy_elec:      ["ecommerce_returns"],
+  data_privacy:            ["ecommerce_privacy", "ecommerce_privacy_data", "ecommerce_confidentiality"],
+  dispute_elec:            ["ecommerce_consumer_dispute", "lease_dispute"],
+  // General
+  terms:                   ["general", "entire_agreement"]
+};
+// flat lookup: category_id → display name
+const CMP_CAT_LABEL = Object.values(CMP_DOMAIN_CATS).reduce((acc, m) => Object.assign(acc, m), {});
+
+/* ── Clause search & category filter ─────────────────────────────────────── */
+function _cmpInitClauseSearch(allClauses) {
+  const searchInput = document.getElementById("cmp-clause-search");
+  const clearBtn    = document.getElementById("cmp-clause-search-clear");
+  const catSelect   = document.getElementById("cmp-clause-category");
+  const infoEl      = document.getElementById("cmp-clause-search-info");
+
+  if (!searchInput || !catSelect) return;
+
+  // Reset fields
+  searchInput.value = "";
+  clearBtn.style.display = "none";
+  infoEl.textContent = "";
+
+  // Map API domain string → CMP_DOMAIN_CATS key
+  const DOMAIN_KEY_MAP = {
+    employment:         "Employment",
+    rental:             "Rental / Lease",
+    finance_leasing:    "Finance Leasing",
+    consumer:           "Consumer / Loan",
+    property:           "Property Sale",
+    partnership:        "Partnership",
+    consumer_protection:"Consumer Protection",
+    microfinance:       "Microfinance",
+    pawn:               "Pawn / Pledge",
+    electronic:         "Electronic",
+    general:            "General"
+  };
+  const rawDomain  = (window._cmpDomain || "").toLowerCase();
+  const domainKey  = DOMAIN_KEY_MAP[rawDomain] || null;
+  const domainCats = domainKey ? CMP_DOMAIN_CATS[domainKey] : null;
+
+  // Build dropdown: ALL categories for the document's domain
+  let optionsHTML = `<option value="">All Categories</option>`;
+  if (domainCats) {
+    const opts = Object.entries(domainCats)
+      .map(([id, label]) => `<option value="${id}">${label}</option>`).join("");
+    optionsHTML += `<optgroup label="${domainKey}">${opts}</optgroup>`;
+  } else {
+    // Fallback: show all domains (unknown document type)
+    for (const [domain, catMap] of Object.entries(CMP_DOMAIN_CATS)) {
+      const opts = Object.entries(catMap)
+        .map(([id, label]) => `<option value="${id}">${label}</option>`).join("");
+      optionsHTML += `<optgroup label="${domain}">${opts}</optgroup>`;
+    }
+  }
+
+  // Replace elements to clear old event listeners
+  function replaceEl(el) {
+    const clone = el.cloneNode(false); // shallow clone — no children
+    el.parentNode.replaceChild(clone, el);
+    return clone;
+  }
+  const inp = replaceEl(searchInput);
+  const clr = replaceEl(clearBtn);
+  const sel = replaceEl(catSelect);
+  sel.innerHTML = optionsHTML;
+
+  function applyFilter() {
+    const q   = inp.value.trim().toLowerCase();
+    const cat = sel.value; // raw id like "working_hours"
+    clr.style.display = q ? "inline" : "none";
+
+    const filtered = allClauses.filter(c => {
+      // Use filter map: mandatory id → set of classifier category ids
+      let matchCat = true;
+      if (cat) {
+        const classifierIds = CMP_MANDATORY_FILTER_MAP[cat];
+        if (classifierIds) {
+          matchCat = classifierIds.includes(c.category || "");
+        } else {
+          matchCat = (c.category || "") === cat;
+        }
+      }
+      if (!matchCat) return false;
+      if (!q) return true;
+      const hay = [
+        c.clause         || "",
+        c.law_reference  || "",
+        c.category       || "",
+        CMP_CAT_LABEL[c.category] || "",
+        c.matched_rule   || "",
+        c.recommendation || ""
+      ].join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+
+    const catLabel = cat ? (CMP_CAT_LABEL[cat] || cat) : "";
+    infoEl.textContent = (q || cat)
+      ? `${catLabel ? '"' + catLabel + '" — ' : ""}Showing ${filtered.length} of ${allClauses.length} clause${allClauses.length !== 1 ? "s" : ""}`
+      : "";
+    cmpRenderClauses(filtered);
+  }
+
+  inp.addEventListener("input", applyFilter);
+  sel.addEventListener("change", applyFilter);
+  clr.addEventListener("click", () => {
+    inp.value = "";
+    clr.style.display = "none";
+    infoEl.textContent = "";
+    applyFilter();
+    inp.focus();
+  });
+}
+
 function cmpRenderClauses(clauses) {
   const listEl = document.getElementById("cmp-clause-list");
   listEl.innerHTML = clauses.map((c, i) => {
@@ -2227,24 +2562,25 @@ function cmpRenderClauses(clauses) {
         </div>
 
         <div class="cmp-cl-conf-row">
-          <span class="cmp-cl-field-label">CONFIDENCE SCORE</span>
+          <span class="cmp-cl-field-label">CONFIDENCE</span>
           <div class="cmp-cl-conf-track">
             <div class="cmp-cl-conf-fill" style="width:${confPct}%;background:${confColor}"></div>
-            <span class="cmp-cl-conf-pct">${confPct.toFixed(1)}%</span>
           </div>
+          <span class="cmp-cl-conf-pct" style="color:${confColor}">${confPct.toFixed(1)}%</span>
         </div>
 
-        ${c.matched_rule ? `
-        <div class="cmp-cl-provision" style="background:${provBg}">
-          <span class="cmp-cl-field-label"> APPLICABLE LAW PROVISION</span>
-          <p>${c.matched_rule}</p>
-        </div>` : ""}
-
-        ${c.recommendation ? `
-        <div class="cmp-cl-recommendation" style="background:${recBg}">
-          <span class="cmp-cl-field-label"> ANALYSIS &amp; RECOMMENDATION</span>
-          <p>${c.recommendation}</p>
-        </div>` : ""}
+        <div class="cmp-cl-panel-row${(c.matched_rule && c.recommendation) ? '' : ' single'}">
+          ${c.matched_rule ? `
+          <div class="cmp-cl-provision">
+            <span class="cmp-cl-field-label">APPLICABLE LAW PROVISION</span>
+            <p>${c.matched_rule}</p>
+          </div>` : ""}
+          ${c.recommendation ? `
+          <div class="cmp-cl-recommendation${isViolation ? ' violation' : ''}">
+            <span class="cmp-cl-field-label">ANALYSIS &amp; RECOMMENDATION</span>
+            <p>${c.recommendation}</p>
+          </div>` : ""}
+        </div>
       </div>
     </div>`;
   }).join("");
@@ -2351,7 +2687,7 @@ function cmpShowClausePage(type) {
       <div class="cmp-sum-card cmp-sum-compliant cmp-sum-clickable${type === 'compliant' ? ' cmp-sum-active' : ''}" data-dpage="compliant">
         <div class="cmp-sum-num">${eLen}</div>
         <div class="cmp-sum-label">Compliant</div>
-        <div class="cmp-sum-pct" style="color:#2e7d32">${((eLen / maxC) * 100).toFixed(1)}%</div>
+        <div class="cmp-sum-pct" style="color:#2e7d32">${(window._cmpScore != null ? window._cmpScore : (eLen / maxC * 100)).toFixed(1)}%</div>
         <div class="cmp-sum-view-link" style="color:#2e7d32">${type === 'compliant' ? 'Viewing →' : 'View →'}</div>
       </div>
       <div class="cmp-sum-card cmp-sum-violation cmp-sum-clickable${type === 'noncompliant' ? ' cmp-sum-active' : ''}" data-dpage="noncompliant">
@@ -2397,6 +2733,9 @@ function cmpShowClausePage(type) {
       title    = ` All Clauses (${clauses.length})`;
     }
     titleEl.textContent = title;
+    // Store current clause set for search/filter
+    window._cmpCurrentClauses = filtered;
+    _cmpInitClauseSearch(filtered);
     cmpRenderClauses(filtered);
   }
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -2616,7 +2955,17 @@ async function cmpLoadHistory() {
       return;
     }
     listEl.innerHTML = items.map(a => {
-      const sc = (a.compliance_score || 0);
+      // Always recalculate with combined formula from raw data so score matches results page exactly.
+      // (Stored compliance_score may be from old formula — ignore it when raw data is available.)
+      const clauses  = a.clauses || [];
+      const present  = a.present_mandatory || [];
+      const missing  = a.missing_mandatory || [];
+      const sc = clauses.length > 0 ? (() => {
+        const entCount = clauses.filter(c => c.prediction === "entailment").length;
+        const clauseR  = entCount / Math.max(clauses.length, 1);
+        const mandR    = present.length / Math.max(present.length + missing.length, 1);
+        return (clauseR * 0.6 + mandR * 0.4) * 100;
+      })() : (a.compliance_score || 0);
       const scColor = sc >= 80 ? "#2e7d32" : sc >= 50 ? "#e65100" : "#b71c1c";
       const aid = a.id || a._id || "";
       return `
@@ -2626,7 +2975,7 @@ async function cmpLoadHistory() {
             <strong style="font-size:.93rem">${a.filename || "Unnamed"}</strong>
           </div>
           <div style="display:flex;align-items:center;gap:.6rem;flex-shrink:0">
-            <span style="font-size:.82rem;font-weight:700;color:#fff;background:${scColor};padding:.2rem .6rem;border-radius:99px">${sc.toFixed(0)}%</span>
+            <span style="font-size:.82rem;font-weight:700;color:#fff;background:${scColor};padding:.2rem .6rem;border-radius:99px">${sc.toFixed(1)}%</span>
             <button data-cmp-action="view" data-cmp-id="${aid}" style="padding:.35rem;border:1px solid var(--primary);color:var(--primary);background:transparent;border-radius:6px;cursor:pointer;line-height:1;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center" title="View full report">
               <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>

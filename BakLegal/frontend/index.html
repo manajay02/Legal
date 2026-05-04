@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=33"/>
+  <link rel="stylesheet" href="css/style.css?v=40"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
 </head>
@@ -552,6 +552,18 @@
           <div class="cmp-summary-grid" id="cmp-detail-summary-strip" style="margin-bottom:1.5rem"></div>
           <div class="cmp-clause-section" id="cmp-detail-clause-section">
             <h3 class="cmp-section-heading" id="cmp-detail-title">&#x1F4CB; Clauses</h3>
+            <!-- Search & filter bar -->
+            <div class="cmp-clause-search-bar" id="cmp-clause-search-bar">
+              <div class="cmp-clause-search-input-wrap">
+                <svg class="cmp-clause-search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="cmp-clause-search" class="cmp-clause-search-input" placeholder="Search clauses, categories, or law references..." autocomplete="off">
+                <button class="cmp-clause-search-clear" id="cmp-clause-search-clear" style="display:none" title="Clear">&times;</button>
+              </div>
+              <select id="cmp-clause-category" class="cmp-clause-cat-select">
+                <option value="">All Categories</option>
+              </select>
+            </div>
+            <div class="cmp-clause-search-info" id="cmp-clause-search-info"></div>
             <div id="cmp-clause-list"></div>
           </div>
 
@@ -744,7 +756,7 @@
     }
   </script>
 
-  <script src="js/app.js?v=47"></script>
+  <script src="js/app.js?v=61"></script>
 </body>
 </html>
 

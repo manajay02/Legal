@@ -1924,6 +1924,12 @@ document.getElementById("btn-cmp-check")?.addEventListener("click", async () => 
     return;
   }
 
+  // File-type validation
+  if (pdfFile && !pdfFile.name.toLowerCase().endsWith(".pdf")) {
+    Swal.fire({ icon: 'warning', title: 'Invalid File Type', text: 'Only PDF files are supported. Please upload a .pdf document.', confirmButtonColor: '#1a3a5c' });
+    return;
+  }
+
   // Text content validation — must look like a legal/contract document
   if (!pdfFile && text) {
     const legalKeywords = ['contract', 'agreement', 'party', 'parties', 'clause', 'terms', 'conditions',
@@ -1976,7 +1982,7 @@ document.getElementById("btn-cmp-check")?.addEventListener("click", async () => 
     if (data.valid === false) {
       cmpStatus(statusEl,
         `<div style="display:flex;align-items:flex-start;gap:.75rem">`
-        + `<span style="font-size:1.5rem;line-height:1">�</span>`
+        + `<span style="font-size:1.5rem;line-height:1"> </span>`
         + `<div>`
         + `<strong style="font-size:1rem">This document cannot be analyzed</strong><br>`
         + `<span style="font-size:.88rem;opacity:.85">${data.reason}</span>`
@@ -2079,7 +2085,9 @@ function cmpRenderResultPage(data) {
   const actionRow = document.getElementById("cmp-action-row");
   actionRow.innerHTML = `
     <div class="cmp-action-card" data-action="missing">
-      <div class="cmp-action-icon"></div>
+      <div class="cmp-action-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/><polyline points="9 9 10 9"/></svg>
+      </div>
       <div class="cmp-action-info">
         <strong>Mandatory Clauses</strong>
         <p>View required clauses and missing items</p>
@@ -2091,7 +2099,9 @@ function cmpRenderResultPage(data) {
       <span class="cmp-action-arrow">→</span>
     </div>
     <div class="cmp-action-card" data-action="acts">
-      <div class="cmp-action-icon"></div>
+      <div class="cmp-action-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </div>
       <div class="cmp-action-info">
         <strong>Download Acts</strong>
         <p>Access official Sri Lankan legislation PDFs</p>
@@ -2195,25 +2205,29 @@ function cmpRenderMandatory(present, missing) {
   document.getElementById("cmp-present-count").textContent = `${present.length} Found`;
   document.getElementById("cmp-present-grid").innerHTML = present.map(c => `
     <div class="cmp-mand-card cmp-mand-present">
-      <div class="cmp-mand-card-icon"></div>
+      <div class="cmp-mand-card-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
       <div class="cmp-mand-card-body">
         <div class="cmp-mand-card-title">${c.clause || c.id}</div>
         <div class="cmp-mand-card-desc">${c.legal_basis || ''}</div>
       </div>
     </div>
-  `).join("") || '<p style="color:rgba(255,255,255,.7);font-size:.88rem;padding:.5rem 0">No present mandatory clauses detected.</p>';
+  `).join("") || '<p style="color:var(--muted);font-size:.88rem;padding:.5rem 0">No present mandatory clauses detected.</p>';
 
   // Missing
   document.getElementById("cmp-missing-count").textContent = `${missing.length} Missing`;
   document.getElementById("cmp-missing-grid").innerHTML = missing.map(c => `
     <div class="cmp-mand-card cmp-mand-missing">
-      <div class="cmp-mand-card-icon"></div>
+      <div class="cmp-mand-card-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+      </div>
       <div class="cmp-mand-card-body">
         <div class="cmp-mand-card-title">${c.clause || c.id}</div>
         <div class="cmp-mand-card-desc">${c.legal_basis || c.rule || ''}</div>
       </div>
     </div>
-  `).join("") || '<p style="color:rgba(255,255,255,.7);font-size:.88rem;padding:.5rem 0">No missing mandatory clauses — great!</p>';
+  `).join("") || '<p style="color:var(--muted);font-size:.88rem;padding:.5rem 0">No missing mandatory clauses — great!</p>';
 }
 
 /* ── Back to upload ──────────────────────────────────────────────────────── */

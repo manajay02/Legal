@@ -170,7 +170,7 @@ def predict(premise, hypothesis):
 
     Returns:
         {
-            "status": "🟢 Compliant" or "🔴 Violation" or "🟡 Needs Review",
+            "status": "🟢 Compliant" or "🔴 Violation",
             "confidence": float (0-100),
             "label_id": int,
             "all_probs": dict with all label probabilities
@@ -180,7 +180,7 @@ def predict(premise, hypothesis):
         # Model not available — calculate varied confidence based on text
         confidence = _calculate_fallback_confidence(premise, hypothesis)
         return {
-            "status": "🟡 Needs Review",
+            "status": "� Needs Review",
             "confidence": confidence,
             "label_id": 1,
             "all_probs": {}
@@ -223,7 +223,7 @@ def predict(premise, hypothesis):
     #
     # For 3-label model (standard NLI):
     # 0 = Contradiction (Violation)
-    # 1 = Neutral (Needs Review)
+    # 1 = Neutral (mapped to Compliant or Violation by comparing label 0 vs 2 probs)
     # 2 = Entailment (Compliant)
 
     if _num_labels == 3:
@@ -242,13 +242,21 @@ def predict(premise, hypothesis):
                 "label_id": prediction,
                 "all_probs": all_probs
             }
-        else:  # Neutral (prediction == 1)
-            return {
-                "status": "🟡 Needs Review",
-                "confidence": round(confidence, 2),
-                "label_id": prediction,
-                "all_probs": all_probs
-            }
+        else:  # Neutral (prediction == 1) — decide by comparing entailment vs contradiction probs
+            if all_probs.get(2, 0) >= all_probs.get(0, 0):
+                return {
+                    "status": "🟢 Compliant",
+                    "confidence": round(confidence, 2),
+                    "label_id": prediction,
+                    "all_probs": all_probs
+                }
+            else:
+                return {
+                    "status": "🔴 Violation",
+                    "confidence": round(confidence, 2),
+                    "label_id": prediction,
+                    "all_probs": all_probs
+                }
     else:
         # 2-label model (your training setup)
         if prediction == 1:  # Entailment
@@ -268,7 +276,7 @@ def predict(premise, hypothesis):
         else:
             # Fallback for any unexpected label
             return {
-                "status": "🟡 Needs Review",
+                "status": "� Violation",
                 "confidence": round(confidence, 2),
                 "label_id": prediction,
                 "all_probs": all_probs

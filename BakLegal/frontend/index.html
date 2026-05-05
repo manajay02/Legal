@@ -87,6 +87,7 @@
         <div class="tabs">
           <button class="tab active" data-tab="by-file">By Filename</button>
           <button class="tab classify-tab" data-tab="classify">Classify / Add Case</button>
+          <button class="tab history-tab" data-tab="clf-history">History</button>
         </div>
 
         <!-- By Filename -->
@@ -119,6 +120,15 @@
               <textarea id="clf-text" rows="6" placeholder="Paste the content of the legal document here..."></textarea>
             </div>
           </div>
+        </div>
+
+        <!-- History -->
+        <div class="tab-content" id="clf-history">
+          <div class="clf-hist-toolbar">
+            <span class="clf-hist-title" id="clf-hist-count">0 classifications</span>
+            <button class="clf-hist-clear-btn" id="clf-hist-clear-btn">Clear All</button>
+          </div>
+          <div id="clf-hist-list" class="clf-hist-list"></div>
         </div>
 
         <!-- Options row -->
@@ -647,8 +657,18 @@
 
         <div class="btn-row">
           <button id="btn-arg-analyze" class="btn-primary">Analyze Argument</button>
+          <button id="btn-arg-history" class="btn-secondary">History</button>
         </div>
         <div id="arg-status" style="margin-top:1rem"></div>
+      </div>
+
+      <!-- History panel -->
+      <div class="card" id="arg-history-panel" style="display:none;">
+        <div class="clf-hist-toolbar">
+          <span class="clf-hist-title" id="arg-hist-count">0 analyses</span>
+          <button class="clf-hist-clear-btn" id="arg-hist-clear-btn">Clear All</button>
+        </div>
+        <div id="arg-hist-list" class="clf-hist-list"></div>
       </div>
 
       <!-- Score result -->

@@ -65,10 +65,12 @@ document.querySelectorAll(".tab").forEach(tab => {
     document.getElementById(tab.dataset.tab).classList.add("active");
 
     const isClassify = tab.dataset.tab === "classify";
-    if (btnSearch) btnSearch.style.display    = "none";
-    if (btnClassify) btnClassify.style.display  = isClassify ? "inline-block" : "none";
-    if (btnAddCase) btnAddCase.style.display   = isClassify ? "inline-block" : "none";
-    if (searchOptions) searchOptions.style.display = isClassify ? "none"        : "flex";
+    const isHistory  = tab.dataset.tab === "clf-history";
+    if (btnSearch)    btnSearch.style.display    = "none";
+    if (btnClassify)  btnClassify.style.display  = isClassify ? "inline-block" : "none";
+    if (btnAddCase)   btnAddCase.style.display   = isClassify ? "inline-block" : "none";
+    if (searchOptions) searchOptions.style.display = (isClassify || isHistory) ? "none" : "flex";
+    if (isHistory) renderClassifyHistory();
   });
 });
 
@@ -187,6 +189,7 @@ if (btnClassify) {
         if (classifyResult) classifyResult.innerHTML = `<div class="error-msg"> ${data.error}</div>`;
       } else {
         renderClassifyResult(data);
+        saveClassifyHistory(data, file ? file.name : null);
       }
     } catch {
       if (classifyResult) classifyResult.innerHTML = `<div class="error-msg"> Could not reach the API. Is the backend running?</div>`;
@@ -336,6 +339,127 @@ function renderClassifyResult(data) {
     </div>
     ${confHtml}`;
 }
+
+/* ── Classification History (localStorage) ────────────────────────────────── */
+const CLF_HISTORY_KEY = "lv_clf_history";
+
+function saveClassifyHistory(data, filename) {
+  const history = getClassifyHistory();
+  history.unshift({
+    id:          Date.now(),
+    timestamp:   new Date().toISOString(),
+    category:    data.category   || "—",
+    subcategory: data.subcategory || "—",
+    confidence:  data.legal_confidence != null ? Math.round(data.legal_confidence * 100) : null,
+    filename:    filename || null,
+  });
+  // Keep max 50 entries
+  localStorage.setItem(CLF_HISTORY_KEY, JSON.stringify(history.slice(0, 50)));
+}
+
+function getClassifyHistory() {
+  try { return JSON.parse(localStorage.getItem(CLF_HISTORY_KEY) || "[]"); }
+  catch { return []; }
+}
+
+function renderClassifyHistory() {
+  const history = getClassifyHistory();
+  const listEl  = document.getElementById("clf-hist-list");
+  const countEl = document.getElementById("clf-hist-count");
+  if (!listEl) return;
+
+  if (countEl) countEl.textContent = `${history.length} classification${history.length !== 1 ? "s" : ""}`;
+
+  if (!history.length) {
+    listEl.innerHTML = `<div class="clf-hist-empty">
+      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <p>No classification history yet.</p>
+      <span>Classify a document to see it here.</span>
+    </div>`;
+    return;
+  }
+
+  listEl.innerHTML = history.map((entry, idx) => {
+    const d   = new Date(entry.timestamp);
+    const date = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+    const confHtml = entry.confidence != null
+      ? `<span class="clf-hist-conf">${entry.confidence}% confidence</span>` : "";
+    const fileHtml = entry.filename
+      ? `<span class="clf-hist-file" title="${entry.filename}">📄 ${entry.filename}</span>` : "";
+    return `
+    <div class="clf-hist-item clf-hist-item-clickable" onclick="openClfHistPopup(${idx})" title="Click to view details">
+      <div class="clf-hist-item-left">
+        <div class="clf-hist-cats">
+          <span class="clf-hist-cat">${entry.category}</span>
+          <span class="clf-hist-arrow">›</span>
+          <span class="clf-hist-subcat">${entry.subcategory}</span>
+        </div>
+        <div class="clf-hist-meta">
+          ${fileHtml}
+          ${confHtml}
+        </div>
+      </div>
+      <div class="clf-hist-item-right">
+        <span class="clf-hist-date">${date}</span>
+        <span class="clf-hist-time">${time}</span>
+        <span class="hist-view-hint">View →</span>
+      </div>
+    </div>`;
+  }).join("");
+
+  // Clear all button
+  const clearBtn = document.getElementById("clf-hist-clear-btn");
+  if (clearBtn) {
+    clearBtn.onclick = () => {
+      Swal.fire({
+        title: "Clear History?",
+        text: "All classification history will be permanently deleted.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#dc2626",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: "Yes, clear it",
+      }).then(result => {
+        if (result.isConfirmed) {
+          localStorage.removeItem(CLF_HISTORY_KEY);
+          renderClassifyHistory();
+        }
+      });
+    };
+  }
+}
+
+/* ── Classify history detail popup ──────────────────────────────────────── */
+window.openClfHistPopup = function(idx) {
+  const entry = getClassifyHistory()[idx];
+  if (!entry) return;
+  const d    = new Date(entry.timestamp);
+  const dateStr = d.toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+  const timeStr = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const confHtml = entry.confidence != null
+    ? `<div class="hist-popup-row"><span class="hist-popup-label">CONFIDENCE</span><span class="hist-popup-value">${entry.confidence}%</span></div>` : "";
+  const fileHtml = entry.filename
+    ? `<div class="hist-popup-row"><span class="hist-popup-label">SOURCE FILE</span><span class="hist-popup-value">📄 ${entry.filename}</span></div>` : "";
+
+  openHistPopup("Classification Details", `
+    <div class="hist-popup-grid">
+      <div class="hist-popup-row">
+        <span class="hist-popup-label">CATEGORY</span>
+        <span class="hist-popup-value hist-popup-primary">${entry.category}</span>
+      </div>
+      <div class="hist-popup-row">
+        <span class="hist-popup-label">SUBCATEGORY</span>
+        <span class="hist-popup-value hist-popup-primary">${entry.subcategory}</span>
+      </div>
+      ${confHtml}
+      ${fileHtml}
+      <div class="hist-popup-row">
+        <span class="hist-popup-label">DATE &amp; TIME</span>
+        <span class="hist-popup-value">${dateStr} at ${timeStr}</span>
+      </div>
+    </div>`);
+};
 
 /* ── Subcategory descriptions ─────────────────────────────────────────────── */
 const DESCRIPTIONS = {
@@ -974,6 +1098,7 @@ document.getElementById("btn-arg-analyze").addEventListener("click", async () =>
 
     const data = await res.json();
     renderArgResults(data);
+    saveArgHistory(data, document.getElementById("arg-text").value.trim(), argSupportFileName);
     Swal.fire({ icon: 'success', title: 'Analysis Complete', text: argSupportDocId ? 'Argument scored with supporting document.' : 'Argument scored successfully.', timer: 2000, showConfirmButton: false });
     argStatus("✓ Analysis complete." + (argSupportDocId ? " (grounded with supporting document)" : ""), "success");
   } catch (e) {
@@ -982,6 +1107,190 @@ document.getElementById("btn-arg-analyze").addEventListener("click", async () =>
   } finally {
     document.getElementById("arg-spinner").style.display = "none";
     document.getElementById("btn-arg-analyze").disabled = false;
+  }
+});
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ARGUMENT SCORER HISTORY
+   ══════════════════════════════════════════════════════════════════════════ */
+const ARG_HISTORY_KEY = "lv_arg_history";
+
+function saveArgHistory(data, argText, filename) {
+  const history = getArgHistory();
+  const snippet = (argText || "").slice(0, 120) + ((argText || "").length > 120 ? "…" : "");
+  history.unshift({
+    id:            Date.now(),
+    timestamp:     new Date().toISOString(),
+    overall_score: data.overall_score ?? null,
+    strength_label:data.strength_label || "—",
+    snippet,
+    filename:      filename || null,
+  });
+  localStorage.setItem(ARG_HISTORY_KEY, JSON.stringify(history.slice(0, 50)));
+}
+
+function getArgHistory() {
+  try { return JSON.parse(localStorage.getItem(ARG_HISTORY_KEY) || "[]"); }
+  catch { return []; }
+}
+
+function renderArgHistory() {
+  const history = getArgHistory();
+  const listEl  = document.getElementById("arg-hist-list");
+  const countEl = document.getElementById("arg-hist-count");
+  if (!listEl) return;
+
+  if (countEl) countEl.textContent = `${history.length} anal${history.length !== 1 ? "yses" : "ysis"}`;
+
+  if (!history.length) {
+    listEl.innerHTML = `<div class="clf-hist-empty">
+      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <p>No argument history yet.</p>
+      <span>Analyze an argument to see it here.</span>
+    </div>`;
+    return;
+  }
+
+  listEl.innerHTML = history.map((entry, idx) => {
+    const d    = new Date(entry.timestamp);
+    const date = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+
+    const score = entry.overall_score ?? null;
+    let scoreColor = "#6b7280";
+    if (score !== null) {
+      if (score >= 80)      scoreColor = "#15803d";
+      else if (score >= 60) scoreColor = "#1565c0";
+      else if (score >= 40) scoreColor = "#ef6c00";
+      else                  scoreColor = "#dc2626";
+    }
+    const scoreBadge = score !== null
+      ? `<span class="arg-hist-score-badge" style="background:${scoreColor}20;color:${scoreColor};border:1.5px solid ${scoreColor}40;">${score}/100</span>` : "";
+    const labelBadge = entry.strength_label && entry.strength_label !== "—"
+      ? `<span class="arg-hist-label">${entry.strength_label}</span>` : "";
+    const fileHtml = entry.filename
+      ? `<span class="clf-hist-file" title="${entry.filename}">📄 ${entry.filename}</span>` : "";
+
+    return `
+    <div class="clf-hist-item clf-hist-item-clickable" onclick="openArgHistPopup(${idx})" title="Click to view details">
+      <div class="clf-hist-item-left" style="flex:1;min-width:0;">
+        <div class="clf-hist-cats" style="margin-bottom:.3rem;">
+          ${scoreBadge}${labelBadge}
+        </div>
+        <div class="arg-hist-snippet">${entry.snippet || "—"}</div>
+        <div class="clf-hist-meta">${fileHtml}</div>
+      </div>
+      <div class="clf-hist-item-right">
+        <span class="clf-hist-date">${date}</span>
+        <span class="clf-hist-time">${time}</span>
+        <span class="hist-view-hint">View →</span>
+      </div>
+    </div>`;
+  }).join("");
+
+  const clearBtn = document.getElementById("arg-hist-clear-btn");
+  if (clearBtn) {
+    clearBtn.onclick = () => {
+      Swal.fire({
+        title: "Clear History?",
+        text: "All argument scoring history will be permanently deleted.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#dc2626",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: "Yes, clear it",
+      }).then(result => {
+        if (result.isConfirmed) {
+          localStorage.removeItem(ARG_HISTORY_KEY);
+          renderArgHistory();
+        }
+      });
+    };
+  }
+}
+
+/* ── Argument history detail popup ──────────────────────────────────────── */
+window.openArgHistPopup = function(idx) {
+  const entry = getArgHistory()[idx];
+  if (!entry) return;
+  const d       = new Date(entry.timestamp);
+  const dateStr = d.toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+  const timeStr = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
+  const score = entry.overall_score ?? null;
+  let scoreColor = "#6b7280";
+  if (score !== null) {
+    if (score >= 80)      scoreColor = "#15803d";
+    else if (score >= 60) scoreColor = "#1565c0";
+    else if (score >= 40) scoreColor = "#ef6c00";
+    else                  scoreColor = "#dc2626";
+  }
+  const scoreHtml = score !== null
+    ? `<div class="hist-popup-row"><span class="hist-popup-label">OVERALL SCORE</span><span class="hist-popup-value" style="color:${scoreColor};font-size:1.5rem;font-weight:800;">${score}<span style="font-size:.9rem;font-weight:600;color:var(--muted)">/100</span></span></div>` : "";
+  const fileHtml = entry.filename
+    ? `<div class="hist-popup-row"><span class="hist-popup-label">SUPPORTING FILE</span><span class="hist-popup-value">📄 ${entry.filename}</span></div>` : "";
+
+  openHistPopup("Argument Analysis Details", `
+    <div class="hist-popup-grid">
+      ${scoreHtml}
+      <div class="hist-popup-row">
+        <span class="hist-popup-label">STRENGTH</span>
+        <span class="hist-popup-value hist-popup-primary">${entry.strength_label || "—"}</span>
+      </div>
+      <div class="hist-popup-row hist-popup-row-full">
+        <span class="hist-popup-label">ARGUMENT SNIPPET</span>
+        <span class="hist-popup-snippet">${entry.snippet || "—"}</span>
+      </div>
+      ${fileHtml}
+      <div class="hist-popup-row">
+        <span class="hist-popup-label">DATE &amp; TIME</span>
+        <span class="hist-popup-value">${dateStr} at ${timeStr}</span>
+      </div>
+    </div>`);
+};
+
+/* ── Shared history popup ────────────────────────────────────────────────── */
+function openHistPopup(title, bodyHtml) {
+  const existing = document.getElementById("hist-detail-popup-overlay");
+  if (existing) existing.remove();
+
+  const overlay = document.createElement("div");
+  overlay.id = "hist-detail-popup-overlay";
+  overlay.className = "hist-detail-popup-overlay";
+  overlay.innerHTML = `
+    <div class="hist-detail-popup">
+      <div class="hist-detail-popup-header">
+        <span class="hist-detail-popup-title">${title}</span>
+        <button class="cmp-clause-popup-close" id="hist-detail-popup-close">✕</button>
+      </div>
+      <div class="hist-detail-popup-body">${bodyHtml}</div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add("visible"));
+
+  document.getElementById("hist-detail-popup-close").addEventListener("click", closeHistPopup);
+  overlay.addEventListener("click", e => { if (e.target === overlay) closeHistPopup(); });
+  document.addEventListener("keydown", _histPopupKeyHandler);
+}
+
+function _histPopupKeyHandler(e) { if (e.key === "Escape") closeHistPopup(); }
+function closeHistPopup() {
+  const overlay = document.getElementById("hist-detail-popup-overlay");
+  if (!overlay) return;
+  overlay.classList.remove("visible");
+  overlay.addEventListener("transitionend", () => overlay.remove(), { once: true });
+  document.removeEventListener("keydown", _histPopupKeyHandler);
+}
+
+/* ── History button toggle ───────────────────────────────────────────────── */
+document.getElementById("btn-arg-history").addEventListener("click", () => {
+  const panel = document.getElementById("arg-history-panel");
+  const isVisible = panel.style.display !== "none";
+  panel.style.display = isVisible ? "none" : "block";
+  if (!isVisible) {
+    renderArgHistory();
+    panel.scrollIntoView({ behavior: "smooth" });
   }
 });
 
@@ -1645,54 +1954,11 @@ async function extViewDocument(docId) {
     ` : `<p class="ext-empty">No insights extracted.</p>`;
 
     // ── TAB: Notes ───────────────────────────────────────
-    const notesHtml = secs.length ? `
-      <h3 class="ext-section-title"> Notes by Section</h3>
-      <p style="font-size:.88rem;color:var(--muted);margin-bottom:1rem;">Add notes for each section. Notes are saved automatically.</p>
-      ${secs.map((s, i) => {
-        const secId = `sec-${i + 1}`;
-        const noteText = userNotes[secId] || "";
-        return `
-        <div class="ext-note-block">
-          <div class="ext-note-header">
-            <span class="ext-sec-num">${s.section_number || (i + 1)}</span>
-            <span class="ext-sec-title">${s.title || "Untitled"}</span>
-          </div>
-          <textarea class="ext-note-textarea" data-section-id="${secId}" data-doc-id="${doc.document_id}" placeholder="Add notes for this section...">${noteText}</textarea>
-        </div>
-      `}).join("")}
-    ` : `<p class="ext-empty">No sections available for notes.</p>`;
-    document.getElementById("eot-notes").innerHTML = notesHtml;
-
-    // Attach save handlers to all note textareas
-    document.querySelectorAll(".ext-note-textarea").forEach(textarea => {
-      let saveTimeout;
-      textarea.addEventListener("input", () => {
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(async () => {
-          const docId = textarea.dataset.docId;
-          const sectionId = textarea.dataset.sectionId;
-          const noteText = textarea.value;
-          try {
-            const allNotes = {};
-            document.querySelectorAll(".ext-note-textarea").forEach(ta => {
-              if (ta.value.trim()) {
-                allNotes[ta.dataset.sectionId] = ta.value;
-              }
-            });
-            await fetch(`${EXT_API}/documents/${docId}/notes`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ notes: allNotes })
-            });
-            textarea.style.borderColor = "#2e7d32";
-            setTimeout(() => { textarea.style.borderColor = ""; }, 1000);
-          } catch (e) {
-            console.error("Failed to save note:", e);
-            textarea.style.borderColor = "#b71c1c";
-          }
-        }, 800);
-      });
-    });
+    if (!secs.length) {
+      document.getElementById("eot-notes").innerHTML = `<p class="ext-empty">No sections available for notes.</p>`;
+    } else {
+      extRenderNotesUI(doc.document_id, secs, userNotes);
+    }
 
     // ── TAB: Confidence ──────────────────────────────────
     const hasConf = conf.outcome != null || conf.sections != null || conf.citations != null || conf.insights != null;
@@ -1742,6 +2008,215 @@ async function extViewDocument(docId) {
     outputEl.style.display = "block";
   } finally {
     extHideSpinner();
+  }
+}
+
+/* ── Notes: multi-note CRUD per section ─────────────────────────────────── */
+// Notes are stored as: { "sec-1": JSON.stringify([{id,text,ts}, ...]) }
+// Back-compat: plain string values are treated as a single legacy note.
+function extParseNotes(raw) {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed;
+  } catch (_) {}
+  // legacy plain string
+  return [{ id: "legacy", text: raw, ts: 0 }];
+}
+function extSerializeNotes(arr) {
+  return JSON.stringify(arr);
+}
+function extNotesGenId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function extRenderNotesUI(docId, secs, rawNotes) {
+  // notesState: { [secId]: [{id, text, ts}, ...] }
+  const notesState = {};
+  secs.forEach((_, i) => {
+    const secId = `sec-${i + 1}`;
+    notesState[secId] = extParseNotes(rawNotes[secId]);
+  });
+
+  function secLabel(s, i) {
+    return `${s.section_number || (i + 1)}. ${s.title || "Untitled"}`;
+  }
+
+  function render() {
+    const container = document.getElementById("eot-notes");
+    if (!container) return;
+
+    // Count total notes
+    const total = Object.values(notesState).reduce((n, arr) => n + arr.length, 0);
+
+    container.innerHTML = `
+      <h3 class="ext-section-title">📝 Notes by Section</h3>
+
+      <!-- Add note form -->
+      <div class="enm-add-form">
+        <div class="enm-add-row">
+          <select id="enm-sec-sel" class="enm-select">
+            <option value="">— Select a section —</option>
+            ${secs.map((s, i) => {
+              const secId = `sec-${i + 1}`;
+              const cnt = notesState[secId].length;
+              return `<option value="${secId}">${secLabel(s, i)}${cnt ? ` (${cnt})` : ""}</option>`;
+            }).join("")}
+          </select>
+        </div>
+        <textarea id="enm-ta" class="enm-textarea" rows="3"
+          placeholder="Type your note here…" disabled></textarea>
+        <div class="enm-form-footer">
+          <span class="enm-chars" id="enm-chars"></span>
+          <button id="enm-add-btn" class="btn-primary"
+            style="padding:.5rem 1.4rem;font-size:.88rem;" disabled>＋ Add Note</button>
+        </div>
+      </div>
+
+      <!-- All notes grouped by section -->
+      <div id="enm-list">
+        ${total === 0
+          ? `<div class="enm-empty">No notes yet. Select a section above to add your first note.</div>`
+          : secs.map((s, i) => {
+              const secId = `sec-${i + 1}`;
+              const arr = notesState[secId];
+              if (!arr.length) return "";
+              return `
+              <div class="enm-group">
+                <div class="enm-group-header">
+                  <span class="ext-sec-num">${s.section_number || (i + 1)}</span>
+                  <span class="enm-group-title">${s.title || "Untitled"}</span>
+                  <span class="enm-group-count">${arr.length} note${arr.length > 1 ? "s" : ""}</span>
+                </div>
+                ${arr.map((note, ni) => {
+                  const escaped = note.text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                  const d = note.ts ? new Date(note.ts).toLocaleString() : "";
+                  return `
+                  <div class="enm-note-item" id="enm-item-${note.id}">
+                    <div class="enm-note-display" id="enm-display-${note.id}">
+                      <div class="enm-note-text">${escaped}</div>
+                      ${d ? `<div class="enm-note-ts">${d}</div>` : ""}
+                    </div>
+                    <div class="enm-note-edit" id="enm-edit-${note.id}" style="display:none;">
+                      <textarea class="enm-textarea" id="enm-edit-ta-${note.id}" rows="3">${note.text}</textarea>
+                      <div class="enm-form-footer" style="margin-top:.4rem;">
+                        <span class="enm-chars" id="enm-edit-chars-${note.id}">${note.text.length} chars</span>
+                        <div style="display:flex;gap:.4rem;">
+                          <button class="enm-btn enm-btn-cancel" onclick="extNoteCancelEdit('${note.id}')">Cancel</button>
+                          <button class="enm-btn enm-btn-save" onclick="extNoteSaveEdit('${docId}','${secId}','${note.id}')">Update</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="enm-note-actions">
+                      <button class="enm-btn enm-btn-edit" onclick="extNoteStartEdit('${note.id}')">✏️ Edit</button>
+                      <button class="enm-btn enm-btn-delete" onclick="extNoteDelete('${docId}','${secId}','${note.id}')">🗑️ Delete</button>
+                    </div>
+                  </div>`;
+                }).join("")}
+              </div>`;
+            }).join("")}
+      </div>`;
+
+    // Wire up the add form
+    const sel  = document.getElementById("enm-sec-sel");
+    const ta   = document.getElementById("enm-ta");
+    const btn  = document.getElementById("enm-add-btn");
+    const chars = document.getElementById("enm-chars");
+
+    sel.addEventListener("change", () => {
+      if (sel.value) {
+        ta.disabled = false;
+        ta.value = "";
+        ta.focus();
+        chars.textContent = "";
+        btn.disabled = true;
+      } else {
+        ta.disabled = true;
+        ta.value = "";
+        btn.disabled = true;
+        chars.textContent = "";
+      }
+    });
+    ta.addEventListener("input", () => {
+      chars.textContent = `${ta.value.length} chars`;
+      btn.disabled = !ta.value.trim() || !sel.value;
+    });
+    btn.addEventListener("click", () => {
+      const secId = sel.value;
+      const text  = ta.value.trim();
+      if (!secId || !text) return;
+      notesState[secId].push({ id: extNotesGenId(), text, ts: Date.now() });
+      extNotesPersistAll(docId, notesState, secs).then(() => render());
+    });
+
+    // Wire up edit char counters
+    document.querySelectorAll("[id^='enm-edit-ta-']").forEach(editTa => {
+      const nid = editTa.id.replace("enm-edit-ta-", "");
+      const ch  = document.getElementById(`enm-edit-chars-${nid}`);
+      if (ch) editTa.addEventListener("input", () => { ch.textContent = `${editTa.value.length} chars`; });
+    });
+  }
+
+  // ── window handlers ─────────────────────────────────────
+  window.extNoteStartEdit = function(noteId) {
+    document.getElementById(`enm-display-${noteId}`).style.display = "none";
+    const editEl = document.getElementById(`enm-edit-${noteId}`);
+    editEl.style.display = "block";
+    const ta = document.getElementById(`enm-edit-ta-${noteId}`);
+    if (ta) ta.focus();
+  };
+
+  window.extNoteCancelEdit = function(noteId) {
+    document.getElementById(`enm-display-${noteId}`).style.display = "block";
+    document.getElementById(`enm-edit-${noteId}`).style.display = "none";
+  };
+
+  window.extNoteSaveEdit = async function(dId, secId, noteId) {
+    const ta   = document.getElementById(`enm-edit-ta-${noteId}`);
+    const text = ta ? ta.value.trim() : "";
+    if (!text) { window.extNoteDelete(dId, secId, noteId); return; }
+    const arr = notesState[secId];
+    const idx = arr.findIndex(n => n.id === noteId);
+    if (idx !== -1) { arr[idx] = { ...arr[idx], text, ts: Date.now() }; }
+    await extNotesPersistAll(dId, notesState, secs);
+    render();
+  };
+
+  window.extNoteDelete = async function(dId, secId, noteId) {
+    const result = await Swal.fire({
+      title: "Delete Note?",
+      text: "This note will be permanently removed.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Delete",
+    });
+    if (!result.isConfirmed) return;
+    notesState[secId] = (notesState[secId] || []).filter(n => n.id !== noteId);
+    await extNotesPersistAll(dId, notesState, secs);
+    render();
+  };
+
+  render();
+}
+
+async function extNotesPersistAll(docId, notesState, secs) {
+  const payload = {};
+  secs.forEach((_, i) => {
+    const secId = `sec-${i + 1}`;
+    const arr = notesState[secId] || [];
+    if (arr.length) payload[secId] = extSerializeNotes(arr);
+  });
+  try {
+    await fetch(`${EXT_API}/documents/${docId}/notes`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes: payload })
+    });
+  } catch (e) {
+    console.error("Failed to save notes:", e);
+    Swal.fire({ icon: "error", title: "Save Failed", text: "Could not save note. Please try again.", confirmButtonColor: "#1a3a5c" });
   }
 }
 
@@ -2525,7 +3000,10 @@ function _cmpInitClauseSearch(allClauses) {
   });
 }
 
+let _cmpClausesData = [];
+
 function cmpRenderClauses(clauses) {
+  _cmpClausesData = clauses;
   const listEl = document.getElementById("cmp-clause-list");
   listEl.innerHTML = clauses.map((c, i) => {
     const isViolation = c.prediction === "contradiction";
@@ -2540,11 +3018,11 @@ function cmpRenderClauses(clauses) {
     const provBg      = isViolation ? "#ffe8cc" : "#e8f5e9";
 
     return `
-    <div class="cmp-clause-card" style="border-left:4px solid ${borderColor}">
+    <div class="cmp-clause-card" style="border-left:4px solid ${borderColor};cursor:pointer;" onclick="cmpOpenClauseModal(${i})">
       <div class="cmp-cl-header">
         <span class="cmp-cl-num">#${i + 1}</span>
         <span class="cmp-cl-badge ${badgeClass}">● ${badgeText}</span>
-        <span class="cmp-cl-expand" onclick="this.closest('.cmp-clause-card').classList.toggle('expanded')">▾</span>
+        <span class="cmp-cl-expand" onclick="event.stopPropagation();this.closest('.cmp-clause-card').classList.toggle('expanded')">▾</span>
       </div>
       <div class="cmp-cl-preview">
         <div class="cmp-cl-clause-text">"${(c.clause || "").replace(/"/g, '&quot;')}"</div>
@@ -2585,6 +3063,91 @@ function cmpRenderClauses(clauses) {
     </div>`;
   }).join("");
 }
+
+/* ── Clause detail popup modal ──────────────────────────────────────────── */
+window.cmpOpenClauseModal = function(index) {
+  const c = _cmpClausesData[index];
+  if (!c) return;
+  const isViolation = c.prediction === "contradiction";
+  const borderColor = isViolation ? "#f87171" : "#4ade80";
+  const badgeClass  = isViolation ? "cmp-cl-badge-violation" : "cmp-cl-badge-entailment";
+  const badgeText   = isViolation ? "CONTRADICTION" : "ENTAILMENT";
+  const statusText  = isViolation ? "ILLEGAL" : "LEGAL";
+  const statusColor = isViolation ? "#dc2626" : "#16a34a";
+  const confPct     = c.confidence || 0;
+  const confColor   = isViolation ? "#ef6c00" : "#2e7d32";
+
+  const existing = document.getElementById("cmp-clause-popup-overlay");
+  if (existing) existing.remove();
+
+  const overlay = document.createElement("div");
+  overlay.id = "cmp-clause-popup-overlay";
+  overlay.className = "cmp-clause-popup-overlay";
+  overlay.innerHTML = `
+    <div class="cmp-clause-popup" style="border-top:4px solid ${borderColor}">
+      <div class="cmp-clause-popup-header">
+        <div style="display:flex;align-items:center;gap:.6rem;">
+          <span class="cmp-cl-num">#${index + 1}</span>
+          <span class="cmp-cl-badge ${badgeClass}">● ${badgeText}</span>
+        </div>
+        <button class="cmp-clause-popup-close" id="cmp-clause-popup-close">✕</button>
+      </div>
+      <div class="cmp-clause-popup-body">
+        <div class="cmp-clause-popup-section">
+          <span class="cmp-cl-field-label">CLAUSE TEXT</span>
+          <div class="cmp-clause-popup-text">&ldquo;${(c.clause || "").replace(/"/g, '&quot;')}&rdquo;</div>
+        </div>
+        <div class="cmp-clause-popup-meta">
+          <div class="cmp-cl-meta-item">
+            <span class="cmp-cl-meta-label">LAW REFERENCE</span>
+            <span class="cmp-cl-meta-value">${c.law_reference || "—"}</span>
+          </div>
+          <div class="cmp-cl-meta-item">
+            <span class="cmp-cl-meta-label">STATUS</span>
+            <span class="cmp-cl-meta-value" style="color:${statusColor};font-weight:700;">${statusText}</span>
+          </div>
+        </div>
+        <div class="cmp-clause-popup-section">
+          <div class="cmp-cl-conf-row" style="margin-bottom:0">
+            <span class="cmp-cl-field-label" style="margin-bottom:0">CONFIDENCE</span>
+            <div class="cmp-cl-conf-track">
+              <div class="cmp-cl-conf-fill" style="width:${confPct}%;background:${confColor}"></div>
+            </div>
+            <span class="cmp-cl-conf-pct" style="color:${confColor}">${confPct.toFixed(1)}%</span>
+          </div>
+        </div>
+        ${c.matched_rule ? `
+        <div class="cmp-cl-provision">
+          <span class="cmp-cl-field-label">APPLICABLE LAW PROVISION</span>
+          <p>${c.matched_rule}</p>
+        </div>` : ""}
+        ${c.recommendation ? `
+        <div class="cmp-cl-recommendation${isViolation ? " violation" : ""}">
+          <span class="cmp-cl-field-label">ANALYSIS &amp; RECOMMENDATION</span>
+          <p>${c.recommendation}</p>
+        </div>` : ""}
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add("visible"));
+
+  document.getElementById("cmp-clause-popup-close").addEventListener("click", window.cmpCloseClauseModal);
+  overlay.addEventListener("click", e => { if (e.target === overlay) window.cmpCloseClauseModal(); });
+  document.addEventListener("keydown", window._cmpPopupKeyHandler);
+};
+
+window._cmpPopupKeyHandler = function(e) {
+  if (e.key === "Escape") window.cmpCloseClauseModal();
+};
+
+window.cmpCloseClauseModal = function() {
+  const overlay = document.getElementById("cmp-clause-popup-overlay");
+  if (!overlay) return;
+  overlay.classList.remove("visible");
+  overlay.addEventListener("transitionend", () => overlay.remove(), { once: true });
+  document.removeEventListener("keydown", window._cmpPopupKeyHandler);
+};
 
 /* ── Render mandatory clauses grid (present + missing) ───────────────────── */
 function cmpRenderMandatory(present, missing) {

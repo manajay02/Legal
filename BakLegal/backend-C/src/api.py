@@ -27,7 +27,7 @@ load_dotenv()
 app = FastAPI()
 
 # ----------------------------
-# Enable CORS — must be registered BEFORE any routes
+# Enable CORS — must be registered BEFORE any routes (block request)
 # ----------------------------
 app.add_middleware(
     CORSMiddleware,
@@ -74,7 +74,7 @@ def _get_conn() -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     return conn
 
-
+#Every time the server starts → checks first → table exists
 def _init_db():
     conn = _get_conn()
     conn.execute("""

@@ -6,7 +6,7 @@ pandas
 numpy
 pdfplumber
 pytesseract
-spacy
+spacy #processes and parses contract text (NLP)
 sentencepiece
 motor
 pymongo
